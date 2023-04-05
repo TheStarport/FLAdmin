@@ -3,6 +3,7 @@
 
 *.cs     linguist-language=csharp
 *.razor  linguist-language=csharp
+*.cshtml linguist-language=csharp
 *.html   linguist-detectable=false
 *.css    linguist-detectable=false
 *.js     linguist-detectable=false
