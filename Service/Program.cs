@@ -1,6 +1,24 @@
+using Business.Managers;
+using Business.Messaging;
+using Common.Managers;
+using Common.Messaging;
+using Service.Services.Listeners;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Messaging
+
+builder.Services.AddSingleton<IStatsManager, StatsManager>();
+
+if (!builder.Configuration.GetValue<bool>("DisableMessaging"))
+{
+    builder.Services.AddSingleton<IChannelProvider, ChannelProvider>();
+    builder.Services.AddSingleton<IMessagePublisher, MessagePublisher>();
+    builder.Services.AddSingleton<IMessageSubscriber, MessageSubscriber>();
+    builder.Services.AddHostedService<ServerStatsListener>();
+}
+
+// Frontend
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddAntDesign();
