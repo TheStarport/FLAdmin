@@ -1,0 +1,45 @@
+﻿<RadzenChart>
+    <RadzenLineSeries Smooth="true" Data="@_serverLoad" CategoryProperty="MS" Title="Server Load (ms)" LineType="LineType.Solid" ValueProperty="Index">
+        <RadzenMarkers MarkerType="MarkerType.Square" />
+        <RadzenLegend Visible="false" />
+        <RadzenCategoryAxis Visible=false/>
+    </RadzenLineSeries>
+</RadzenChart>
+
+@code {
+
+    [Parameter]
+    public uint ServerLoadMs { get; set; } = 0u;
+
+    class Load
+    {
+        public uint MS { get; set; }
+        public static int TotalIndex { get; set; } = 0;
+        public int Index { get; set; }
+
+        public Load(uint ms)
+        {
+            MS = ms;
+            Index = TotalIndex++;
+        }
+    }
+
+    List<Load> _serverLoad = new();
+
+    protected override async void OnParametersSet()
+    {
+        _serverLoad.Add(new Load(ServerLoadMs));
+        if (_serverLoad.Count > 60)
+        {
+            _serverLoad.Remove(_serverLoad.ElementAt(0));
+        }
+
+        await base.OnParametersSetAsync();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _serverLoad.Add(new Load(ServerLoadMs));
+        await base.OnInitializedAsync();
+    }
+}

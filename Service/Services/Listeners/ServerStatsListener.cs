@@ -1,20 +1,27 @@
-﻿using Common.Messaging;
+﻿using Common.Managers;
+using Common.Messaging;
 using Common.Messaging.Messages;
 
 namespace Service.Services.Listeners;
 
 public class ServerStatsListener : AbstractMessageListener
 {
-    public ServerStatsListener(IServiceProvider serviceProvider, ILogger<ServerStatsListener> logger, 
-        IMessageSubscriber messageSubscriber) : base(serviceProvider, logger, messageSubscriber)
+    private readonly IExchangeSubscriber _exchangeSubscriber;
+    private readonly IStatsManager _statsManager;
+
+    public ServerStatsListener(IServiceProvider serviceProvider, ILogger<ServerStatsListener> logger, IMessageSubscriber messageSubscriber, IExchangeSubscriber exchangeSubscriber,
+        IStatsManager statsManager) : base(serviceProvider, logger, messageSubscriber)
     {
+        _exchangeSubscriber = exchangeSubscriber;
+        _statsManager = statsManager;
     }
 
     protected override void Initalize(CancellationToken token)
     {
-        _subscriber.Subscribe(ExchangeName.ServerStats.ToString(), async (_, ea) =>
+        string queueName = _exchangeSubscriber.GetQueueName(ExchangeName.ServerStats.ToString());
+        _exchangeSubscriber.Subscribe(ExchangeName.ServerStats.ToString(), queueName, async (_, ea) =>
         {
-            _currentTask = HandleMessageAsync<ServerStats>(ea, ExchangeName.ServerStats.ToString(), token);
+            _currentTask = HandleMessageAsync<ServerStats>(ea, queueName, token);
             await _currentTask;
         });
     }
@@ -22,7 +29,9 @@ public class ServerStatsListener : AbstractMessageListener
     protected override Task ProcessMessageAsync<T>(T message, CancellationToken token)
     {
         ServerStats msg = (message as ServerStats)!;
-        _logger.LogInformation("Testing Message");
+
+        _logger.LogInformation("Updating server stats");
+        _statsManager.UpdateServerStats(msg);
 
         return Task.CompletedTask;
     }

@@ -1,38 +1,87 @@
 @import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+body {
+    background-image: url(/images/background.jpg);
+    background-color: #000;
+    background-size: cover;
+    min-height: 100vh;
 }
 
-h1:focus {
-    outline: none;
+.ojp-transparent, .form-control, .form-control:disabled, .form-control[readonly] {
+    background: rgba(0, 0, 0, 0.6);
 }
 
-a, .btn-link {
-    color: #0071c1;
+.ojp-border, .dropdown-menu, .btn {
+    border-color: rgb(2, 157, 187);
+    border-style: solid;
+    border-width: 1px;
 }
 
-.btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+.navbar {
+    border-bottom-color: rgb(2, 157, 187);
+    border-bottom-style: solid;
+    border-bottom-width: 4px;
+    background-color: rgba(2, 17, 20, 0.85);
 }
 
-.content {
-    padding-top: 1.1rem;
+.table {
+    margin-bottom: 0;
 }
 
-.valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+    .ojp th, .table tr {
+        border-color: #a1ecfb;
+    }
+
+    .table tbody tr:last-child td, .table tbody tr:last-child th {
+        border: 0;
+    }
+
+.ojp-text-color, .dropdown-item, .btn, .table, h4, .dropdown-item:focus, .dropdown-item:hover, .form-control {
+    color: #a1ecfb;
 }
 
-.invalid {
-    outline: 1px solid red;
+    .ojp-text-glow, .btn:hover, h4, .dropdown-item:focus, .dropdown-item:hover {
+        color: #a1ecfb;
+        text-shadow: rgb(161 236 251 / 65%) 0 0 4px;
+    }
+
+    .dropdown-item, .dropdown-menu, .dropdown-item:focus, .dropdown-item:hover {
+        background-color: rgba(2, 17, 20, 0.95);
+    }
+
+.dropdown-item {
+    cursor: pointer;
 }
 
-.validation-message {
-    color: red;
+.form-control {
+    border: 0;
 }
+
+@media only screen and (max-width: 767px) {
+    .container-fluid {
+        padding: 0;
+    }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-color: rgb(2, 157, 187);
+    border-style: solid;
+    border-width: 1px;
+}
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgb(2, 157, 187);
+    }
 
 #blazor-error-ui {
     background: lightyellow;

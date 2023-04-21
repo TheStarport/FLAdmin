@@ -14,7 +14,7 @@ public abstract class AbstractMessageListener : IHostedService
 
     protected Task? _currentTask;
 
-    public AbstractMessageListener(IServiceProvider serviceProvider, ILogger logger, IMessageSubscriber subscriber)
+    protected AbstractMessageListener(IServiceProvider serviceProvider, ILogger logger, IMessageSubscriber subscriber)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;

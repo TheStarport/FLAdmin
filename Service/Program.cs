@@ -12,6 +12,7 @@ builder.Services.AddSingleton<IStatsManager, StatsManager>();
 
 if (!builder.Configuration.GetValue<bool>("DisableMessaging"))
 {
+    builder.Services.AddSingleton<IExchangeSubscriber, ExchangeSubscriber>();
     builder.Services.AddSingleton<IChannelProvider, ChannelProvider>();
     builder.Services.AddSingleton<IMessagePublisher, MessagePublisher>();
     builder.Services.AddSingleton<IMessageSubscriber, MessageSubscriber>();
@@ -21,7 +22,6 @@ if (!builder.Configuration.GetValue<bool>("DisableMessaging"))
 // Frontend
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddAntDesign();
 
 var app = builder.Build();
 

@@ -1,9 +1,39 @@
 ﻿@page "/"
+@using Common.Managers;
+@using Common.Messaging.Messages;
+@inject IStatsManager manager;
 
 <PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
+<Service.Components.Charts.ServerLoad ServerLoadMs=@serverLoad />
 
-Welcome to your new app.
+@if (manager.GetPlayers() is not null)
+{
+    <h1>Memory Usage: @manager.GetServerLoad()</h1>
+    @foreach (var player in manager.GetPlayers()!)
+    {
+        <h1>@player.Name</h1>
+    }
+}
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@code {
+    Timer? timer;
+    IEnumerable<PlayerInfo> players = Enumerable.Empty<PlayerInfo>();
+    uint serverLoad = 0;
+
+    protected override void OnInitialized()
+    {
+        timer = new Timer(async _ =>  // async void
+        {
+            var newPlayers = manager.GetPlayers();
+            if (newPlayers is null)
+            {
+                return;
+            }
+
+            players = newPlayers;
+            serverLoad = manager.GetServerLoad();
+            await InvokeAsync(StateHasChanged);
+        }, null, 0, 10000);
+    }
+}
