@@ -1,7 +1,6 @@
 ﻿using Common.Messaging;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client.Events;
-using System.Threading.Channels;
 
 namespace Business.Messaging;
 public class ExchangeSubscriber : IExchangeSubscriber

@@ -2,11 +2,10 @@ using Business.Managers;
 using Business.Messaging;
 using Common.Managers;
 using Common.Messaging;
+using Fluxor;
 using Service.Services.Listeners;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Messaging
 
 builder.Services.AddSingleton<IStatsManager, StatsManager>();
 
@@ -20,6 +19,8 @@ if (!builder.Configuration.GetValue<bool>("DisableMessaging"))
 }
 
 // Frontend
+var currentAssembly = typeof(Program).Assembly;
+builder.Services.AddFluxor(options => options.ScanAssemblies(currentAssembly));
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 

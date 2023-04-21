@@ -5,35 +5,6 @@
 
 <PageTitle>Index</PageTitle>
 
-<Service.Components.Charts.ServerLoad ServerLoadMs=@serverLoad />
-
-@if (manager.GetPlayers() is not null)
-{
-    <h1>Memory Usage: @manager.GetServerLoad()</h1>
-    @foreach (var player in manager.GetPlayers()!)
-    {
-        <h1>@player.Name</h1>
-    }
-}
-
 @code {
-    Timer? timer;
-    IEnumerable<PlayerInfo> players = Enumerable.Empty<PlayerInfo>();
-    uint serverLoad = 0;
 
-    protected override void OnInitialized()
-    {
-        timer = new Timer(async _ =>  // async void
-        {
-            var newPlayers = manager.GetPlayers();
-            if (newPlayers is null)
-            {
-                return;
-            }
-
-            players = newPlayers;
-            serverLoad = manager.GetServerLoad();
-            await InvokeAsync(StateHasChanged);
-        }, null, 0, 10000);
-    }
 }
