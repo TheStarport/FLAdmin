@@ -2,6 +2,7 @@ using Business.Managers;
 using Business.Messaging;
 using Common.Managers;
 using Common.Messaging;
+using Common.State.ServerLoad;
 using Fluxor;
 using Service.Services.Listeners;
 
@@ -19,8 +20,13 @@ if (!builder.Configuration.GetValue<bool>("DisableMessaging"))
 }
 
 // Frontend
-var currentAssembly = typeof(Program).Assembly;
-builder.Services.AddFluxor(options => options.ScanAssemblies(currentAssembly));
+var currentAssembly = typeof(ServerLoadState).Assembly;
+builder.Services.AddFluxor(options => 
+{
+    options.ScanAssemblies(currentAssembly);
+    options.WithLifetime(StoreLifetime.Singleton);
+});
+
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 

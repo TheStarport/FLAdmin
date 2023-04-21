@@ -1,14 +1,35 @@
 ﻿@using Common.State.ServerLoad;
 @inject IState<ServerLoadState> loadState
 
-<RadzenChart>
-    <RadzenLineSeries Smooth="true" Data="@_serverLoad" CategoryProperty="MS" Title="Server Load (ms)" LineType="LineType.Solid" ValueProperty="Index">
-        <RadzenMarkers MarkerType="MarkerType.Square" />
-        <RadzenLegend Visible="false" />
-        <RadzenCategoryAxis Visible=false/>
-    </RadzenLineSeries>
-</RadzenChart>
-
+<div style="display: flex; flex-direction: row; width: 100%;">
+    <div style="width: 33%;">
+        <RadzenChart>
+            <RadzenLineSeries Smooth="false" Data="@_serverLoad" CategoryProperty="Index" Title="Server Load (ms)" LineType="LineType.Solid" ValueProperty="MS">
+                <RadzenMarkers MarkerType="MarkerType.Square" />
+                <RadzenLegend Visible="false" />
+                <RadzenCategoryAxis Visible=false />
+            </RadzenLineSeries>
+        </RadzenChart>
+    </div>
+    <div style="width: 33%;">
+        <RadzenChart>
+            <RadzenLineSeries Smooth="false" Data="@_serverLoad" CategoryProperty="Index" Title="Server Load (ms)" LineType="LineType.Solid" ValueProperty="MS">
+                <RadzenMarkers MarkerType="MarkerType.Square" />
+                <RadzenLegend Visible="false" />
+                <RadzenCategoryAxis Visible=false />
+            </RadzenLineSeries>
+        </RadzenChart>
+    </div>
+    <div style="width: 33%;">
+        <RadzenChart>
+            <RadzenLineSeries Smooth="false" Data="@_serverLoad" CategoryProperty="Index" Title="Server Load (ms)" LineType="LineType.Solid" ValueProperty="MS">
+                <RadzenMarkers MarkerType="MarkerType.Square" />
+                <RadzenLegend Visible="false" />
+                <RadzenCategoryAxis Visible=false />
+            </RadzenLineSeries>
+        </RadzenChart>
+    </div>
+</div>
 @code {
 
     class Load
@@ -32,7 +53,8 @@
 
         loadState.StateChanged += (_, _) =>
         {
-            _serverLoad.Add(new (loadState.Value.ServerLoadMs));
+            _serverLoad.Add(new(loadState.Value.ServerLoadMs));
+            InvokeAsync(StateHasChanged);
         };
     }
 }
