@@ -51,11 +51,11 @@
 }
 
 .nav-menu {
-	height: 95vh;
-	border-bottom-color: rgb(2, 157, 187);
-	border-bottom-style: solid;
-	border-bottom-width: 4px;
-	background-color: rgba(2, 17, 20, 0.85);
+    height: 95vh;
+    border-bottom-color: rgb(2, 157, 187);
+    border-bottom-style: solid;
+    border-bottom-width: 4px;
+    background-color: rgba(2, 17, 20, 0.85);
 }
 
 @media (min-width: 641px) {

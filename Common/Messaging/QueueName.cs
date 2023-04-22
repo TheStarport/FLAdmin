@@ -1,4 +1,4 @@
-﻿namespace Common.Messaging;
+namespace Common.Messaging;
 public enum QueueName
 {
 

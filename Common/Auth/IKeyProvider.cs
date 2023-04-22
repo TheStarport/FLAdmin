@@ -1,6 +1,6 @@
-﻿namespace Common.Auth;
+namespace Common.Auth;
 public interface IKeyProvider
 {
-    byte[] GetSigningKey();
-    byte[] GetEncryptionKey();
+	byte[] GetSigningKey();
+	byte[] GetEncryptionKey();
 }

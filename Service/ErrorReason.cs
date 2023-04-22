@@ -1,8 +1,8 @@
-﻿namespace Service;
+namespace Service;
 
 public enum ErrorReason
 {
-    NoError,
-    FLServerNotFound,
-    MissingDirectoryPermissions,
+	NoError,
+	FLServerNotFound,
+	MissingDirectoryPermissions,
 }

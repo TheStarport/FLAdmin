@@ -1,11 +1,8 @@
-﻿namespace Common.State.ServerLoad;
+namespace Common.State.ServerLoad;
 
 public class ServerLoadAction
 {
-    public uint ServerLoad { get; }
+	public uint ServerLoad { get; }
 
-    public ServerLoadAction(uint serverLoad)
-    {
-        ServerLoad = serverLoad;
-    }
+	public ServerLoadAction(uint serverLoad) => ServerLoad = serverLoad;
 }
