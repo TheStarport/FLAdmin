@@ -1,4 +1,4 @@
-﻿@page "/login"
+@page "/login"
 @using Common.Auth;
 @using Common.State.ModalInfo;
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
@@ -7,7 +7,7 @@
 @inject ILocalStorageService _localStorage
 @inject IDispatcher _dispatcher
 
-<div class="rz-p-12 rz-text-align-center">
+<div class="rz-p-12 rz-text-align-center" style="display: @(render ? "inherit" : "none")">
     <div>
         <RadzenFormField Text="Login Token" Variant="Variant.Flat">
             <Start>
@@ -29,6 +29,7 @@
 
 @code
 {
+    bool render = false;
     string? value;
     bool rememberMe;
 
@@ -50,7 +51,13 @@
                 // Token was bad, clear it
                 await _localStorage.RemoveItemAsync("token");
             }
+            else
+            {
+                return;
+            }
         }
+
+        render = true;
     }
 
     private async Task<bool> SignIn(bool automatic)
