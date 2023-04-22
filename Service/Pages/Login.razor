@@ -1,0 +1,36 @@
+﻿@page "/login"
+@using Common.Auth;
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@inject AuthStateProvider authState
+@inject NavigationManager _navigationManager
+
+<div class="rz-p-12 rz-text-align-center">
+    <RadzenFormField Text="Login Token" Variant="Variant.Flat">
+        <Start>
+            <RadzenIcon Icon="account_circle" />
+        </Start>
+        <ChildContent>
+            <RadzenPassword @bind-Value=@value Placeholder="Enter Login Token" />
+        </ChildContent>
+    </RadzenFormField>
+</div>
+<div class="rz-p-12 rz-text-align-center">
+    <RadzenButton Click=@(_ => SignIn()) Text="Add New" Icon="lock" ButtonStyle="ButtonStyle.Primary" />
+</div>
+
+
+@code
+{
+    string? value;
+    private void SignIn()
+    {
+        if (authState.Authenticate(value ?? ""))
+        {
+            //_navigationManager.NavigateTo("/");
+        }
+        else
+        {
+
+        }
+    }
+}

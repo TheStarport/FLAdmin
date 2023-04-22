@@ -1,0 +1,18 @@
+﻿@attribute [AllowAnonymous]
+@inject NavigationManager _navigationManager
+@inject AuthenticationStateProvider authState
+
+@code {
+    protected override async void OnAfterRender(bool firstRender)
+    {
+        var state = await authState.GetAuthenticationStateAsync();
+        if (state.User!.Identity!.IsAuthenticated)
+        {
+            _navigationManager.NavigateTo("/");
+        }
+        else
+        {
+            _navigationManager.NavigateTo("/login");
+        }
+    }
+}

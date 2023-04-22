@@ -6,7 +6,10 @@
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @using Microsoft.JSInterop
+@using Radzen;
 @using Radzen.Blazor
 @using Service;
 @using Service.Shared;
 @using Fluxor;
+
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
