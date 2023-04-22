@@ -261,4 +261,4 @@ __pycache__/
 *.pyc
 
 Service/wwwroot/css/site.css
-Service/wwwroot/csss/site.min.css
+Service/wwwroot/css/site.min.css
