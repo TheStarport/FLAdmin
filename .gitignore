@@ -259,3 +259,6 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+
+Service/wwwroot/css/site.css
+Service/wwwroot/csss/site.min.css
