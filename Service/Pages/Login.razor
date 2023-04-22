@@ -1,9 +1,11 @@
 ﻿@page "/login"
 @using Common.Auth;
+@using Common.State.ModalInfo;
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
 @inject AuthStateProvider _authState
 @inject NavigationManager _navigationManager
 @inject ILocalStorageService _localStorage
+@inject IDispatcher _dispatcher
 
 <div class="rz-p-12 rz-text-align-center">
     <div>
@@ -64,9 +66,11 @@
             
             return true;
         }
-        else
+        else if (!automatic)
         {
-            return false;
+            _dispatcher.Dispatch(new ModalInfoAction($"Invalid login token", true));
         }
+        
+        return false;
     }
 }

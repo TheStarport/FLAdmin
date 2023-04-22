@@ -11,6 +11,7 @@ using Common.State.ServerLoad;
 using Fluxor;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.IdentityModel.Logging;
+using Radzen;
 using Service;
 using Service.Services.Listeners;
 
@@ -57,6 +58,11 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddAuthenticationCore();
 builder.Services.AddBlazoredLocalStorage();
+
+// Radzen components
+builder.Services.AddScoped<DialogService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<TooltipService>();
 
 builder.Services.AddScoped<JwtAuthStateProvider>();
 builder.Services.AddScoped<AuthStateProvider>(x => x.GetRequiredService<JwtAuthStateProvider>());

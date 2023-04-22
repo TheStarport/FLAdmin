@@ -1,0 +1,15 @@
+@using Common.State.ModalInfo;
+@inject DialogService _dialogService
+@inject IState<ModalInfoState> loadState
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        loadState.StateChanged += (_, _) =>
+        {
+            _dialogService.Alert(loadState.Value.Text, loadState.Value.IsError ? "An error has occured" : "Alert");
+        };
+    }
+}

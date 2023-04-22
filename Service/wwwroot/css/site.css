@@ -5,6 +5,7 @@ body {
     background-color: #000;
     background-size: cover;
     min-height: 100vh;
+    color: white;
 }
 
 .ojp-transparent, .form-control, .form-control:disabled, .form-control[readonly] {

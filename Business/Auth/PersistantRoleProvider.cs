@@ -1,20 +1,25 @@
 namespace Business.Auth;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Xml.Linq;
 using Common.Auth;
+using Common.State.ModalInfo;
+using Fluxor;
 using Microsoft.Extensions.Logging;
 
 public class PersistantRoleProvider : IPersistantRoleProvider
 {
 	private readonly ILogger<PersistantRoleProvider> _logger;
 	private readonly IJwtProvider _provider;
+	private readonly IDispatcher _dispatcher;
 	private List<AdminUser> _users = new();
 	private readonly string _path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FLAdmin", "users.json");
 
-	public PersistantRoleProvider(ILogger<PersistantRoleProvider> logger, IJwtProvider provider)
+	public PersistantRoleProvider(ILogger<PersistantRoleProvider> logger, IJwtProvider provider, IDispatcher dispatcher)
 	{
 		_logger = logger;
 		_provider = provider;
+		_dispatcher = dispatcher;
 		LoadUsers();
 	}
 
@@ -81,7 +86,7 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 		}
 		catch (Exception)
 		{
-			// TODO: set blazor error state with fluxor#
+			_dispatcher.Dispatch(new ModalInfoAction($"Unable to save users to disk", true));
 			_logger.LogError("Unable to save users to user.json!");
 		}
 	}
@@ -91,7 +96,8 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 		var user = _users.Find(x => x.Name == name);
 		if (user is null)
 		{
-			_logger.LogError("Unable to find user ({user}) when updating roles", name);
+			_dispatcher.Dispatch(new ModalInfoAction($"User ({name}) does not exist!", true));
+			_logger.LogError("Unable to find user ({User}) when updating roles", name);
 			return;
 		}
 
@@ -105,7 +111,8 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 		var user = _users.Find(x => x.Name == name);
 		if (user is null)
 		{
-			_logger.LogError("Unable to find user ({user}) when updating token", name);
+			_dispatcher.Dispatch(new ModalInfoAction($"User ({name}) does not exist", true));
+			_logger.LogError("Unable to find user ({User}) when updating token", name);
 			return;
 		}
 
@@ -119,8 +126,8 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 		var instance = _users.Find(x => x.Name == user.Name);
 		if (instance is not null)
 		{
-			// TODO: Fluxor modal!
-			_logger.LogError("User {user} already exists!", user.Name);
+			_dispatcher.Dispatch(new ModalInfoAction($"User ({user.Name}) already exists!", true));
+			_logger.LogError("User {User} already exists!", user.Name);
 			return;
 		}
 
@@ -133,7 +140,8 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 		var user = _users.Find(x => x.Name == name);
 		if (user is null)
 		{
-			_logger.LogError("Unable to find user ({user}) when removing", name);
+			_dispatcher.Dispatch(new ModalInfoAction($"User ({name}) does not exist", true));
+			_logger.LogError("Unable to find user ({User}) when removing", name);
 			return;
 		}
 
@@ -143,13 +151,16 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 
 	private void GenerateDefaultAdminUser()
 	{
-		_users.Add(new AdminUser()
+		var admin = new AdminUser()
 		{
 			Name = "Admin",
 			Roles = Enum.GetValues<Role>(),
 			Token = _provider.GenerateToken("Admin")
-		});
+		};
 
+		_users.Add(admin);
+
+		_dispatcher.Dispatch(new ModalInfoAction("Admin user created! You can login with the following token (make sure to save it!): \n\n" + admin.Token));
 		SaveUsers();
 	}
 }
