@@ -1,36 +1,72 @@
 ﻿@page "/login"
 @using Common.Auth;
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
-@inject AuthStateProvider authState
+@inject AuthStateProvider _authState
 @inject NavigationManager _navigationManager
+@inject ILocalStorageService _localStorage
 
 <div class="rz-p-12 rz-text-align-center">
-    <RadzenFormField Text="Login Token" Variant="Variant.Flat">
-        <Start>
-            <RadzenIcon Icon="account_circle" />
-        </Start>
-        <ChildContent>
-            <RadzenPassword @bind-Value=@value Placeholder="Enter Login Token" />
-        </ChildContent>
-    </RadzenFormField>
+    <div>
+        <RadzenFormField Text="Login Token" Variant="Variant.Flat">
+            <Start>
+                <RadzenIcon Icon="account_circle" />
+            </Start>
+            <ChildContent>
+                <RadzenPassword @bind-Value=@value Placeholder="Enter Login Token" />
+            </ChildContent>
+        </RadzenFormField>
+    </div>
+    <div class="rz-p-3">
+        <RadzenCheckBox @bind-Value=@rememberMe Name="RememberMe" />
+        <RadzenLabel Text="Remember Me?" Component="RememberMe" Style="color: white" />
+    </div>
+    <div class="rz-p-3">
+        <RadzenButton Click=@(_ => SignIn(false)) Text="Login" Icon="lock_open" ButtonStyle="ButtonStyle.Primary" />
+    </div>
 </div>
-<div class="rz-p-12 rz-text-align-center">
-    <RadzenButton Click=@(_ => SignIn()) Text="Add New" Icon="lock" ButtonStyle="ButtonStyle.Primary" />
-</div>
-
 
 @code
 {
     string? value;
-    private void SignIn()
+    bool rememberMe;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if ((authState).Authenticate(value ?? ""))
+        await base.OnAfterRenderAsync(firstRender);
+
+        if (!firstRender)
+        {
+            return;
+        }
+
+        value = await _localStorage.GetItemAsStringAsync("token");
+        if (value is not null)
+        {
+            // Attempt to sign in if we already have a valid token
+            if(!await SignIn(true))
+            {
+                // Token was bad, clear it
+                await _localStorage.RemoveItemAsync("token");
+            }
+        }
+    }
+
+    private async Task<bool> SignIn(bool automatic)
+    {
+        if (_authState.Authenticate(value ?? ""))
         {
             _navigationManager.NavigateTo("/");
+
+            if (rememberMe)
+            {
+                await _localStorage.SetItemAsStringAsync("token", value);
+            }
+            
+            return true;
         }
         else
         {
-
+            return false;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Common.Auth;
+using Common.Auth;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using System.Text.Json;
@@ -91,5 +91,14 @@ public class JwtAuthStateProvider : AuthStateProvider
         {
             return Enumerable.Empty<Claim>();
         }
+    }
+
+	public override void SignOut()
+    {
+        // Reset auth state
+        var identity = new ClaimsIdentity();
+        var user = new ClaimsPrincipal(identity);
+
+        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
     }
 }

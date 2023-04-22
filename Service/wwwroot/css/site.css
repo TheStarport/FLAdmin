@@ -111,3 +111,13 @@ body {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+.push-to-bottom {
+    margin-top: auto;
+}
+
+.flex-column-fill {
+	flex-direction: column;
+	display: flex;
+	height: 100%;
+}

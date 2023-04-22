@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using Business.Auth;
 using Business.Managers;
 using Business.Messaging;
@@ -56,6 +57,7 @@ builder.Services.AddFluxor(options =>
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddAuthenticationCore();
+builder.Services.AddBlazoredLocalStorage();
 
 builder.Services.AddScoped<JwtAuthStateProvider>();
 builder.Services.AddScoped<AuthStateProvider>(x => x.GetRequiredService<JwtAuthStateProvider>());
