@@ -1,35 +1,14 @@
-﻿@using Common.State.ServerLoad;
+@using Common.State.ServerLoad;
 @inject IState<ServerLoadState> loadState
 
-<div style="display: flex; flex-direction: row; width: 100%;">
-    <div style="width: 33%;">
-        <RadzenChart>
-            <RadzenLineSeries Smooth="false" Data="@_serverLoad" CategoryProperty="Index" Title="Server Load (ms)" LineType="LineType.Solid" ValueProperty="MS">
-                <RadzenMarkers MarkerType="MarkerType.Square" />
-                <RadzenLegend Visible="false" />
-                <RadzenCategoryAxis Visible=false />
-            </RadzenLineSeries>
-        </RadzenChart>
-    </div>
-    <div style="width: 33%;">
-        <RadzenChart>
-            <RadzenLineSeries Smooth="false" Data="@_serverLoad" CategoryProperty="Index" Title="Server Load (ms)" LineType="LineType.Solid" ValueProperty="MS">
-                <RadzenMarkers MarkerType="MarkerType.Square" />
-                <RadzenLegend Visible="false" />
-                <RadzenCategoryAxis Visible=false />
-            </RadzenLineSeries>
-        </RadzenChart>
-    </div>
-    <div style="width: 33%;">
-        <RadzenChart>
-            <RadzenLineSeries Smooth="false" Data="@_serverLoad" CategoryProperty="Index" Title="Server Load (ms)" LineType="LineType.Solid" ValueProperty="MS">
-                <RadzenMarkers MarkerType="MarkerType.Square" />
-                <RadzenLegend Visible="false" />
-                <RadzenCategoryAxis Visible=false />
-            </RadzenLineSeries>
-        </RadzenChart>
-    </div>
-</div>
+<RadzenChart>
+    <RadzenLineSeries Smooth="false" Data="@_serverLoad" CategoryProperty="Index" Title="Server Load (ms)" LineType="LineType.Solid" ValueProperty="MS">
+        <RadzenMarkers MarkerType="MarkerType.Square" />
+        <RadzenLegend Visible="false" />
+        <RadzenCategoryAxis Visible=false />
+    </RadzenLineSeries>
+</RadzenChart>
+
 @code {
 
     class Load
