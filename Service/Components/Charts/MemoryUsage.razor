@@ -1,0 +1,59 @@
+@using Common.State.MemoryUsage;
+@inject IState<MemoryUsageState> loadState
+
+<RadzenChart>
+    <RadzenLineSeries Smooth="false" Data="@_memoryUsage" CategoryProperty="Index" Title=@_title LineType="LineType.Solid" ValueProperty="UsageDenomination">
+        <RadzenMarkers MarkerType="MarkerType.Square" />
+        <RadzenLegend Visible="true" />
+        <RadzenCategoryAxis Visible=false />
+        <RadzenValueAxis FormatString="{0:0.##}"/>
+    </RadzenLineSeries>
+</RadzenChart>
+
+@code {
+    private static string _title = "";
+
+    private class Usage
+    {
+        public uint UsageBytes { get; }
+        public static int TotalIndex { get; set; } = 0;
+        public int Index { get; set; }
+
+        public double UsageDenomination
+        {
+            get
+            {
+                uint bytes = UsageBytes;
+                string[] suffix = { "B", "KB", "MB", "GB" };
+                int i;
+                double dblSByte = bytes;
+                for (i = 0; i < suffix.Length && bytes >= 1024; i++, bytes /= 1024)
+                {
+                    dblSByte = bytes / 1024.0;
+                }
+
+                _title = $"Memory Usage ({suffix[i]})";
+                return dblSByte;
+            }
+        }
+
+        public Usage(uint usage)
+        {
+            UsageBytes = usage;
+            Index = TotalIndex++;
+        }
+    }
+
+    List<Usage> _memoryUsage = new();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        loadState.StateChanged += (_, _) =>
+        {
+            _memoryUsage.Add(new(loadState.Value.MemoryUsageBytes));
+            InvokeAsync(StateHasChanged);
+        };
+    }
+}
