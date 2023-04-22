@@ -6,6 +6,7 @@ using Common.Managers;
 using Common.Messaging;
 using Common.State.ServerLoad;
 using Fluxor;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.IdentityModel.Logging;
 using Service;
 using Service.Services.Listeners;
@@ -56,7 +57,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddAuthenticationCore();
 
-builder.Services.AddScoped<AuthStateProvider, JwtAuthStateProvider>();
+builder.Services.AddScoped<JwtAuthStateProvider>();
+builder.Services.AddScoped<AuthStateProvider>(x => x.GetRequiredService<JwtAuthStateProvider>());
+builder.Services.AddScoped<AuthenticationStateProvider>(x => x.GetRequiredService<JwtAuthStateProvider>());
 
 var app = builder.Build();
 

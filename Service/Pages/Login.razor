@@ -24,9 +24,9 @@
     string? value;
     private void SignIn()
     {
-        if (authState.Authenticate(value ?? ""))
+        if ((authState).Authenticate(value ?? ""))
         {
-            //_navigationManager.NavigateTo("/");
+            _navigationManager.NavigateTo("/");
         }
         else
         {
