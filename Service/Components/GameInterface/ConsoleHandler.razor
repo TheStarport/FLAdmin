@@ -1,0 +1,62 @@
+@using Common.Managers;
+@using Common.State.ServerEvents;
+@inject IServerLifetime _server
+@inject IState<ConsoleMessageState> _state
+
+<RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" Class="rz-mt-4 rz-p-4 rz-border-radius-1" @attributes=@Attributes Style="border: var(--rz-grid-cell-border)" >
+    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
+        <div>
+            <RadzenText TextStyle="TextStyle.Subtitle1" Class="rz-m-0">Page<br/></RadzenText>
+            <RadzenDropDown TValue="int" Value=@_currentPage Data=@(Enumerable.Range(1, _messageCount / 50 + 1)) Change="@(args => PageChanged((int)args))" />
+        </div>
+        
+        <RadzenButton Click=@ClearConsole Text="Clear console" ButtonStyle="ButtonStyle.Dark" Variant="Variant.Flat" Size="ButtonSize.Small" />
+    </RadzenStack>
+    <RadzenStack Orientation="Orientation.Vertical" Gap="0" ID="event-console" Class="rz-pt-1" Style="border-top: var(--rz-grid-cell-border); min-height: 2rem; max-height: 60vh; overflow: auto;">
+        @foreach (var message in _messages)
+        {
+            <RadzenAlert ShowIcon="false" Variant="Variant.Flat" AlertStyle="AlertStyle.Info" Size="AlertSize.ExtraSmall" Shade="Shade.Lighter" AllowClose="false" Style="font-size: 0.75rem">
+                <span Style="color: var(--rz-text-color)">@message</span>
+            </RadzenAlert>
+        }
+    </RadzenStack>
+</RadzenStack>
+
+@code {
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object>? Attributes { get; set; }
+
+    private List<string> _messages = new();
+
+    int _messageCount = 0;
+    int _currentPage = 1;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _state.StateChanged += (_, _) =>
+        {
+            _messageCount++;
+            _messages.Insert(0, _state.Value.LastMessage);
+            InvokeAsync(StateHasChanged);
+        };
+
+        _messageCount = _server.GetMessageCount();
+        _messages = _server.GetConsoleMessages(1).ToList();
+    }
+
+    private void PageChanged(int page)
+    {
+        _currentPage = page;
+        _messageCount = _server.GetMessageCount();
+        _messages = _server.GetConsoleMessages(page).ToList();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void ClearConsole()
+    {
+        _messages.Clear();
+        InvokeAsync(StateHasChanged);
+    }
+}

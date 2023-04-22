@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.IdentityModel.Logging;
 using Radzen;
 using Service;
+using Service.Services;
 using Service.Services.Listeners;
 
 if (!OperatingSystem.IsWindows())
@@ -67,6 +68,10 @@ builder.Services.AddScoped<TooltipService>();
 builder.Services.AddScoped<JwtAuthStateProvider>();
 builder.Services.AddScoped<AuthStateProvider>(x => x.GetRequiredService<JwtAuthStateProvider>());
 builder.Services.AddScoped<AuthenticationStateProvider>(x => x.GetRequiredService<JwtAuthStateProvider>());
+
+// Hosted Services
+builder.Services.AddSingleton<IServerLifetime, ServerLifetimeService>();
+builder.Services.AddHostedService(x => (x.GetRequiredService<IServerLifetime>() as ServerLifetimeService)!);
 
 var app = builder.Build();
 

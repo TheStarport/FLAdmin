@@ -4,16 +4,16 @@
 @inject IStatsManager _statManager
 
 <RadzenChart>
-    <RadzenLineSeries Smooth="false" Data="@_serverLoad" CategoryProperty="Time" Title="Server Load (ms)" LineType="LineType.Solid" ValueProperty="MS">
+    <RadzenLineSeries Smooth="false" Data="@_playerTrend" CategoryProperty="Key" Title="Player Count" LineType="LineType.Solid" ValueProperty="Value">
         <RadzenMarkers MarkerType="MarkerType.Square" />
         <RadzenLegend Visible="false" />
         <RadzenCategoryAxis Visible=false />
-        <ValueAxisTitle Text="Server Load (ms)" />
+        <ValueAxisTitle Text="Player Count"/>
     </RadzenLineSeries>
 </RadzenChart>
 
 @code {
-    IEnumerable<Load> _serverLoad = Enumerable.Empty<Load>();
+    IEnumerable<KeyValuePair<string, uint>> _playerTrend = Enumerable.Empty<KeyValuePair<string, uint>>();
 
     protected override void OnInitialized()
     {
@@ -21,10 +21,10 @@
 
         _state.StateChanged += (_, _) =>
         {
-            _serverLoad = _statManager.GetServerLoad();
+            _playerTrend = _statManager.GetPlayerTrend();
             InvokeAsync(StateHasChanged);
         };
 
-        _serverLoad = _statManager.GetServerLoad();
+        _playerTrend = _statManager.GetPlayerTrend();
     }
 }

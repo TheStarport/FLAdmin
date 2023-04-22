@@ -7,5 +7,7 @@ public interface IStatsManager
 	void UpdateServerStats(ServerStats stats);
 	IEnumerable<Usage> GetMemoryUsage();
 	IEnumerable<Load> GetServerLoad();
+	IEnumerable<PlayerInfo> GetOnlinePlayers();
+	IEnumerable<KeyValuePair<string, uint>> GetPlayerTrend();
 	void Clear();
 }
