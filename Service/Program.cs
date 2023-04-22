@@ -7,8 +7,7 @@ using Business.Messaging;
 using Common.Auth;
 using Common.Managers;
 using Common.Messaging;
-using Common.State.MemoryUsage;
-using Common.State.ServerLoad;
+using Common.State.ServerStats;
 using Fluxor;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.IdentityModel.Logging;
@@ -48,7 +47,7 @@ if (!builder.Configuration.GetValue<bool>("DisableMessaging"))
 	builder.Services.AddHostedService<ServerStatsListener>();
 }
 
-var currentAssembly = typeof(ServerLoadState).Assembly;
+var currentAssembly = typeof(ServerStatsState).Assembly;
 builder.Services.AddFluxor(options =>
 {
 	options.ScanAssemblies(currentAssembly);
