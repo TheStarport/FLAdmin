@@ -73,6 +73,9 @@ builder.Services.AddScoped<AuthenticationStateProvider>(x => x.GetRequiredServic
 builder.Services.AddSingleton<IServerLifetime, ServerLifetimeService>();
 builder.Services.AddHostedService(x => (x.GetRequiredService<IServerLifetime>() as ServerLifetimeService)!);
 
+// Extend the shutdown timer to allow FLServer time to gracefully shutdown
+builder.Services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(10));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

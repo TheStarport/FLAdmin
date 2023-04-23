@@ -10,15 +10,46 @@
     <nav class="flex-column-fill">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="console">
-                <span class="oi oi-terminal" aria-hidden="true"></span> Console
+                <span class="oi oi-home" aria-hidden="true"></span> Dashboard
             </NavLink>
         </div>
         <AuthorizeView>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="console">
+                    <span class="oi oi-terminal" aria-hidden="true"></span> Console
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="players">
+                    <span class="oi oi-people" aria-hidden="true"></span> Players
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="logs">
+                    <span class="oi oi-inbox" aria-hidden="true"></span> Chat Logs
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="bans">
+                    <span class="oi oi-wrench" aria-hidden="true"></span> Bans
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="scripts">
+                    <span class="oi oi-inbox" aria-hidden="true"></span> Scripts
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin">
+                    <span class="oi oi-key" aria-hidden="true"></span> Admin Management
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="admin">
+                    <span class="oi oi-key" aria-hidden="true"></span> Configuration
+                </NavLink>
+            </div>
+
             <div class="push-to-bottom nav-item px-3">
                 <Service.Components.Auth.LogOut />
             </div>
