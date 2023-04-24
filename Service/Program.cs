@@ -164,7 +164,7 @@ static void RemoveConsoleCloseButton()
 }
 
 // Explicit process exit as some consoles being closed do not trigger automatic shutdown steps
-void OnProcessExit(IServiceProvider services)
+static void OnProcessExit(IServiceProvider services)
 {
 	List<Task> shutdownTasks = new();
 	foreach (var service in services.GetServices<IHostedService>())
