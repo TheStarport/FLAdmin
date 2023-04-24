@@ -35,8 +35,6 @@ if (goodToGo is not ErrorReason.NoError)
 	Environment.Exit((int)goodToGo);
 }
 
-RemoveConsoleCloseButton();
-
 builder.Services.AddSingleton<IKeyProvider, KeyProvider>();
 builder.Services.AddSingleton<IPersistantRoleProvider, PersistantRoleProvider>();
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
@@ -144,23 +142,6 @@ static ErrorReason PrelaunchChecks(IConfiguration config)
 	}
 
 	return ErrorReason.NoError;
-}
-
-static void RemoveConsoleCloseButton()
-{
-	const int byCommand = 0x00000000;
-	const int scClose = 0xF060;
-
-	[DllImport("user32.dll")]
-	static extern int DeleteMenu(IntPtr hMenu, int nPosition, int wFlags);
-
-	[DllImport("user32.dll")]
-	static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
-
-	[DllImport("kernel32.dll", ExactSpelling = true)]
-	static extern IntPtr GetConsoleWindow();
-
-	_ = DeleteMenu(GetSystemMenu(GetConsoleWindow(), false), scClose, byCommand);
 }
 
 // Explicit process exit as some consoles being closed do not trigger automatic shutdown steps
