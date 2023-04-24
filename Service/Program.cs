@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Principal;
 using Blazored.LocalStorage;
@@ -33,6 +34,8 @@ if (goodToGo is not ErrorReason.NoError)
 {
 	Environment.Exit((int)goodToGo);
 }
+
+RemoveConsoleCloseButton();
 
 builder.Services.AddSingleton<IKeyProvider, KeyProvider>();
 builder.Services.AddSingleton<IPersistantRoleProvider, PersistantRoleProvider>();
@@ -77,6 +80,8 @@ builder.Services.AddHostedService(x => (x.GetRequiredService<IServerLifetime>() 
 builder.Services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(10));
 
 var app = builder.Build();
+
+AppDomain.CurrentDomain.ProcessExit += new EventHandler((_, _) => OnProcessExit(app.Services));
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -139,4 +144,33 @@ static ErrorReason PrelaunchChecks(IConfiguration config)
 	}
 
 	return ErrorReason.NoError;
+}
+
+static void RemoveConsoleCloseButton()
+{
+	const int byCommand = 0x00000000;
+	const int scClose = 0xF060;
+
+	[DllImport("user32.dll")]
+	static extern int DeleteMenu(IntPtr hMenu, int nPosition, int wFlags);
+
+	[DllImport("user32.dll")]
+	static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+	[DllImport("kernel32.dll", ExactSpelling = true)]
+	static extern IntPtr GetConsoleWindow();
+
+	_ = DeleteMenu(GetSystemMenu(GetConsoleWindow(), false), scClose, byCommand);
+}
+
+// Explicit process exit as some consoles being closed do not trigger automatic shutdown steps
+void OnProcessExit(IServiceProvider services)
+{
+	List<Task> shutdownTasks = new();
+	foreach (var service in services.GetServices<IHostedService>())
+	{
+		shutdownTasks.Add(service.StopAsync(CancellationToken.None));
+	}
+
+	Task.WaitAll(shutdownTasks.ToArray());
 }
