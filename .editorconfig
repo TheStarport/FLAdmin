@@ -90,6 +90,11 @@ indent_style = tab
 [*.{cs,csx,cake,vb,vbx}]
 # Default Severity for all .NET Code Style rules below
 dotnet_analyzer_diagnostic.severity = warning
+indent_style = tab
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+end_of_line = lf
 
 ##########################################
 # Language Rules
@@ -211,7 +216,7 @@ dotnet_diagnostic.IDE0059.severity = suggestion
 # https://docs.microsoft.com/dotnet/fundamentals/code-analysis/style-rules/formatting-rules#net-formatting-rules
 [*.{cs,csx,cake,vb,vbx}]
 # Organize using directives
-dotnet_sort_system_directives_first = true
+dotnet_sort_system_directives_first = true:suggestion
 dotnet_separate_import_directive_groups = false
 # Dotnet namespace options
 dotnet_style_namespace_match_folder = true:suggestion
@@ -392,7 +397,7 @@ dotnet_naming_rule.sanity_check_uncovered_field_case_rule.style = internal_error
 dotnet_naming_rule.sanity_check_uncovered_field_case_rule.severity = error
 
 dotnet_naming_rule.private_members_with_underscore.symbols  = private_fields
-dotnet_naming_rule.private_members_with_underscore.style    = prefix_underscore
+dotnet_naming_rule.private_members_with_underscore.style = prefix_underscore
 dotnet_naming_rule.private_members_with_underscore.severity = suggestion
 
 dotnet_naming_symbols.private_fields.applicable_kinds           = field
