@@ -58,6 +58,7 @@
         }
 
         render = true;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task<bool> SignIn(bool automatic)

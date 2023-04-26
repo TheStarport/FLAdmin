@@ -162,4 +162,11 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 		_dispatcher.Dispatch(new ModalInfoAction("Admin user created! You can login with the following token (make sure to save it!): \n\n" + admin.Token));
 		SaveUsers();
 	}
+
+	// Get all users back but remove their tokens
+	public IEnumerable<AdminUser> GetUsers() => _users.Select(x =>
+	{
+		x.Token = "";
+		return x;
+	});
 }

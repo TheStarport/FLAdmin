@@ -1,6 +1,7 @@
 namespace Common.Auth;
 public interface IPersistantRoleProvider
 {
+	IEnumerable<AdminUser> GetUsers();
 	AdminUser? GetUser(string name);
 	void LoadUsers();
 	void SaveUsers();
