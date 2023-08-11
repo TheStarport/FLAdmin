@@ -1,10 +1,12 @@
 using System.Security.AccessControl;
 using System.Security.Principal;
+using System.Text.Json;
 using Blazored.LocalStorage;
-using Business.Auth;
-using Business.Managers;
-using Business.Messaging;
+using Logic.Auth;
+using Logic.Managers;
+using Logic.Messaging;
 using Common.Auth;
+using Common.Configuration;
 using Common.Managers;
 using Common.Messaging;
 using Common.State.ServerStats;
@@ -15,11 +17,7 @@ using Radzen;
 using Service;
 using Service.Services;
 using Service.Services.Listeners;
-
-if (!OperatingSystem.IsWindows())
-{
-	throw new InvalidOperationException("FLAdmin is meant to be run on Windows only.");
-}
+using System.Diagnostics;
 
 // Debug only options
 #if DEBUG
@@ -28,18 +26,15 @@ IdentityModelEventSource.ShowPII = true;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var goodToGo = PrelaunchChecks(builder.Configuration);
-if (goodToGo is not ErrorReason.NoError)
-{
-	Environment.Exit((int)goodToGo);
-}
+var config = FLAdminConfiguration.Get();
+builder.Services.AddSingleton(_ => config!);
 
 builder.Services.AddSingleton<IKeyProvider, KeyProvider>();
 builder.Services.AddSingleton<IPersistantRoleProvider, PersistantRoleProvider>();
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
 builder.Services.AddSingleton<IStatsManager, StatsManager>();
 
-if (!builder.Configuration.GetValue<bool>("DisableMessaging"))
+if (config.Messaging.EnableMessaging)
 {
 	builder.Services.AddSingleton<IExchangeSubscriber, ExchangeSubscriber>();
 	builder.Services.AddSingleton<IChannelProvider, ChannelProvider>();
@@ -78,6 +73,14 @@ builder.Services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.
 
 var app = builder.Build();
 
+var goodToGo = PrelaunchChecks(config);
+if (goodToGo is not ErrorReason.NoError)
+{
+	Console.WriteLine("Prelaunch checks failed. Reason: " + goodToGo.ToString());
+	Debugger.Break();
+	return (int)goodToGo;
+}
+
 AppDomain.CurrentDomain.ProcessExit += new EventHandler((_, _) => OnProcessExit(app.Services));
 
 // Configure the HTTP request pipeline.
@@ -99,41 +102,12 @@ app.MapFallbackToPage("/_Host");
 
 app.Run();
 
-static bool DirectoryHasPermission(string directoryPath, FileSystemRights accessRight)
+return 0;
+
+static ErrorReason PrelaunchChecks(FLAdminConfiguration config)
 {
-	if (string.IsNullOrEmpty(directoryPath))
-	{
-		return false;
-	}
-
-	try
-	{
-		var rules = new DirectoryInfo(directoryPath).GetAccessControl().GetAccessRules(true, true, typeof(SecurityIdentifier));
-		var identity = WindowsIdentity.GetCurrent();
-		foreach (FileSystemAccessRule rule in rules)
-		{
-			if (identity.Groups!.Contains(rule.IdentityReference) && (accessRight & rule.FileSystemRights) == accessRight && rule.AccessControlType == AccessControlType.Allow)
-			{
-				return true;
-			}
-		}
-	}
-	catch
-	{
-		// No need to handle
-	}
-	return false;
-}
-
-static ErrorReason PrelaunchChecks(IConfiguration config)
-{
-	var flDirectory = Environment.ExpandEnvironmentVariables(config.GetValue<string>("FreelancerPath") ?? "");
-
-	if (!DirectoryHasPermission(flDirectory, FileSystemRights.FullControl) ||
-		!DirectoryHasPermission(Path.Combine(flDirectory, "EXE"), FileSystemRights.FullControl))
-	{
-		return ErrorReason.MissingDirectoryPermissions;
-	}
+	var flDirectory = Environment.ExpandEnvironmentVariables(config.Server.FreelancerPath);
+	var e = Path.Combine(flDirectory, "EXE/FLServer.exe");
 
 	if (!File.Exists(Path.Combine(flDirectory, "EXE/FLServer.exe")))
 	{

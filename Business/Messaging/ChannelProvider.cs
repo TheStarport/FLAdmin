@@ -1,6 +1,7 @@
-namespace Business.Messaging;
+namespace Logic.Messaging;
 using System.Collections.Concurrent;
 using System.Configuration;
+using Common.Configuration;
 using Common.Messaging;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
@@ -12,11 +13,12 @@ public sealed class ChannelProvider : IChannelProvider, IDisposable
 	private readonly object _connectionLock = new();
 	private readonly IDictionary<string, IModel> _channels;
 
-	public ChannelProvider(IConfiguration configuration)
+	public ChannelProvider(FLAdminConfiguration config)
 	{
-		if (!Uri.TryCreate(configuration.GetConnectionString("Messaging"), UriKind.Absolute, out var uri))
+		string constructedUri = $"amqp://{config.Messaging.Username}:{config.Messaging.Password}@{config.Messaging.HostName}:{config.Messaging.Port}";
+		if (!Uri.TryCreate(constructedUri, UriKind.Absolute, out var uri))
 		{
-			throw new ConfigurationErrorsException("ConnectionString::Messaging was not found within appsettings.json");
+			throw new ConfigurationErrorsException("ConnectionString::Messaging was not found within config.json or it was not a valid URI.");
 		}
 
 		_connectionFactory = new ConnectionFactory

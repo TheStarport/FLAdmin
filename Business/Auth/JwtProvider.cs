@@ -1,4 +1,4 @@
-namespace Business.Auth;
+namespace Logic.Auth;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Common.Auth;

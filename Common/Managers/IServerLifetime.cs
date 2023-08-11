@@ -2,8 +2,8 @@ namespace Common.Managers;
 
 public interface IServerLifetime
 {
+	void Start();
 	int GetMessageCount();
 	IEnumerable<string> GetConsoleMessages(int page);
-	void AddLog(string message);
 	void SendCommandToConsole(string command);
 }

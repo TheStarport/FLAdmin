@@ -1,4 +1,4 @@
-namespace Business.Managers;
+namespace Logic.Managers;
 
 using System.Collections.Generic;
 using Common.Managers;

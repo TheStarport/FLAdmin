@@ -1,4 +1,4 @@
-namespace Business.Messaging;
+namespace Logic.Messaging;
 using System.Text;
 using System.Text.Json;
 using Common.Messaging;

@@ -1,4 +1,4 @@
-namespace Business.Auth;
+namespace Logic.Auth;
 using System.Security.Cryptography;
 using Common.Auth;
 using Microsoft.Extensions.Logging;

@@ -1,4 +1,4 @@
-namespace Business.Messaging;
+namespace Logic.Messaging;
 using Common.Messaging;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;

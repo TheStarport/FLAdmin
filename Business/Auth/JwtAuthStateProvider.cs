@@ -1,4 +1,4 @@
-namespace Business.Auth;
+namespace Logic.Auth;
 using System.Security.Claims;
 using System.Text.Json;
 using Common.Auth;
