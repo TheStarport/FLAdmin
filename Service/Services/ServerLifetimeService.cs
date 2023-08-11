@@ -79,13 +79,28 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 
 		var path = Environment.ExpandEnvironmentVariables(_config.Server.FreelancerPath);
 
+		var exePath = Path.Combine(path, "EXE");
+		var fileNamePath = Path.Combine(exePath, "FLServer.exe");
+
+		if (_config.Server.CloseFLServerIfAlreadyOpen)
+		{
+			var activeProcessess = Process.GetProcessesByName(fileNamePath);
+			if (activeProcessess is not null && activeProcessess.Length > 0)
+			{
+				foreach (var process in activeProcessess)
+				{
+					process.Close();
+				}
+			}
+		}
+
 		ProcessStartInfo startInfo = new()
 		{
 			RedirectStandardInput = true,
 			RedirectStandardOutput = true,
 			Arguments = $"-noconsole /p{_config.Server.Port} /c",
-			WorkingDirectory = Path.Combine(path, "EXE"),
-			FileName = Path.Combine(path, "EXE", "FLServer.exe")
+			WorkingDirectory = exePath,
+			FileName = fileNamePath
 		};
 
 		try

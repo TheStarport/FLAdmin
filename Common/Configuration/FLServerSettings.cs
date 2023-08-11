@@ -7,6 +7,7 @@ public class FLServerSettings
 	public string FreelancerPath { get; set; } = string.Empty;
 	public bool UseFLHook { get; set; } = true;
 	public bool CheckForFLHookUpdates { get; set; } = true;
-	public bool AutoDownloadLatestFLHook { get; set; }
+	public bool AutoDownloadLatestFLHook { get; set; } = true;
+	public bool CloseFLServerIfAlreadyOpen { get; set; } = true;
 	public string FLHookRepositry { get; set; } = "https://github.com/TheStarport/FLHook";
 }
