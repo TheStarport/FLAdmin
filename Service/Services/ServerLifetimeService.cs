@@ -34,7 +34,7 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 			if (!_readyToStart && !_config.Server.AutoStartFLServer)
 			{
 				// Await or we block the main thread from starting
-				await Task.Delay(1000);
+				await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
 				continue;
 			}
 
@@ -45,7 +45,7 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 					StartProcess();
 				}
 
-				await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+				await _flServer!.WaitForExitAsync(stoppingToken);
 			}
 			finally
 			{
@@ -61,11 +61,13 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 	}
 
 	public void SendCommandToConsole(string command) => _flServer?.StandardInput.WriteLine(command);
+
 	public IEnumerable<string> GetConsoleMessages(int page) => _consoleMessages
 		.AsEnumerable()
 		.Reverse()
 		.Skip((page - 1) * 50)
 		.Take(50);
+
 	public int GetMessageCount() => _consoleMessages.Count;
 
 	private void StartProcess()

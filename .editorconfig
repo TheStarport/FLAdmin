@@ -36,6 +36,14 @@ csharp_style_expression_bodied_local_functions = true:warning
 csharp_style_throw_expression = true:warning
 csharp_style_prefer_null_check_over_type_check = true:warning
 csharp_indent_labels = no_change
+csharp_prefer_simple_default_expression = true:warning
+csharp_style_prefer_local_over_anonymous_function = true:suggestion
+csharp_style_prefer_index_operator = true:warning
+csharp_style_prefer_range_operator = true:warning
+csharp_style_implicit_object_creation_when_type_is_apparent = true:warning
+csharp_style_prefer_utf8_string_literals = true:suggestion
+csharp_style_prefer_tuple_swap = true:suggestion
+csharp_style_inlined_variable_declaration = true:warning
 
 ##########################################
 # File Extension Settings
