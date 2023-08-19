@@ -8,10 +8,10 @@ public class FLAdminConfiguration
 	public void Save()
 	{
 		var path = Path.Combine(Environment.GetFolderPath(
-			Environment.SpecialFolder.LocalApplicationData), "FLAdmin", "configuration.json");
+			Environment.SpecialFolder.LocalApplicationData), "FLAdmin", "configuration.json")!;
 		if (!Directory.Exists(path))
 		{
-			Directory.CreateDirectory(Path.GetFileNameWithoutExtension(path));
+			_ = Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 		}
 		File.WriteAllText(path,
 			JsonSerializer.Serialize<FLAdminConfiguration>(this, new JsonSerializerOptions()
