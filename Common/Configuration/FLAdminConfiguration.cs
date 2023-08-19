@@ -5,12 +5,21 @@ using System.Text.Json;
 [Serializable]
 public class FLAdminConfiguration
 {
-	public void Save() => File.WriteAllText(Path.Combine(Environment.GetFolderPath(
-		Environment.SpecialFolder.LocalApplicationData), "FLAdmin", "configuration.json"), JsonSerializer.Serialize<FLAdminConfiguration>(this, new JsonSerializerOptions()
+	public void Save()
+	{
+		var path = Path.Combine(Environment.GetFolderPath(
+			Environment.SpecialFolder.LocalApplicationData), "FLAdmin", "configuration.json");
+		if (!Directory.Exists(path))
 		{
-			PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-			WriteIndented = true
-		}));
+			Directory.CreateDirectory(Path.GetFileNameWithoutExtension(path));
+		}
+		File.WriteAllText(path,
+			JsonSerializer.Serialize<FLAdminConfiguration>(this, new JsonSerializerOptions()
+			{
+				PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+				WriteIndented = true
+			}));
+	}
 
 	public static FLAdminConfiguration Load()
 	{
