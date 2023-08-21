@@ -17,6 +17,7 @@ using Radzen;
 using Service;
 using Service.Services;
 using Service.Services.Listeners;
+using Service.Services.RedisClientService;
 using System.Diagnostics;
 
 // Debug only options
@@ -33,6 +34,8 @@ builder.Services.AddSingleton<IKeyProvider, KeyProvider>();
 builder.Services.AddSingleton<IPersistantRoleProvider, PersistantRoleProvider>();
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
 builder.Services.AddSingleton<IStatsManager, StatsManager>();
+
+builder.Services.AddSingleton<IRedisClient, RedisClientService>();
 
 if (config.Messaging.EnableMessaging)
 {

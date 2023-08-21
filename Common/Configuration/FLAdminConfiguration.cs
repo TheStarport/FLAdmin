@@ -64,4 +64,5 @@ public class FLAdminConfiguration
 
 	public FLServerSettings Server { get; set; } = new();
 	public MessagingSettings Messaging { get; set; } = new();
+	public RedisSettings Redis { get; set; } = new();
 }
