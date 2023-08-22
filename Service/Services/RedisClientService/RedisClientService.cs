@@ -1,22 +1,51 @@
 namespace Service.Services.RedisClientService;
 using Common.Configuration;
+using NRedisStack;
+using NRedisStack.RedisStackCommands;
 using StackExchange.Redis;
 
 public class RedisClientService : IRedisClient
 {
-	private readonly IDatabase _database;
+	private readonly FLAdminConfiguration _adminConfiguration;
 
-	public RedisClientService(FLAdminConfiguration adminConfiguration)
+	private ConnectionMultiplexer? _connection;
+
+	public RedisClientService(FLAdminConfiguration adminConfiguration) => _adminConfiguration = adminConfiguration;
+
+	private void ConnectIfNecessary()
 	{
-		var redis = ConnectionMultiplexer.Connect($"{adminConfiguration.Redis.HostName}:{adminConfiguration.Redis.Port}");
+		if (_connection is { IsConnected: true })
+		{
+			return;
+		}
 
-		_database = redis.GetDatabase();
+		Connect(string.Empty);
 	}
 
-	public void HashSet(RedisKey key, HashEntry[] hashEntries) => _database.HashSet(key, hashEntries);
-	public RedisValue HashGet(RedisKey key, RedisValue hashValue) => _database.HashGet(key, hashValue);
+	private JsonCommands GetJsonCommands(int dbIndex = 0)
+	{
+		ConnectIfNecessary();
 
-	public RedisValue[] HashGet(RedisKey key, RedisValue[] hashValues) => _database.HashGet(key, hashValues);
+		var db = _connection?.GetDatabase(dbIndex);
 
-	public HashEntry[] HashGetAll(RedisKey key) => _database.HashGetAll(key);
+		return db!.JSON();
+	}
+
+	public void Connect(string configuration)
+	{
+		if (string.IsNullOrEmpty(configuration) || string.IsNullOrWhiteSpace(configuration))
+		{
+			_connection = ConnectionMultiplexer.Connect($"{_adminConfiguration.Redis.HostName}:{_adminConfiguration.Redis.Port}");
+
+			return;
+		}
+
+		_connection = ConnectionMultiplexer.Connect(configuration);
+	}
+
+	public bool SetValue(string key, object objectToStore, int dbIndex = 0) => GetJsonCommands(dbIndex).Set(key, "$", objectToStore);
+
+	public T? GetValue<T>(string key, int dbIndex = 0) => GetJsonCommands(dbIndex).Get<T>(key);
+
+	public void DeleteValue(string key, int dbIndex = 0) => GetJsonCommands(dbIndex).Del(key);
 }
