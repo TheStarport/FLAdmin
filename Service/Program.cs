@@ -18,6 +18,9 @@ using Service;
 using Service.Services;
 using Service.Services.Listeners;
 using System.Diagnostics;
+using Common.Jobs;
+using Logic.Jobs;
+using Quartz;
 
 // Debug only options
 #if DEBUG
@@ -33,6 +36,7 @@ builder.Services.AddSingleton<IKeyProvider, KeyProvider>();
 builder.Services.AddSingleton<IPersistantRoleProvider, PersistantRoleProvider>();
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
 builder.Services.AddSingleton<IStatsManager, StatsManager>();
+builder.Services.AddSingleton<IJobManager, JobManager>();
 
 if (config.Messaging.EnableMessaging)
 {
@@ -48,6 +52,12 @@ builder.Services.AddFluxor(options =>
 {
 	options.ScanAssemblies(currentAssembly);
 	options.WithLifetime(StoreLifetime.Singleton);
+});
+
+builder.Services.AddQuartzHostedService(x =>
+{
+	x.WaitForJobsToComplete = true;
+	x.AwaitApplicationStarted = true;
 });
 
 builder.Services.AddRazorPages();
