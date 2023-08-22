@@ -3,6 +3,7 @@ using Common.Configuration;
 using NRedisStack;
 using NRedisStack.RedisStackCommands;
 using StackExchange.Redis;
+using System.Text.Json;
 
 public class RedisClientService : IRedisClient
 {
@@ -43,7 +44,26 @@ public class RedisClientService : IRedisClient
 		_connection = ConnectionMultiplexer.Connect(configuration);
 	}
 
-	public bool SetValue(string key, object objectToStore, int dbIndex = 0) => GetJsonCommands(dbIndex).Set(key, "$", objectToStore);
+	public bool SetValue(string key, object objectToStore, int dbIndex = 0)
+	{
+		string serializedObject;
+
+		try
+		{
+			serializedObject = JsonSerializer.Serialize(objectToStore, new JsonSerializerOptions
+			{
+				PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+				WriteIndented = true
+			});
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine($"Unable to serialize object. Reason: {e.Message}");
+			throw;
+		}
+
+		return GetJsonCommands(dbIndex).Set(key,"$",serializedObject);
+	}
 
 	public T? GetValue<T>(string key, int dbIndex = 0) => GetJsonCommands(dbIndex).Get<T>(key);
 
