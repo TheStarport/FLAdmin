@@ -7,5 +7,5 @@ public interface IJobManager
 	public void AddJob(JobGroup group, Job job);
 	public void RemoveJob(JobGroup group, Job job);
 	public void RemoveJobByName(JobGroup group, string name);
-	public void ExecuteTrigger(JobTrigger trigger);
+	public Task ExecuteTrigger(JobTrigger trigger, CancellationToken token);
 }

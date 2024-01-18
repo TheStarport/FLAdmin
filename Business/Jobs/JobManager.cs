@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 public class JobManager : IJobManager
 {
-	private readonly IScheduler _scheduler;
+	private readonly ISchedulerFactory _schedulerFactory;
 	private HashSet<JobGroup> _jobGroups = new();
 
 	private static IReadOnlyDictionary<string, Type> JobTypes => new Dictionary<string, Type>()
@@ -14,9 +14,9 @@ public class JobManager : IJobManager
 		{ RunShellJob.Id, typeof(RunShellJob) },
 	};
 
-	public JobManager(IScheduler scheduler)
+	public JobManager(ISchedulerFactory schedulerFactory)
 	{
-		_scheduler = scheduler;
+		_schedulerFactory = schedulerFactory;
 
 		// TODO: Register all jobs that have cron timers set
 		// TODO: Load jobs from the redis database
@@ -24,7 +24,7 @@ public class JobManager : IJobManager
 
 	public void AddJob(JobGroup group, Job job) => _jobGroups.Add(group);
 
-	public void ExecuteTrigger(JobTrigger trigger)
+	public async Task ExecuteTrigger(JobTrigger trigger, CancellationToken token)
 	{
 		foreach (var group in _jobGroups)
 		{
@@ -54,7 +54,8 @@ public class JobManager : IJobManager
 					.StartNow()
 					.Build();
 
-				_ = _scheduler.ScheduleJob(builtJob, triggerNow);
+				var scheduler = await _schedulerFactory.GetScheduler(token);
+				_ = await scheduler.ScheduleJob(builtJob, triggerNow, token);
 			}
 		}
 	}

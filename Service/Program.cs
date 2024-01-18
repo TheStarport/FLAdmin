@@ -54,6 +54,7 @@ builder.Services.AddFluxor(options =>
 	options.WithLifetime(StoreLifetime.Singleton);
 });
 
+builder.Services.AddQuartz();
 builder.Services.AddQuartzHostedService(x =>
 {
 	x.WaitForJobsToComplete = true;
@@ -86,12 +87,12 @@ var app = builder.Build();
 var goodToGo = PrelaunchChecks(config);
 if (goodToGo is not ErrorReason.NoError)
 {
-	Console.WriteLine("Prelaunch checks failed. Reason: " + goodToGo.ToString());
+	Console.WriteLine("Prelaunch checks failed. Reason: " + goodToGo);
 	Debugger.Break();
 	return (int)goodToGo;
 }
 
-AppDomain.CurrentDomain.ProcessExit += new EventHandler((_, _) => OnProcessExit(app.Services));
+AppDomain.CurrentDomain.ProcessExit += (_, _) => OnProcessExit(app.Services);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
