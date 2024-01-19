@@ -3,35 +3,25 @@ namespace Service.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq.Dynamic.Core.Tokenizer;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Configuration;
 using Common.Managers;
 using Common.State.ServerEvents;
 using Fluxor;
+using Serilog.Context;
 
-public class ServerLifetimeService : BackgroundService, IServerLifetime
+public class ServerLifetimeService(ILogger logger, FLAdminConfiguration configuration, IDispatcher dispatcher) : BackgroundService, IServerLifetime
 {
 	private Process? _flServer;
-	private readonly ILogger<ServerLifetimeService> _logger;
-	private readonly FLAdminConfiguration _config;
-	private readonly IDispatcher _dispatcher;
 	private readonly List<string> _consoleMessages = new();
-	private bool _readyToStart = false;
-
-	public ServerLifetimeService(ILogger<ServerLifetimeService> logger, FLAdminConfiguration configuration, IDispatcher dispatcher)
-	{
-		_logger = logger;
-		_config = configuration;
-		_dispatcher = dispatcher;
-	}
+	private bool _readyToStart;
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 	{
 		while (!stoppingToken.IsCancellationRequested)
 		{
-			if (!_readyToStart && !_config.Server.AutoStartFLServer)
+			if (!_readyToStart && !configuration.Server.AutoStartFLServer)
 			{
 				// Await or we block the main thread from starting
 				await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
@@ -72,22 +62,22 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 
 	private void StartProcess()
 	{
-		if (string.IsNullOrWhiteSpace(_config.Server.FreelancerPath))
+		if (string.IsNullOrWhiteSpace(configuration.Server.FreelancerPath))
 		{
 			return;
 		}
 
-		var path = Environment.ExpandEnvironmentVariables(_config.Server.FreelancerPath);
+		var path = Environment.ExpandEnvironmentVariables(configuration.Server.FreelancerPath);
 
 		var exePath = Path.Combine(path, "EXE");
 		var fileNamePath = Path.Combine(exePath, "FLServer.exe");
 
-		if (_config.Server.CloseFLServerIfAlreadyOpen)
+		if (configuration.Server.CloseFLServerIfAlreadyOpen)
 		{
-			var activeProcessess = Process.GetProcessesByName(fileNamePath);
-			if (activeProcessess is not null && activeProcessess.Length > 0)
+			var activeProcesses = Process.GetProcessesByName(fileNamePath);
+			if (activeProcesses.Length > 0)
 			{
-				foreach (var process in activeProcessess)
+				foreach (var process in activeProcesses)
 				{
 					process.Close();
 				}
@@ -98,7 +88,7 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 		{
 			RedirectStandardInput = true,
 			RedirectStandardOutput = true,
-			Arguments = $"-noconsole /p{_config.Server.Port} /c",
+			Arguments = $"-noconsole /p{configuration.Server.Port} /c",
 			WorkingDirectory = exePath,
 			FileName = fileNamePath
 		};
@@ -111,12 +101,12 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 				throw new InvalidOperationException("Unable to start FLServer");
 			}
 
-			_flServer.OutputDataReceived += (object _, DataReceivedEventArgs args) => AddLog(args?.Data ?? "");
+			_flServer.OutputDataReceived += (_, args) => AddLog(args?.Data ?? "");
 			_flServer.BeginOutputReadLine();
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "Failed to start process");
+			logger.LogError(ex, "Failed to start process");
 		}
 	}
 
@@ -127,8 +117,10 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 			return;
 		}
 
+		using var prop = LogContext.PushProperty("FLHook", true);
+		logger.Log(LogLevel.Information, message);
 		_consoleMessages.Add(message);
-		_dispatcher.Dispatch(new ConsoleMessageAction(message));
+		dispatcher.Dispatch(new ConsoleMessageAction(message));
 	}
 
 	public void Start() => _readyToStart = true;

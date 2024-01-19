@@ -1,10 +1,22 @@
 namespace Common.Configuration;
 
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 [Serializable]
+// ReSharper disable once InconsistentNaming
 public class FLAdminConfiguration
 {
+	private static readonly JsonSerializerOptions SerializerOptions = new()
+	{
+		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+		WriteIndented = true,
+		PropertyNameCaseInsensitive = true,
+		AllowTrailingCommas = true,
+		IncludeFields = true,
+		DefaultIgnoreCondition = JsonIgnoreCondition.Never
+	};
+
 	public void Save()
 	{
 		var path = Path.Combine(Environment.GetFolderPath(
@@ -14,11 +26,7 @@ public class FLAdminConfiguration
 			_ = Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 		}
 		File.WriteAllText(path,
-			JsonSerializer.Serialize<FLAdminConfiguration>(this, new JsonSerializerOptions()
-			{
-				PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-				WriteIndented = true
-			}));
+			JsonSerializer.Serialize(this, SerializerOptions));
 	}
 
 	public static FLAdminConfiguration Load()
@@ -28,19 +36,16 @@ public class FLAdminConfiguration
 			var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FLAdmin", "configuration.json");
 			if (File.Exists(path))
 			{
-				_instance = JsonSerializer.Deserialize<FLAdminConfiguration>(File.ReadAllText(path), new JsonSerializerOptions()
-				{
-					PropertyNameCaseInsensitive = true,
-					AllowTrailingCommas = true,
-					IncludeFields = true
-				});
+				_instance = JsonSerializer.Deserialize<FLAdminConfiguration>(File.ReadAllText(path), SerializerOptions);
 
-				if (_instance is null)
+				if (_instance is not null)
 				{
-					Console.WriteLine("Error while deserializing configuration. Assuming corrupted file. Regenerating.");
-					_instance = new FLAdminConfiguration();
 					return _instance;
 				}
+
+				Console.WriteLine("Error while deserializing configuration. Assuming corrupted file. Regenerating.");
+				_instance = new FLAdminConfiguration();
+				return _instance;
 			}
 			else
 			{
@@ -62,6 +67,7 @@ public class FLAdminConfiguration
 	public static FLAdminConfiguration Get() => _instance ??= Load();
 	public static void Reset(FLAdminConfiguration? newConfig) => _instance = newConfig ?? new FLAdminConfiguration();
 
+	public LoggingSettings Logging { get; set; } = new();
 	public FLServerSettings Server { get; set; } = new();
 	public MessagingSettings Messaging { get; set; } = new();
 }

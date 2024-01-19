@@ -21,6 +21,10 @@ using System.Diagnostics;
 using Common.Jobs;
 using Logic.Jobs;
 using Quartz;
+using Serilog;
+using Serilog.Events;
+using Serilog.Filters;
+using Serilog.Formatting.Compact;
 
 // Debug only options
 #if DEBUG
@@ -82,12 +86,57 @@ builder.Services.AddHostedService(x => (x.GetRequiredService<IServerLifetime>() 
 // Extend the shutdown timer to allow FLServer time to gracefully shutdown
 builder.Services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(10));
 
+// Handle application logging
+builder.Host.UseSerilog((_, lc) =>
+{
+	var logLevel = config.Logging.EnableDebugLogs ? LogEventLevel.Debug : LogEventLevel.Information;
+	lc.Enrich.FromLogContext();
+	lc.WriteTo.Console(new CompactJsonFormatter(), logLevel);
+
+	// FLAdmin only logs
+	lc.WriteTo.Logger(x =>
+	{
+		var excluding = x.Filter.ByExcluding(Matching.WithProperty("FLHook"));
+		SetupLogConfiguration(excluding, "FLAdmin", config.Logging.LogFileFLAdmin);
+	});
+
+	// FLHook only logs
+	lc.WriteTo.Logger(x =>
+	{
+		var including = x.Filter.ByIncludingOnly(Matching.WithProperty("FLHook"));
+		SetupLogConfiguration(including, "FLHook", config.Logging.LogFileFLHook);
+	});
+
+	// ReSharper disable once SeparateLocalFunctionsWithJumpStatement
+	void SetupLogConfiguration(LoggerConfiguration logger, string tag, string? logFile)
+	{
+		if (!string.IsNullOrWhiteSpace(logFile))
+		{
+			logger.WriteTo.File(new CompactJsonFormatter(), logFile, logLevel);
+		}
+
+		if (!config.Logging.FluentDOptions.Enable)
+		{
+			return;
+		}
+
+		if (string.IsNullOrWhiteSpace(config.Logging.FluentDOptions.UnixSocket))
+		{
+			logger.WriteTo.Fluentd(config.Logging.FluentDOptions.Host, config.Logging.FluentDOptions.Port, tag: tag, restrictedToMinimumLevel: logLevel);
+		}
+		else
+		{
+			logger.WriteTo.Fluentd(config.Logging.FluentDOptions.UnixSocket, logLevel);
+		}
+	}
+});
+
 var app = builder.Build();
 
 var goodToGo = PrelaunchChecks(config);
 if (goodToGo is not ErrorReason.NoError)
 {
-	Console.WriteLine("Prelaunch checks failed. Reason: " + goodToGo);
+	app.Logger.LogCritical("Prelaunch checks failed. Reason: {Reason}", goodToGo);
 	Debugger.Break();
 	return (int)goodToGo;
 }
