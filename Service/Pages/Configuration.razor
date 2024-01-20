@@ -14,6 +14,9 @@
 				<RadzenFormField Text="Freelancer Path" Variant="Variant.Outlined">
 					<RadzenTextBox @bind-Value="@_configuration.Server.FreelancerPath"/>
 				</RadzenFormField>
+				<RadzenFormField Text="Launch Arguments" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Server.LaunchArgs" />
+				</RadzenFormField>
 				<RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
 					<RadzenLabel Text="Auto Start FLServer:"/>
 					<RadzenSwitch @bind-Value="@_configuration.Server.AutoStartFLServer"/>

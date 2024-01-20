@@ -103,7 +103,7 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 		{
 			RedirectStandardInput = true,
 			RedirectStandardOutput = true,
-			Arguments = $"-noconsole /p{_configuration.Server.Port} /c",
+			Arguments = $"-noconsole /p{_configuration.Server.Port} /c {_configuration.Server.LaunchArgs}",
 			WorkingDirectory = exePath,
 			FileName = fileNamePath
 		};

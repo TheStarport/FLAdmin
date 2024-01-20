@@ -101,6 +101,7 @@ public class FLAdminConfiguration
 			UseFLHook = Server.UseFLHook,
 			FLHookRepositry = Server.FLHookRepositry,
 			FreelancerPath = Server.FreelancerPath,
+			LaunchArgs = Server.LaunchArgs,
 			Port = Server.Port,
 		};
 	}
