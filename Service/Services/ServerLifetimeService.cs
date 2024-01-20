@@ -63,7 +63,7 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 	public void SendCommandToConsole(string command) => _flServer?.StandardInput.WriteLine(command);
 	public void Terminate()
 	{
-		_flServer?.CloseMainWindow();
+		_ = (_flServer?.CloseMainWindow());
 		_readyToStart = false;
 	}
 

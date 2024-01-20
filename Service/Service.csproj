@@ -8,14 +8,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
+		<PackageReference Include="Blazored.LocalStorage" Version="4.4.0" />
 		<PackageReference Include="BuildWebCompiler2022" Version="1.14.10" />
-		<PackageReference Include="Fluxor.Blazor.Web" Version="5.7.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="6.0.16" />
-		<PackageReference Include="Quartz" Version="3.7.0" />
-		<PackageReference Include="Quartz.AspNetCore" Version="3.7.0" />
-		<PackageReference Include="RabbitMQ.Client" Version="6.5.0" />
-		<PackageReference Include="Radzen.Blazor" Version="4.10.0" />
+		<PackageReference Include="Fluxor.Blazor.Web" Version="5.9.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.1" />
+		<PackageReference Include="Quartz" Version="3.8.0" />
+		<PackageReference Include="Quartz.AspNetCore" Version="3.8.0" />
+		<PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+		<PackageReference Include="Radzen.Blazor" Version="4.24.1" />
 		<PackageReference Include="Serilog" Version="3.1.1" />
 		<PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
 		<PackageReference Include="Serilog.Formatting.Compact" Version="2.0.0" />
