@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Fluxor" Version="5.9.1" />
+    <PackageReference Include="LibreLancer.Data" Version="0.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="7.2.0" />

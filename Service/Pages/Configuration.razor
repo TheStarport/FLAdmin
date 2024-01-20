@@ -1,8 +1,10 @@
 @page "/configuration"
 @using Common.Configuration;
+@using Common.Freelancer
 @using Common.State.ModalInfo
 @inject FLAdminConfiguration ExistingConfig
 @inject IDispatcher Dispatcher
+@inject IFreelancerDataProvider FreelancerDataProvider
 
 <PageTitle>Configuration</PageTitle>
 
@@ -117,9 +119,16 @@
 
 	private void SaveNewConfig()
 	{
+		var pathChanged = ExistingConfig.Server.FreelancerPath.Equals(_configuration.Server.FreelancerPath, StringComparison.InvariantCultureIgnoreCase);
+
 		_configuration.CopyConfigTo(ExistingConfig);
 		ExistingConfig.Save();
 		Dispatcher.Dispatch(new ModalInfoAction("Configuration saved!"));
+
+		if (pathChanged)
+		{
+			FreelancerDataProvider.Reload();
+		}
 	}
 
 }

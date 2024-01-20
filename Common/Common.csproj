@@ -8,8 +8,13 @@
 
   <ItemGroup>
     <PackageReference Include="Fluxor" Version="5.9.1" />
+    <PackageReference Include="LibreLancer.Data" Version="0.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.1" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Freelancer\" />
   </ItemGroup>
 
 </Project>

@@ -4,6 +4,7 @@ using Logic.Managers;
 using Logic.Messaging;
 using Common.Auth;
 using Common.Configuration;
+using Common.Freelancer;
 using Common.Managers;
 using Common.Messaging;
 using Common.State.ServerStats;
@@ -14,6 +15,7 @@ using Radzen;
 using Service.Services;
 using Service.Services.Listeners;
 using Common.Jobs;
+using Logic.Freelancer;
 using Logic.Jobs;
 using Quartz;
 using Serilog;
@@ -36,6 +38,7 @@ builder.Services.AddSingleton<IPersistentRoleProvider, PersistentRoleProvider>()
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
 builder.Services.AddSingleton<IStatsManager, StatsManager>();
 builder.Services.AddSingleton<IJobManager, JobManager>();
+builder.Services.AddSingleton<IFreelancerDataProvider, FreelancerDataProvider>();
 
 if (config.Messaging.EnableMessaging)
 {
@@ -127,6 +130,9 @@ builder.Host.UseSerilog((_, lc) =>
 });
 
 var app = builder.Build();
+
+// Load freelancer data, if we can
+app.Services.GetRequiredService<IFreelancerDataProvider>().Reload();
 
 AppDomain.CurrentDomain.ProcessExit += (_, _) => OnProcessExit(app.Services);
 
