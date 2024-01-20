@@ -1,7 +1,7 @@
 @using Common.Managers;
 @using Common.State.ServerStats;
-@inject IState<ServerStatsState> _state
-@inject IStatsManager _statManager
+@inject IState<ServerStatsState> State
+@inject IStatsManager StatManager
 
 <RadzenChart>
     <RadzenLineSeries Smooth="false" Data="@_playerTrend" CategoryProperty="Key" Title="Player Count" LineType="LineType.Solid" ValueProperty="Value">
@@ -19,12 +19,12 @@
     {
         base.OnInitialized();
 
-        _state.StateChanged += (_, _) =>
+        State.StateChanged += (_, _) =>
         {
-            _playerTrend = _statManager.GetPlayerTrend();
+            _playerTrend = StatManager.GetPlayerTrend();
             InvokeAsync(StateHasChanged);
         };
 
-        _playerTrend = _statManager.GetPlayerTrend();
+        _playerTrend = StatManager.GetPlayerTrend();
     }
 }

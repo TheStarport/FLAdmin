@@ -3,5 +3,5 @@ using RabbitMQ.Client;
 
 public interface IChannelProvider
 {
-	public IModel ProvideChannel(string queueName);
+	public IModel? ProvideChannel(string queueName);
 }

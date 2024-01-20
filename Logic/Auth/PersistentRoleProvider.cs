@@ -6,15 +6,21 @@ using Common.State.ModalInfo;
 using Fluxor;
 using Microsoft.Extensions.Logging;
 
-public class PersistantRoleProvider : IPersistantRoleProvider
+public class PersistentRoleProvider : IPersistentRoleProvider
 {
-	private readonly ILogger<PersistantRoleProvider> _logger;
+	private readonly ILogger<PersistentRoleProvider> _logger;
 	private readonly IJwtProvider _provider;
 	private readonly IDispatcher _dispatcher;
 	private List<AdminUser> _users = new();
 	private readonly string _path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FLAdmin", "users.json");
 
-	public PersistantRoleProvider(ILogger<PersistantRoleProvider> logger, IJwtProvider provider, IDispatcher dispatcher)
+	private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+	{
+		Converters = { new JsonStringEnumConverter() },
+		WriteIndented = true
+	};
+
+	public PersistentRoleProvider(ILogger<PersistentRoleProvider> logger, IJwtProvider provider, IDispatcher dispatcher)
 	{
 		_logger = logger;
 		_provider = provider;
@@ -22,7 +28,7 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 		LoadUsers();
 	}
 
-	public AdminUser? GetUser(string name) => _users.FirstOrDefault(x => x.Name == name);
+	public AdminUser? GetUser(string name) => _users.Find(x => x.Name == name);
 
 	public void LoadUsers()
 	{
@@ -34,26 +40,13 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 				info.Directory.Create();
 			}
 
-			using var file = File.Open(_path, FileMode.OpenOrCreate);
-			if (file is null)
-			{
-				throw new IOException("Unable to load or read users.json");
-			}
+			using var file = File.Open(_path, FileMode.OpenOrCreate) ?? throw new IOException("Unable to load or read users.json");
 
-			_users = JsonSerializer.Deserialize<AdminUser[]>(file, new JsonSerializerOptions()
-			{
-				Converters =
-				{
-					new JsonStringEnumConverter(),
-				}
-			})!.ToList();
+			_users = JsonSerializer.Deserialize<AdminUser[]>(file, JsonSerializerOptions)!.ToList();
+
 			file.Close();
 
-			if (!_users.Any())
-			{
-				GenerateDefaultAdminUser();
-			}
-			else
+			if (_users.Find(user => user.Name is "Admin") is not null)
 			{
 				// Ensure the roles of the admin user are always up to date!
 				UpdateRoles("Admin", Enum.GetValues<Role>());
@@ -63,7 +56,7 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 		{
 			// It's bad, lets purge and start again.
 			_logger.LogError(ex, "Unable to read user.json or was in wrong format.");
-			GenerateDefaultAdminUser();
+			GenerateDefaultAdminUserIfNotExists();
 			File.WriteAllText(_path, JsonSerializer.Serialize(_users));
 		}
 	}
@@ -72,21 +65,14 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 	{
 		try
 		{
-			var jsonString = JsonSerializer.Serialize(_users, new JsonSerializerOptions()
-			{
-				WriteIndented = true,
-				Converters =
-				{
-					new JsonStringEnumConverter()
-				}
-			});
+			var jsonString = JsonSerializer.Serialize(_users, JsonSerializerOptions);
 
 			File.WriteAllText(_path, jsonString);
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
 			_dispatcher.Dispatch(new ModalInfoAction($"Unable to save users to disk", true));
-			_logger.LogError("Unable to save users to user.json!");
+			_logger.LogError(ex, "Unable to save users to user.json!");
 		}
 	}
 
@@ -148,8 +134,13 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 		SaveUsers();
 	}
 
-	private void GenerateDefaultAdminUser()
+	public bool GenerateDefaultAdminUserIfNotExists()
 	{
+		if (_users.Find(user => user.Name is "Admin") is not null)
+		{
+			return false;
+		}
+
 		var admin = new AdminUser()
 		{
 			Name = "Admin",
@@ -159,8 +150,16 @@ public class PersistantRoleProvider : IPersistantRoleProvider
 
 		_users.Add(admin);
 
-		_dispatcher.Dispatch(new ModalInfoAction("Admin user created! You can login with the following token (make sure to save it!): \n\n" + admin.Token));
+		Task.Run(async () =>
+		{
+			// Delay one second before displaying notification 
+			await Task.Delay(TimeSpan.FromSeconds(1));
+			_dispatcher.Dispatch(new ModalInfoAction(
+				"Admin user created! You can login with the following token (make sure to save it!): \n\n" +
+				admin.Token));
+		});
 		SaveUsers();
+		return true;
 	}
 
 	// Get all users back but remove their tokens

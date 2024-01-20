@@ -9,8 +9,12 @@ public class LoggingSettings
 	public FluentDOptions FluentDOptions { get; set; } = new();
 }
 
-public class FluentDOptions()
+public class FluentDOptions
 {
+	public FluentDOptions()
+	{
+	}
+
 	public bool Enable { get; set; }
 	public int Port { get; set; } = 24224;
 	public string? Host { get; set; } = "localhost";

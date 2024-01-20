@@ -1,8 +1,9 @@
 namespace Common.Auth;
-public interface IPersistantRoleProvider
+public interface IPersistentRoleProvider
 {
 	IEnumerable<AdminUser> GetUsers();
 	AdminUser? GetUser(string name);
+	public bool GenerateDefaultAdminUserIfNotExists();
 	void LoadUsers();
 	void SaveUsers();
 	void UpdateToken(string name, string token);

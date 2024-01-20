@@ -1,9 +1,122 @@
 @page "/configuration"
 @using Common.Configuration;
-@inject FLAdminConfiguration _config
+@using Common.State.ModalInfo
+@inject FLAdminConfiguration ExistingConfig
+@inject IDispatcher Dispatcher
 
 <PageTitle>Configuration</PageTitle>
 
+<div Class="rz-p-0 rz-p-md-12">
+	<RadzenRow Gap="1rem">
+		<RadzenColumn Size="12" SizeSM="6">
+			<RadzenStack Gap="1rem" Class="rz-p-4 rz-mb-6 rz-border-radius-1">
+				<RadzenHeading Text="Server Configuration"/>
+				<RadzenFormField Text="Freelancer Path" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Server.FreelancerPath"/>
+				</RadzenFormField>
+				<RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+					<RadzenLabel Text="Auto Start FLServer:"/>
+					<RadzenSwitch @bind-Value="@_configuration.Server.AutoStartFLServer"/>
+				</RadzenStack>
+				<RadzenFormField Text="FLServer Port" Variant="Variant.Outlined">
+					<RadzenNumeric @bind-Value="@_configuration.Server.Port"/>
+				</RadzenFormField>
+				<RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+					<RadzenLabel Text="Close FLServer If It's Already Open':"/>
+					<RadzenSwitch @bind-Value="@_configuration.Server.CloseFLServerIfAlreadyOpen"/>
+				</RadzenStack>
+				<RadzenFormField Text="Freelancer Path" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Server.FLHookRepositry"/>
+				</RadzenFormField>
+				<RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+					<RadzenLabel Text="Use FLHook:"/>
+					<RadzenSwitch @bind-Value="@_configuration.Server.UseFLHook"/>
+				</RadzenStack>
+				<RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+					<RadzenLabel Text="Auto Download Latest FLHook:"/>
+					<RadzenSwitch @bind-Value="@_configuration.Server.AutoDownloadLatestFLHook"/>
+				</RadzenStack>
+				<RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+					<RadzenLabel Text="Automatically Check For FLHook Updates:"/>
+					<RadzenSwitch @bind-Value="@_configuration.Server.CheckForFLHookUpdates"/>
+				</RadzenStack>
+			</RadzenStack>
+		</RadzenColumn>
+		<RadzenColumn Size="12" SizeSM="6">
+			<RadzenStack Gap="1rem" Class="rz-p-4 rz-mb-6 rz-border-radius-1">
+				<RadzenHeading Text="Logging Configuration"/>
+				<RadzenFormField Text="FLAdmin Log File" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Logging.LogFileFLAdmin" />
+				</RadzenFormField>
+				<RadzenFormField Text="FLHook Log File" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Logging.LogFileFLHook" />
+				</RadzenFormField>
+				<RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+					<RadzenLabel Text="Enable Debug Logs:" />
+					<RadzenSwitch @bind-Value="@_configuration.Logging.EnableDebugLogs" />
+				</RadzenStack>
+				<RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+					<RadzenLabel Text="Enable FluentD Logging:" />
+					<RadzenSwitch @bind-Value="@_configuration.Logging.FluentDOptions.Enable" />
+				</RadzenStack>
+				<RadzenFormField Text="FluentD Host" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Logging.FluentDOptions.Host" />
+				</RadzenFormField>
+				<RadzenFormField Text="FluentD Port" Variant="Variant.Outlined">
+					<RadzenNumeric @bind-Value="@_configuration.Logging.FluentDOptions.Port" />
+				</RadzenFormField>
+				<RadzenFormField Text="FluentD Unix Socket" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Logging.FluentDOptions.UnixSocket" />
+				</RadzenFormField>
+			</RadzenStack>
+		</RadzenColumn>
+	</RadzenRow>
+	<RadzenRow Gap="1rem">
+		<RadzenColumn Size="12" SizeSM="6">
+			<RadzenStack Gap="1rem" Class="rz-p-4 rz-mb-6 rz-border-radius-1">
+				<RadzenHeading Text="Message Queue Configuration" />
+				<RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
+					<RadzenLabel Text="Enable Message Queues:" />
+					<RadzenSwitch @bind-Value="@_configuration.Messaging.EnableMessaging" />
+				</RadzenStack>
+				<RadzenFormField Text="RabbitMQ Host" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Messaging.HostName" />
+				</RadzenFormField>
+				<RadzenFormField Text="RabbitMQ Port" Variant="Variant.Outlined">
+					<RadzenNumeric @bind-Value="@_configuration.Messaging.Port" />
+				</RadzenFormField>
+				<RadzenFormField Text="RabbitMQ Username" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Messaging.Username" />
+				</RadzenFormField>
+				<RadzenFormField Text="RabbitMQ Password" Variant="Variant.Outlined">
+					<RadzenPassword @bind-Value="@_configuration.Messaging.Password" />
+				</RadzenFormField>
+			</RadzenStack>
+		</RadzenColumn>
+	</RadzenRow>
+	<RadzenRow Gap="1rem">
+		<RadzenColumn Size="12" SizeSM="6">
+			<RadzenStack Gap="1rem" Class="rz-p-4 rz-mb-6 rz-border-radius-1">
+				<RadzenButton Click="SaveNewConfig" Text="Save Configuration" Style="max-width: 20rem" ButtonStyle="ButtonStyle.Secondary"/>
+			</RadzenStack>
+		</RadzenColumn>
+	</RadzenRow>
+</div>
+
 @code {
-    
+	private FLAdminConfiguration _configuration = null!;
+
+	protected override void OnInitialized()
+	{
+		_configuration = new FLAdminConfiguration();
+		ExistingConfig.CopyConfigTo(_configuration);
+	}
+
+	private void SaveNewConfig()
+	{
+		_configuration.CopyConfigTo(ExistingConfig);
+		ExistingConfig.Save();
+		Dispatcher.Dispatch(new ModalInfoAction("Configuration saved!"));
+	}
+
 }

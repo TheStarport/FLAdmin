@@ -6,3 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Performance", "CA1848:Use the LoggerMessage delegates", Justification = "<Pending>")]
+[assembly: SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "Suggestion doesn't work.")]

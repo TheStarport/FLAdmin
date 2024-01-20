@@ -1,7 +1,7 @@
 @using Common.Managers;
 @using Common.State.ServerStats;
-@inject IState<ServerStatsState> _state
-@inject IStatsManager _statManager
+@inject IState<ServerStatsState> State
+@inject IStatsManager StatManager
 
 <RadzenChart>
     <RadzenLineSeries Smooth="false" Data="@_serverLoad" CategoryProperty="Time" Title="Server Load (ms)" LineType="LineType.Solid" ValueProperty="MS">
@@ -19,12 +19,12 @@
     {
         base.OnInitialized();
 
-        _state.StateChanged += (_, _) =>
+        State.StateChanged += (_, _) =>
         {
-            _serverLoad = _statManager.GetServerLoad();
+            _serverLoad = StatManager.GetServerLoad();
             InvokeAsync(StateHasChanged);
         };
 
-        _serverLoad = _statManager.GetServerLoad();
+        _serverLoad = StatManager.GetServerLoad();
     }
 }

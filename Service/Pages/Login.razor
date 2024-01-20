@@ -1,37 +1,38 @@
 @page "/login"
 @using Common.Auth;
 @using Common.State.ModalInfo;
-@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
-@inject AuthStateProvider _authState
-@inject NavigationManager _navigationManager
-@inject ILocalStorageService _localStorage
-@inject IDispatcher _dispatcher
+@attribute [AllowAnonymous]
+@inject AuthStateProvider AuthState
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService LocalStorage
+@inject IDispatcher Dispatcher
+@inject IPersistentRoleProvider RoleProvider
 
-<div class="rz-p-12 rz-text-align-center" style="display: @(render ? "inherit" : "none")">
+<div class="rz-p-12 rz-text-align-center" style="display: @(_render ? "inherit" : "none")">
     <div>
         <RadzenFormField Text="Login Token" Variant="Variant.Flat">
             <Start>
                 <RadzenIcon Icon="account_circle" />
             </Start>
             <ChildContent>
-                <RadzenPassword @bind-Value=@value Placeholder="Enter Login Token" />
+                <RadzenPassword @bind-Value="@_value" Placeholder="Enter Login Token" />
             </ChildContent>
         </RadzenFormField>
     </div>
     <div class="rz-p-3">
-        <RadzenCheckBox @bind-Value=@rememberMe Name="RememberMe" />
+        <RadzenCheckBox @bind-Value="@_rememberMe" Name="RememberMe" />
         <RadzenLabel Text="Remember Me?" Component="RememberMe" Style="color: white" />
     </div>
     <div class="rz-p-3">
-        <RadzenButton Click=@(_ => SignIn(false)) Text="Login" Icon="lock_open" ButtonStyle="ButtonStyle.Primary" />
+        <RadzenButton Click="@(_ => SignIn(false))" Text="Login" Icon="lock_open" ButtonStyle="ButtonStyle.Primary" />
     </div>
 </div>
 
 @code
 {
-    bool render = false;
-    string? value;
-    bool rememberMe;
+    bool _render = false;
+    string? _value;
+    bool _rememberMe;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -42,14 +43,19 @@
             return;
         }
 
-        value = await _localStorage.GetItemAsStringAsync("token");
-        if (value is not null)
+	    if (RoleProvider.GenerateDefaultAdminUserIfNotExists())
+	    {
+		    return;
+	    }
+
+        _value = await LocalStorage.GetItemAsStringAsync("token");
+        if (_value is not null)
         {
             // Attempt to sign in if we already have a valid token
             if(!await SignIn(true))
             {
                 // Token was bad, clear it
-                await _localStorage.RemoveItemAsync("token");
+                await LocalStorage.RemoveItemAsync("token");
             }
             else
             {
@@ -57,26 +63,26 @@
             }
         }
 
-        render = true;
+        _render = true;
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task<bool> SignIn(bool automatic)
     {
-        if (_authState.Authenticate(value ?? ""))
+        if (AuthState.Authenticate(_value ?? ""))
         {
-            _navigationManager.NavigateTo("/");
+            NavigationManager.NavigateTo("/");
 
-            if (rememberMe)
+            if (_rememberMe)
             {
-                await _localStorage.SetItemAsStringAsync("token", value);
+                await LocalStorage.SetItemAsStringAsync("token", _value);
             }
             
             return true;
         }
         else if (!automatic)
         {
-            _dispatcher.Dispatch(new ModalInfoAction($"Invalid login token", true));
+            Dispatcher.Dispatch(new ModalInfoAction($"Invalid login token", true));
         }
         
         return false;

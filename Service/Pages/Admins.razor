@@ -1,23 +1,22 @@
 @page "/admins"
 @using System.Text.RegularExpressions;
 @using Common.Auth;
-@using Common.State.ModalInfo;
 @attribute [Authorize(Roles = "ManageAdmins")]
-@inject IPersistantRoleProvider _roleProvider
-@inject IJwtProvider _jwtProvider
-@inject IDispatcher _dispatcher
-@inject DialogService _dialogServce
-@inject NotificationService _notificationService
+@inject IPersistentRoleProvider RoleProvider
+@inject IJwtProvider JwtProvider
+@inject IDispatcher Dispatcher
+@inject DialogService DialogService
+@inject NotificationService NotificationService
 
 <div style="display: flex; align-items: center; margin-bottom: 16px">
     <RadzenButton Click="@NewAdmin" Text="New User" ButtonStyle="ButtonStyle.Info" Style="margin: 3px;" />
-    <RadzenButton Disabled=!_selected Click="@ClearSelection" Text="Clear Selection" ButtonStyle="ButtonStyle.Secondary" Style="margin: 3px;" />
-    <RadzenButton Disabled=!_selected Click="@UpdateAdmin" Text="Update User" ButtonStyle="ButtonStyle.Warning" Style="margin: 3px;" />
-    <RadzenButton Disabled=!_selected Click="@DeleteAdmin" Text="Delete User" ButtonStyle="ButtonStyle.Danger" Style="margin: 3px;" />
+    <RadzenButton Disabled="!Selected" Click="@ClearSelection" Text="Clear Selection" ButtonStyle="ButtonStyle.Secondary" Style="margin: 3px;" />
+    <RadzenButton Disabled="!Selected" Click="@UpdateAdmin" Text="Update User" ButtonStyle="ButtonStyle.Warning" Style="margin: 3px;" />
+    <RadzenButton Disabled="!Selected" Click="@DeleteAdmin" Text="Delete User" ButtonStyle="ButtonStyle.Danger" Style="margin: 3px;" />
 </div>
 
 <RadzenDataGrid AllowFiltering="true" FilterPopupRenderMode="PopupRenderMode.OnDemand" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowPaging="true" PageSize="4"
-                AllowSorting="true" Data="@_users" TItem="AdminUser" ColumnWidth="200px" SelectionMode="DataGridSelectionMode.Single" @bind-Value=@_selectedUsers>
+                AllowSorting="true" Data="@_users" TItem="AdminUser" ColumnWidth="200px" SelectionMode="DataGridSelectionMode.Single" @bind-Value="@_selectedUsers">
     <Columns>
         <RadzenDataGridColumn TItem="AdminUser" Property="Name" Title="Name" />
         <RadzenDataGridColumn TItem="AdminUser" Property="Roles" Title="Permissions">
@@ -33,26 +32,22 @@
     IList<AdminUser>? _selectedUsers;
     IEnumerable<Role> _allRoles = Enum.GetValues<Role>();
 
-
     IEnumerable<AdminUser> _users;
-    IEnumerable<Role> updatedUserRoles;
-    string updatedUserName = "";
-    string updatedUserToken = "";
+    IEnumerable<Role> _updatedUserRoles;
+    string _updatedUserName = "";
+    string _updatedUserToken = "";
 
-    bool _selected { get => _selectedUsers?.Any() ?? false; }
+    bool Selected => _selectedUsers?.Any() ?? false;
 
-    string RoleToString(Role role) => Regex.Replace(Regex.Replace(role.ToString(), @"(\P{Ll})(\P{Ll}\p{Ll})", "$1 $2"), @"(\p{Ll})(\P{Ll})", "$1 $2");
+	string RoleToString(Role role) => Regex.Replace(Regex.Replace(role.ToString(), @"(\P{Ll})(\P{Ll}\p{Ll})", "$1 $2"), @"(\p{Ll})(\P{Ll})", "$1 $2");
 
-    void ClearSelection()
-    {
-        _selectedUsers = null;
-    }
+    void ClearSelection() => _selectedUsers = null;
 
-    protected override async Task OnInitializedAsync()
+	protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
 
-        _users = _roleProvider.GetUsers();
+        _users = RoleProvider.GetUsers();
     }
 
     async Task NewAdmin() => AddOrUpdateUser(null);
@@ -61,7 +56,7 @@
 
     void UpdateTokenInDialog(DialogService ds)
     {
-        updatedUserToken = _jwtProvider.GenerateToken(updatedUserName);
+        _updatedUserToken = JwtProvider.GenerateToken(_updatedUserName);
         ds.Refresh();
     }
 
@@ -70,13 +65,13 @@
         <p>Note: Updating the name will cause a new login token to be generated.</p>
         <RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Start" JustifyContent="JustifyContent.SpaceBetween">
             <RadzenFormField Text="RadzenTextBox" Variant="Variant.Outlined">
-                <RadzenTextBox @bind-Value="@updatedUserName" Change="(val => UpdateTokenInDialog(ds))" />
+                <RadzenTextBox @bind-Value="@_updatedUserName" Change="(val => UpdateTokenInDialog(ds))" />
             </RadzenFormField>
             <RadzenFormField Text="Login Token" Variant="Variant.Outlined">
-                <RadzenTextBox ReadOnly=true @bind-Value="@updatedUserToken" />
+                <RadzenTextBox ReadOnly="true" @bind-Value="@_updatedUserToken" />
             </RadzenFormField>
             <RadzenFormField Text="Roles" Variant="Variant.Outlined">
-                <RadzenListBox @bind-Value=@updatedUserRoles Data="@_allRoles" Multiple=true AllowClear=true Name="Role Selection">
+                <RadzenListBox @bind-Value="@_updatedUserRoles" Data="@_allRoles" Multiple="true" AllowClear="true" Name="Role Selection">
                     <Template Context="role">
                         @RoleToString(role)
                     </Template>
@@ -98,12 +93,12 @@
         var selectedAdmin = _selectedUsers.First();
         if (selectedAdmin.Name == "Admin")
         {
-            _dialogServce.Alert("The default admin cannot be modified or deleted, other than the login token being regenerated.");
+            DialogService.Alert("The default admin cannot be modified or deleted, other than the login token being regenerated.");
             return;
         }
 
-        _roleProvider.RemoveUser(selectedAdmin.Name);
-        _notificationService.Notify(NotificationSeverity.Success, "User Deleted", "User has been successfully removed");
+        RoleProvider.RemoveUser(selectedAdmin.Name);
+        NotificationService.Notify(NotificationSeverity.Success, "User Deleted", "User has been successfully removed");
         _users = _users.Where(x => x.Name != selectedAdmin.Name);
         InvokeAsync(StateHasChanged);
     }
@@ -115,66 +110,66 @@
             Roles = new Role[] { Role.Baisc }
         };
         selectedUser.Token = "*****************";
-        updatedUserRoles = selectedUser.Roles.AsEnumerable();
-        updatedUserName = selectedUser.Name;
-        updatedUserToken = selectedUser.Token;
+        _updatedUserRoles = selectedUser.Roles.AsEnumerable();
+        _updatedUserName = selectedUser.Name;
+        _updatedUserToken = selectedUser.Token;
 
 
-        bool confirmed = await _dialogServce.OpenAsync("Admin User", GetDialogFragment);
+        bool confirmed = await DialogService.OpenAsync("Admin User", GetDialogFragment);
 
         if (!confirmed)
         {
             return;
         }
 
-        if (selectedUser.Name == "Admin" && (updatedUserName != "Admin" || !updatedUserRoles.OrderBy(x => x).SequenceEqual(selectedUser.Roles.OrderBy(x => x))))
+        if (selectedUser.Name == "Admin" && (_updatedUserName != "Admin" || !_updatedUserRoles.OrderBy(x => x).SequenceEqual(selectedUser.Roles.OrderBy(x => x))))
         {
-            _dialogServce.Alert("The default admin cannot be modified or deleted, other than the login token being regenerated.");
+            DialogService.Alert("The default admin cannot be modified or deleted, other than the login token being regenerated.");
             return;
         }
 
-        if (string.IsNullOrEmpty(updatedUserName))
+        if (string.IsNullOrEmpty(_updatedUserName))
         {
-            _notificationService.Notify(NotificationSeverity.Error, "Invalid Name", "The name of a user cannot be empty.");
+            NotificationService.Notify(NotificationSeverity.Error, "Invalid Name", "The name of a user cannot be empty.");
             return;
         }
 
-        if (selectedUser.Name == updatedUserName)
+        if (selectedUser.Name == _updatedUserName)
         {
             // If we are updating a user
-            if (updatedUserToken != selectedUser.Token)
+            if (_updatedUserToken != selectedUser.Token)
             {
-                _roleProvider.UpdateToken(updatedUserName, updatedUserToken);
+                RoleProvider.UpdateToken(_updatedUserName, _updatedUserToken);
             }
 
-            _roleProvider.UpdateRoles(updatedUserName, updatedUserRoles);
+            RoleProvider.UpdateRoles(_updatedUserName, _updatedUserRoles);
         }
         else if (selectedUser.Name == "")
         {
             // If its a new user
-            _roleProvider.AddUser(new AdminUser()
+            RoleProvider.AddUser(new AdminUser()
             {
-                Name = updatedUserName,
-                Roles = updatedUserRoles.ToArray(),
-                Token = updatedUserToken
+                Name = _updatedUserName,
+                Roles = _updatedUserRoles.ToArray(),
+                Token = _updatedUserToken
             });
         }
         else
         {
             // If we are changing the name of a user
-            _roleProvider.RemoveUser(selectedUser.Name);
-            _roleProvider.AddUser(new AdminUser()
+            RoleProvider.RemoveUser(selectedUser.Name);
+            RoleProvider.AddUser(new AdminUser()
                 {
-                    Name = updatedUserName,
-                    Roles = updatedUserRoles.ToArray(),
-                    Token = updatedUserToken
+                    Name = _updatedUserName,
+                    Roles = _updatedUserRoles.ToArray(),
+                    Token = _updatedUserToken
                 });
         }
 
         var createdOrUpdated = selectedUser.Name == "" ? "created" : "updated";
-        _notificationService.Notify(NotificationSeverity.Success, "User " + createdOrUpdated, "User has been successfully " + createdOrUpdated);
+        NotificationService.Notify(NotificationSeverity.Success, "User " + createdOrUpdated, "User has been successfully " + createdOrUpdated);
 
-        _users = _roleProvider.GetUsers();
+        _users = RoleProvider.GetUsers();
         _selectedUsers = null;
 
         InvokeAsync(StateHasChanged);

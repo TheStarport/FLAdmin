@@ -1,7 +1,7 @@
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"/>
+            <span class="navbar-toggler-icon"></span>
         </button>
     </div>
 </div>
@@ -10,43 +10,43 @@
     <nav class="flex-column-fill">
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"/> Dashboard
+                <span class="oi oi-home" aria-hidden="true"></span> Dashboard
             </NavLink>
         </div>
         <AuthorizeView>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="console">
-                    <span class="oi oi-terminal" aria-hidden="true"/> Console
+                    <span class="oi oi-terminal" aria-hidden="true"></span> Console
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="players">
-                    <span class="oi oi-people" aria-hidden="true"/> Players
+                    <span class="oi oi-people" aria-hidden="true"></span> Players
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="logs">
-                    <span class="oi oi-inbox" aria-hidden="true"/> Chat Logs
+                    <span class="oi oi-inbox" aria-hidden="true"></span> Chat Logs
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="bans">
-                    <span class="oi oi-wrench" aria-hidden="true"/> Bans
+                    <span class="oi oi-wrench" aria-hidden="true"></span> Bans
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="scripts">
-                    <span class="oi oi-inbox" aria-hidden="true"/> Scripts
+                    <span class="oi oi-inbox" aria-hidden="true"></span> Scripts
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="admins">
-                    <span class="oi oi-key" aria-hidden="true"/> Admin Management
+                    <span class="oi oi-key" aria-hidden="true"></span> Admin Management
                 </NavLink>
             </div>
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="configuration">
-                    <span class="oi oi-cog" aria-hidden="true"/> Configuration
+                    <span class="oi oi-cog" aria-hidden="true"></span> Configuration
                 </NavLink>
             </div>
 
@@ -58,13 +58,11 @@
 </div>
 
 @code {
-    private bool collapseNavMenu = true;
+    private bool _collapseNavMenu = true;
 
-    const string navMenu = "nav-menu ";
-    private string? NavMenuCssClass => navMenu + (collapseNavMenu ? "collapse" : "");
+	// ReSharper disable once InconsistentNaming
+	private const string navMenu = "nav-menu ";
+    private string? NavMenuCssClass => navMenu + (_collapseNavMenu ? "collapse" : "");
 
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
+    private void ToggleNavMenu() => _collapseNavMenu = !_collapseNavMenu;
 }

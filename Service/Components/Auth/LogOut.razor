@@ -1,6 +1,6 @@
 @using Common.Auth;
-@inject ILocalStorageService _localStorage
-@inject AuthStateProvider _authState
+@inject ILocalStorageService LocalStorage
+@inject AuthStateProvider AuthState
 
 <RadzenButton Text="Logout" Click=@(_ => SignOut()) Icon="lock" ButtonStyle="ButtonStyle.Dark" />
 
@@ -8,7 +8,7 @@
 {
     private async Task SignOut()
     {
-        await _localStorage.RemoveItemAsync("token");
-        _authState.SignOut();
+        await LocalStorage.RemoveItemAsync("token");
+        AuthState.SignOut();
     }
 }

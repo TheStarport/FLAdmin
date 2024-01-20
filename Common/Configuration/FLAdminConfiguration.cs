@@ -47,11 +47,9 @@ public class FLAdminConfiguration
 				_instance = new FLAdminConfiguration();
 				return _instance;
 			}
-			else
-			{
-				_instance = new FLAdminConfiguration();
-				_instance.Save();
-			}
+
+			_instance = new FLAdminConfiguration();
+			_instance.Save();
 
 			return _instance;
 		}
@@ -63,11 +61,47 @@ public class FLAdminConfiguration
 	}
 
 	private static FLAdminConfiguration? _instance;
-
 	public static FLAdminConfiguration Get() => _instance ??= Load();
 	public static void Reset(FLAdminConfiguration? newConfig) => _instance = newConfig ?? new FLAdminConfiguration();
 
 	public LoggingSettings Logging { get; set; } = new();
 	public FLServerSettings Server { get; set; } = new();
 	public MessagingSettings Messaging { get; set; } = new();
+
+	public void CopyConfigTo(FLAdminConfiguration config)
+	{
+		config.Logging = new LoggingSettings
+		{
+			EnableDebugLogs = Logging.EnableDebugLogs,
+			LogFileFLAdmin = Logging.LogFileFLAdmin,
+			LogFileFLHook = Logging.LogFileFLHook,
+			FluentDOptions =
+			{
+				Enable = Logging.FluentDOptions.Enable,
+				UnixSocket = Logging.FluentDOptions.UnixSocket,
+				Host = Logging.FluentDOptions.Host,
+				Port = Logging.FluentDOptions.Port,
+			}
+		};
+
+		config.Messaging = new MessagingSettings
+		{
+			EnableMessaging = Messaging.EnableMessaging,
+			Port = Messaging.Port,
+			HostName = Messaging.HostName,
+			Username = Messaging.Username,
+		};
+
+		config.Server = new FLServerSettings
+		{
+			AutoDownloadLatestFLHook = Server.AutoDownloadLatestFLHook,
+			AutoStartFLServer = Server.AutoStartFLServer,
+			CheckForFLHookUpdates = Server.CheckForFLHookUpdates,
+			CloseFLServerIfAlreadyOpen = Server.CloseFLServerIfAlreadyOpen,
+			UseFLHook = Server.UseFLHook,
+			FLHookRepositry = Server.FLHookRepositry,
+			FreelancerPath = Server.FreelancerPath,
+			Port = Server.Port,
+		};
+	}
 }

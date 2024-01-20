@@ -20,8 +20,8 @@ public class ServerStatsListener : AbstractMessageListener
 		var queueName = _exchangeSubscriber.GetQueueName(ExchangeName.ServerStats.ToString());
 		_exchangeSubscriber.Subscribe(ExchangeName.ServerStats.ToString(), queueName, async (_, ea) =>
 		{
-			_currentTask = HandleMessageAsync<ServerStats>(ea, queueName, token);
-			await _currentTask;
+			____RULE_VIOLATION____CurrentTask____RULE_VIOLATION____ = HandleMessageAsync<ServerStats>(ea, queueName, token);
+			await ____RULE_VIOLATION____CurrentTask____RULE_VIOLATION____;
 		});
 	}
 
@@ -29,11 +29,11 @@ public class ServerStatsListener : AbstractMessageListener
 	{
 		var msg = (message as ServerStats)!;
 
-		_logger.LogInformation("Updating server stats");
+		____RULE_VIOLATION____Logger____RULE_VIOLATION____.LogInformation("Updating server stats");
 		_statsManager.UpdateServerStats(msg);
 
 		return Task.CompletedTask;
 	}
 
-	protected override void Shutdown() => _subscriber.Unsubscribe(ExchangeName.ServerStats.ToString());
+	protected override void Shutdown() => ____RULE_VIOLATION____Subscriber____RULE_VIOLATION____.Unsubscribe(ExchangeName.ServerStats.ToString());
 }

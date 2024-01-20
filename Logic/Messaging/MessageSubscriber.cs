@@ -19,6 +19,11 @@ public sealed class MessageSubscriber : IMessageSubscriber
 	{
 		var channel = _channelProvider.ProvideChannel(queueName);
 
+		if (channel is null)
+		{
+			return;
+		}
+
 		channel.BasicQos(0, 1, false);
 		var consumer = new AsyncEventingBasicConsumer(channel);
 
@@ -32,13 +37,14 @@ public sealed class MessageSubscriber : IMessageSubscriber
 			return Task.CompletedTask;
 		};
 
-		channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
+		_ = channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
 	}
 
 	public void Unsubscribe(string queueName)
 	{
 		var channel = _channelProvider.ProvideChannel(queueName);
-		channel.Close();
+
+		channel?.Close();
 	}
 
 	public void Reject(string queueName, BasicDeliverEventArgs ea, bool requeue)

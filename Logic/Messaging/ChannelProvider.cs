@@ -1,9 +1,10 @@
 namespace Logic.Messaging;
+
 using System.Collections.Concurrent;
 using System.Configuration;
 using Common.Configuration;
 using Common.Messaging;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
 public sealed class ChannelProvider : IChannelProvider, IDisposable
@@ -12,10 +13,12 @@ public sealed class ChannelProvider : IChannelProvider, IDisposable
 	private readonly ConnectionFactory _connectionFactory;
 	private readonly object _connectionLock = new();
 	private readonly IDictionary<string, IModel> _channels;
+	private readonly ILogger _logger;
 
-	public ChannelProvider(FLAdminConfiguration config)
+	public ChannelProvider(FLAdminConfiguration config, ILogger<ChannelProvider> logger)
 	{
-		string constructedUri = $"amqp://{config.Messaging.Username}:{config.Messaging.Password}@{config.Messaging.HostName}:{config.Messaging.Port}";
+		_logger = logger;
+		var constructedUri = $"amqp://{config.Messaging.Username}:{config.Messaging.Password}@{config.Messaging.HostName}:{config.Messaging.Port}";
 		if (!Uri.TryCreate(constructedUri, UriKind.Absolute, out var uri))
 		{
 			throw new ConfigurationErrorsException("ConnectionString::Messaging was not found within config.json or it was not a valid URI.");
@@ -30,20 +33,13 @@ public sealed class ChannelProvider : IChannelProvider, IDisposable
 		_channels = new ConcurrentDictionary<string, IModel>();
 	}
 
-	public IModel ProvideChannel(string queueName)
+	public IModel? ProvideChannel(string queueName)
 	{
-		try
-		{
-			var channel = GetChannel(queueName);
-			return channel!;
-		}
-		catch
-		{
-			throw;
-		}
+		var channel = GetChannel(queueName);
+		return channel;
 	}
 
-	private IModel GetChannel(string queueName)
+	private IModel? GetChannel(string queueName)
 	{
 		if (_channels.TryGetValue(queueName, out var channel))
 		{
@@ -52,14 +48,22 @@ public sealed class ChannelProvider : IChannelProvider, IDisposable
 				return channel;
 			}
 
-			_channels.Remove(queueName);
+			_ = _channels.Remove(queueName);
 		}
 
 		lock (_connectionLock)
 		{
 			if (_connection is not { IsOpen: true })
 			{
-				_connection = _connectionFactory.CreateConnection();
+				try
+				{
+					_connection = _connectionFactory.CreateConnection();
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Unable to create RabbitMQ connection");
+					return null;
+				}
 			}
 
 			channel = _connection.CreateModel();

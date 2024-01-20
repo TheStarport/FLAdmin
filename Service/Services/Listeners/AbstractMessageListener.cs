@@ -6,20 +6,20 @@ using RabbitMQ.Client.Events;
 
 public abstract class AbstractMessageListener : IHostedService
 {
-	protected readonly IServiceProvider _serviceProvider;
-	protected readonly ILogger _logger;
-	protected readonly IMessageSubscriber _subscriber;
-	protected readonly JsonSerializerOptions _jsonSerializerOptions;
+	protected readonly IServiceProvider ____RULE_VIOLATION____ServiceProvider____RULE_VIOLATION____;
+	protected readonly ILogger ____RULE_VIOLATION____Logger____RULE_VIOLATION____;
+	protected readonly IMessageSubscriber ____RULE_VIOLATION____Subscriber____RULE_VIOLATION____;
+	protected readonly JsonSerializerOptions ____RULE_VIOLATION____JsonSerializerOptions____RULE_VIOLATION____;
 
-	protected Task? _currentTask;
+	protected Task? ____RULE_VIOLATION____CurrentTask____RULE_VIOLATION____;
 
 	protected AbstractMessageListener(IServiceProvider serviceProvider, ILogger logger, IMessageSubscriber subscriber)
 	{
-		_serviceProvider = serviceProvider;
-		_logger = logger;
-		_subscriber = subscriber;
+		____RULE_VIOLATION____ServiceProvider____RULE_VIOLATION____ = serviceProvider;
+		____RULE_VIOLATION____Logger____RULE_VIOLATION____ = logger;
+		____RULE_VIOLATION____Subscriber____RULE_VIOLATION____ = subscriber;
 
-		_jsonSerializerOptions = new JsonSerializerOptions
+		____RULE_VIOLATION____JsonSerializerOptions____RULE_VIOLATION____ = new JsonSerializerOptions
 		{
 			PropertyNameCaseInsensitive = true
 		};
@@ -30,7 +30,7 @@ public abstract class AbstractMessageListener : IHostedService
 
 	public Task StartAsync(CancellationToken cancellationToken)
 	{
-		_logger.LogInformation("Starting Message Listener: {name}", GetType().Name);
+		____RULE_VIOLATION____Logger____RULE_VIOLATION____.LogInformation("Starting Message Listener: {name}", GetType().Name);
 
 		Initalize(cancellationToken);
 
@@ -39,13 +39,13 @@ public abstract class AbstractMessageListener : IHostedService
 
 	public async Task StopAsync(CancellationToken cancellationToken)
 	{
-		_logger.LogInformation("Stopping Message Listner: {name}", GetType().Name);
+		____RULE_VIOLATION____Logger____RULE_VIOLATION____.LogInformation("Stopping Message Listner: {name}", GetType().Name);
 
 		Shutdown();
 
-		if (_currentTask is not null)
+		if (____RULE_VIOLATION____CurrentTask____RULE_VIOLATION____ is not null)
 		{
-			await _currentTask;
+			await ____RULE_VIOLATION____CurrentTask____RULE_VIOLATION____;
 		}
 	}
 
@@ -55,36 +55,36 @@ public abstract class AbstractMessageListener : IHostedService
 	{
 		if (stoppingToken.IsCancellationRequested)
 		{
-			_logger.LogInformation("Message received during shutdown");
-			_subscriber.Reject(queueName, ea, requeue: true);
-			_subscriber.Unsubscribe(queueName);
+			____RULE_VIOLATION____Logger____RULE_VIOLATION____.LogInformation("Message received during shutdown");
+			____RULE_VIOLATION____Subscriber____RULE_VIOLATION____.Reject(queueName, ea, requeue: true);
+			____RULE_VIOLATION____Subscriber____RULE_VIOLATION____.Unsubscribe(queueName);
 			return;
 		}
 
-		using var _ = _logger.BeginScope(new Dictionary<string, object>
+		using var _ = ____RULE_VIOLATION____Logger____RULE_VIOLATION____.BeginScope(new Dictionary<string, object>
 		{
 			["DeliveryTag"] = ea.DeliveryTag
 		});
 
-		_logger.LogInformation("Handling Message");
+		____RULE_VIOLATION____Logger____RULE_VIOLATION____.LogInformation("Handling Message");
 
 		try
 		{
-			var body = JsonSerializer.Deserialize<T>(Encoding.UTF8.GetString(ea.Body.ToArray()), _jsonSerializerOptions);
+			var body = JsonSerializer.Deserialize<T>(Encoding.UTF8.GetString(ea.Body.ToArray()), ____RULE_VIOLATION____JsonSerializerOptions____RULE_VIOLATION____);
 
 			await ProcessMessageAsync(body!, stoppingToken);
 
-			_subscriber.Complete(queueName, ea);
+			____RULE_VIOLATION____Subscriber____RULE_VIOLATION____.Complete(queueName, ea);
 		}
 		catch (JsonException jsonException)
 		{
-			_subscriber.Reject(queueName, ea, false);
-			_logger.LogCritical(jsonException, "Failed to deserialise message");
+			____RULE_VIOLATION____Subscriber____RULE_VIOLATION____.Reject(queueName, ea, false);
+			____RULE_VIOLATION____Logger____RULE_VIOLATION____.LogCritical(jsonException, "Failed to deserialise message");
 		}
 		catch (Exception e)
 		{
-			_logger.LogError(e, "Failed to process message");
-			_subscriber.Reject(queueName, ea, true);
+			____RULE_VIOLATION____Logger____RULE_VIOLATION____.LogError(e, "Failed to process message");
+			____RULE_VIOLATION____Subscriber____RULE_VIOLATION____.Reject(queueName, ea, true);
 		}
 	}
 }

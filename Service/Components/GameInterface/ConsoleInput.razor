@@ -1,7 +1,7 @@
 @using Common.Managers;
 @using Common.State.ServerEvents;
-@inject IServerLifetime _server
-@inject DialogService _dialogService
+@inject IServerLifetime Server
+@inject DialogService DialogService
 
 <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" Class="rz-mt-4 rz-p-4 rz-border-radius-1" @attributes=@Attributes Style="border: var(--rz-grid-cell-border)" >
     <RadzenText TextStyle="TextStyle.Subtitle2" TagName="TagName.H3">Send command to FLServer</RadzenText>
@@ -21,11 +21,11 @@
     {
         if (string.IsNullOrEmpty(cmd))
         {
-            _dialogService.Alert("The command provided was empty.", "Invalid Command");
+            DialogService.Alert("The command provided was empty.", "Invalid Command");
             return;
         }
 
-        _server.SendCommandToConsole(cmd);
+        Server.SendCommandToConsole(cmd);
         _command = "";
     }
 }

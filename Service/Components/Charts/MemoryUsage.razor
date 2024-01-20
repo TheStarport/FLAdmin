@@ -1,7 +1,7 @@
 @using Common.Managers;
 @using Common.State.ServerStats;
-@inject IState<ServerStatsState> _state
-@inject IStatsManager _statManager
+@inject IState<ServerStatsState> State
+@inject IStatsManager StatManager
 
 <RadzenChart>
     <RadzenLineSeries  Smooth="false" Data="@_memoryUsage" CategoryProperty="Time" Title="Memory Usage (MB)" LineType="LineType.Solid" ValueProperty="UsageDenomination">
@@ -21,12 +21,12 @@
     {
         base.OnInitialized();
 
-        _state.StateChanged += (_, _) =>
+        State.StateChanged += (_, _) =>
         {
-            _memoryUsage = _statManager.GetMemoryUsage();
+            _memoryUsage = StatManager.GetMemoryUsage();
             InvokeAsync(StateHasChanged);
         };
 
-        _memoryUsage = _statManager.GetMemoryUsage();
+        _memoryUsage = StatManager.GetMemoryUsage();
     }
 }

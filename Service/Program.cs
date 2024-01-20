@@ -1,6 +1,3 @@
-using System.Security.AccessControl;
-using System.Security.Principal;
-using System.Text.Json;
 using Blazored.LocalStorage;
 using Logic.Auth;
 using Logic.Managers;
@@ -14,10 +11,8 @@ using Fluxor;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.IdentityModel.Logging;
 using Radzen;
-using Service;
 using Service.Services;
 using Service.Services.Listeners;
-using System.Diagnostics;
 using Common.Jobs;
 using Logic.Jobs;
 using Quartz;
@@ -34,10 +29,10 @@ IdentityModelEventSource.ShowPII = true;
 var builder = WebApplication.CreateBuilder(args);
 
 var config = FLAdminConfiguration.Get();
-builder.Services.AddSingleton(_ => config!);
+builder.Services.AddSingleton(config);
 
 builder.Services.AddSingleton<IKeyProvider, KeyProvider>();
-builder.Services.AddSingleton<IPersistantRoleProvider, PersistantRoleProvider>();
+builder.Services.AddSingleton<IPersistentRoleProvider, PersistentRoleProvider>();
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
 builder.Services.AddSingleton<IStatsManager, StatsManager>();
 builder.Services.AddSingleton<IJobManager, JobManager>();
@@ -133,14 +128,6 @@ builder.Host.UseSerilog((_, lc) =>
 
 var app = builder.Build();
 
-var goodToGo = PrelaunchChecks(config);
-if (goodToGo is not ErrorReason.NoError)
-{
-	app.Logger.LogCritical("Prelaunch checks failed. Reason: {Reason}", goodToGo);
-	Debugger.Break();
-	return (int)goodToGo;
-}
-
 AppDomain.CurrentDomain.ProcessExit += (_, _) => OnProcessExit(app.Services);
 
 // Configure the HTTP request pipeline.
@@ -164,27 +151,6 @@ app.Run();
 
 return 0;
 
-static ErrorReason PrelaunchChecks(FLAdminConfiguration config)
-{
-	var flDirectory = Environment.ExpandEnvironmentVariables(config.Server.FreelancerPath);
-	var e = Path.Combine(flDirectory, "EXE/FLServer.exe");
-
-	if (!File.Exists(Path.Combine(flDirectory, "EXE/FLServer.exe")))
-	{
-		return ErrorReason.FLServerNotFound;
-	}
-
-	return ErrorReason.NoError;
-}
-
 // Explicit process exit as some consoles being closed do not trigger automatic shutdown steps
-static void OnProcessExit(IServiceProvider services)
-{
-	List<Task> shutdownTasks = new();
-	foreach (var service in services.GetServices<IHostedService>())
-	{
-		shutdownTasks.Add(service.StopAsync(CancellationToken.None));
-	}
-
-	Task.WaitAll(shutdownTasks.ToArray());
-}
+static void OnProcessExit(IServiceProvider services) =>
+	Task.WaitAll(services.GetServices<IHostedService>().Select(service => service.StopAsync(CancellationToken.None)).ToArray());

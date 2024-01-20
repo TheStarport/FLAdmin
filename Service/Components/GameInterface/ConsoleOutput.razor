@@ -1,7 +1,7 @@
 @using Common.Managers;
 @using Common.State.ServerEvents;
-@inject IServerLifetime _server
-@inject IState<ConsoleMessageState> _state
+@inject IServerLifetime Server
+@inject IState<ConsoleMessageState> State
 
 <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" Class="rz-mt-4 rz-p-4 rz-border-radius-1" @attributes=@Attributes Style="border: var(--rz-grid-cell-border)" >
     <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" JustifyContent="JustifyContent.SpaceBetween">
@@ -35,22 +35,22 @@
     {
         base.OnInitialized();
 
-        _state.StateChanged += (_, _) =>
+        State.StateChanged += (_, _) =>
         {
             _messageCount++;
-            _messages.Insert(0, _state.Value.LastMessage);
+            _messages.Insert(0, State.Value.LastMessage);
             InvokeAsync(StateHasChanged);
         };
 
-        _messageCount = _server.GetMessageCount();
-        _messages = _server.GetConsoleMessages(1).ToList();
+        _messageCount = Server.GetMessageCount();
+        _messages = Server.GetConsoleMessages(1).ToList();
     }
 
     private void PageChanged(int page)
     {
         _currentPage = page;
-        _messageCount = _server.GetMessageCount();
-        _messages = _server.GetConsoleMessages(page).ToList();
+        _messageCount = Server.GetMessageCount();
+        _messages = Server.GetConsoleMessages(page).ToList();
         InvokeAsync(StateHasChanged);
     }
 

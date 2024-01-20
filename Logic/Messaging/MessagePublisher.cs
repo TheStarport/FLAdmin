@@ -2,18 +2,15 @@ namespace Logic.Messaging;
 using System.Text;
 using System.Text.Json;
 using Common.Messaging;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 public class MessagePublisher : IMessagePublisher
 {
-	private readonly IChannelProvider? _channelProvider;
 	private readonly ILogger<MessagePublisher> _logger;
-	private readonly IConfiguration _configuration;
+	private readonly IChannelProvider _channelProvider;
 
-	public MessagePublisher(ILogger<MessagePublisher> logger, IConfiguration configuration, IChannelProvider channelProvider)
+	public MessagePublisher(ILogger<MessagePublisher> logger, IChannelProvider channelProvider)
 	{
-		_configuration = configuration;
 		_logger = logger;
 		_channelProvider = channelProvider;
 	}
@@ -26,6 +23,11 @@ public class MessagePublisher : IMessagePublisher
 	{
 		ReadOnlyMemory<byte> bodyJson = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
 		var channel = _channelProvider!.ProvideChannel(queue);
+
+		if (channel is null)
+		{
+			return;
+		}
 
 		var messageProperties = channel.CreateBasicProperties();
 		messageProperties.Headers ??= new Dictionary<string, object>();

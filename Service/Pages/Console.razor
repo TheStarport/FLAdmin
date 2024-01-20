@@ -1,12 +1,25 @@
 @page "/console"
 @using Common.Managers;
-@using Common.Messaging.Messages;
-@inject IStatsManager manager;
+@inject IStatsManager Manager;
+@inject IServerLifetime ServerLifetime;
 
 <h1>FLServer Console</h1>
 <br/>
 
 <PageTitle>Console</PageTitle>
+
+<RadzenRow>
+	<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem" Wrap="FlexWrap.Wrap">
+		@if (!ServerLifetime.IsAlive())
+		{
+			<RadzenButton Variant="Variant.Flat" Click=@(_ => ServerLifetime.Start()) Disabled="@(ServerLifetime.ReadyToStart())" Text="Start FLServer" ButtonStyle="ButtonStyle.Secondary"/>
+		}
+		else
+		{
+			<RadzenButton Variant="Variant.Flat" Click=@(_ => ServerLifetime.Terminate()) Text="Terminate FLServer" ButtonStyle="ButtonStyle.Secondary" />
+		}
+	</RadzenStack>
+</RadzenRow>
 
 <Service.Components.GameInterface.ConsoleOutput/>
 <Service.Components.GameInterface.ConsoleInput/>

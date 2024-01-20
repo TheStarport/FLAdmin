@@ -7,9 +7,9 @@ using Microsoft.AspNetCore.Components.Authorization;
 public class JwtAuthStateProvider : AuthStateProvider
 {
 	private readonly IJwtProvider _jwtProvider;
-	private readonly IPersistantRoleProvider _roleProvider;
+	private readonly IPersistentRoleProvider _roleProvider;
 
-	public JwtAuthStateProvider(IJwtProvider jwtProvider, IPersistantRoleProvider roleProvider)
+	public JwtAuthStateProvider(IJwtProvider jwtProvider, IPersistentRoleProvider roleProvider)
 	{
 		_jwtProvider = jwtProvider;
 		_roleProvider = roleProvider;
