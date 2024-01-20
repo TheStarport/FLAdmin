@@ -61,7 +61,11 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 	}
 
 	public void SendCommandToConsole(string command) => _flServer?.StandardInput.WriteLine(command);
-	public void Terminate() => _flServer?.CloseMainWindow();
+	public void Terminate()
+	{
+		_flServer?.CloseMainWindow();
+		_readyToStart = false;
+	}
 
 	public IEnumerable<string> GetConsoleMessages(int page) => _consoleMessages
 		.AsEnumerable()
