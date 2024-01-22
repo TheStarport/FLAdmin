@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Blazored.LocalStorage;
 using Logic.Auth;
 using Logic.Managers;
@@ -15,8 +16,10 @@ using Radzen;
 using Service.Services;
 using Service.Services.Listeners;
 using Common.Jobs;
+using Common.Storage;
 using Logic.Freelancer;
 using Logic.Jobs;
+using Logic.Storage;
 using Quartz;
 using Serilog;
 using Serilog.Events;
@@ -39,6 +42,10 @@ builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
 builder.Services.AddSingleton<IStatsManager, StatsManager>();
 builder.Services.AddSingleton<IJobManager, JobManager>();
 builder.Services.AddSingleton<IFreelancerDataProvider, FreelancerDataProvider>();
+
+// MongoDB
+builder.Services.AddSingleton<IMongoManager, MongoManager>();
+builder.Services.AddSingleton<IAccountStorage, AccountStorage>();
 
 if (config.Messaging.EnableMessaging)
 {
@@ -131,7 +138,15 @@ builder.Host.UseSerilog((_, lc) =>
 
 var app = builder.Build();
 
-// Load freelancer data, if we can
+// If we can, load freelancer data, connect to external services, etc
+
+if (!await app.Services.GetRequiredService<IMongoManager>().ConnectAsync())
+{
+	app.Logger.LogCritical("Unable to connect to MongoDB. Please check credentials! Configuration file can be found at {Path}", FLAdminConfiguration.ConfigPath);
+	Debugger.Break();
+	return -1;
+}
+
 app.Services.GetRequiredService<IFreelancerDataProvider>().Reload();
 
 AppDomain.CurrentDomain.ProcessExit += (_, _) => OnProcessExit(app.Services);

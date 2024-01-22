@@ -11,10 +11,6 @@ public class LoggingSettings
 
 public class FluentDOptions
 {
-	public FluentDOptions()
-	{
-	}
-
 	public bool Enable { get; set; }
 	public int Port { get; set; } = 24224;
 	public string? Host { get; set; } = "localhost";

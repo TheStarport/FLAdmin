@@ -98,6 +98,35 @@
 				</RadzenFormField>
 			</RadzenStack>
 		</RadzenColumn>
+		<RadzenColumn Size="12" SizeSM="6">
+			<RadzenStack Gap="1rem" Class="rz-p-4 rz-mb-6 rz-border-radius-1">
+				<RadzenHeading Text="MongoDB Configuration" />
+				<RadzenFormField Text="Host" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Mongo.Host" />
+				</RadzenFormField>
+				<RadzenFormField Text="Port" Variant="Variant.Outlined">
+					<RadzenNumeric @bind-Value="@_configuration.Mongo.Port" />
+				</RadzenFormField>
+				<RadzenFormField Text="Username" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Mongo.Username" />
+				</RadzenFormField>
+				<RadzenFormField Text="Password" Variant="Variant.Outlined">
+					<RadzenPassword @bind-Value="@_configuration.Mongo.Password" />
+				</RadzenFormField>
+				<RadzenFormField Text="Auth Database" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Mongo.AuthDatabase" />
+				</RadzenFormField>
+				<RadzenFormField Text="Primary Database" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Mongo.PrimaryDatabaseName" />
+				</RadzenFormField>
+				<RadzenFormField Text="Connection String" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Mongo.ConnectionString" />
+				</RadzenFormField>
+				<RadzenFormField Text="Accounts Collection Name" Variant="Variant.Outlined">
+					<RadzenTextBox @bind-Value="@_configuration.Mongo.AccountCollectionName" />
+				</RadzenFormField>
+			</RadzenStack>
+		</RadzenColumn>
 	</RadzenRow>
 	<RadzenRow Gap="1rem">
 		<RadzenColumn Size="12" SizeSM="6">

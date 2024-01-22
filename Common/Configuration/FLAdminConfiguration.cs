@@ -17,16 +17,16 @@ public class FLAdminConfiguration
 		DefaultIgnoreCondition = JsonIgnoreCondition.Never
 	};
 
+	public static string ConfigPath => Path.Combine(Environment.GetFolderPath(
+		Environment.SpecialFolder.LocalApplicationData), "FLAdmin", "configuration.json");
+
 	public void Save()
 	{
-		var path = Path.Combine(Environment.GetFolderPath(
-			Environment.SpecialFolder.LocalApplicationData), "FLAdmin", "configuration.json")!;
-		if (!Directory.Exists(path))
+		if (!Directory.Exists(ConfigPath))
 		{
-			_ = Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+			_ = Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath)!);
 		}
-		File.WriteAllText(path,
-			JsonSerializer.Serialize(this, SerializerOptions));
+		File.WriteAllText(ConfigPath, JsonSerializer.Serialize(this, SerializerOptions));
 	}
 
 	public static FLAdminConfiguration Load()
@@ -38,17 +38,18 @@ public class FLAdminConfiguration
 			{
 				_instance = JsonSerializer.Deserialize<FLAdminConfiguration>(File.ReadAllText(path), SerializerOptions);
 
-				if (_instance is not null)
+				if (_instance is null)
 				{
-					return _instance;
+					Console.WriteLine("Error while deserializing configuration. Assuming corrupted file. Regenerating.");
+					_instance = new FLAdminConfiguration();
 				}
-
-				Console.WriteLine("Error while deserializing configuration. Assuming corrupted file. Regenerating.");
+			}
+			else
+			{
 				_instance = new FLAdminConfiguration();
-				return _instance;
 			}
 
-			_instance = new FLAdminConfiguration();
+			// Force a save to ensure we have correct permissions
 			_instance.Save();
 
 			return _instance;
@@ -67,6 +68,7 @@ public class FLAdminConfiguration
 	public LoggingSettings Logging { get; set; } = new();
 	public FLServerSettings Server { get; set; } = new();
 	public MessagingSettings Messaging { get; set; } = new();
+	public MongoSettings Mongo { get; set; } = new();
 
 	public void CopyConfigTo(FLAdminConfiguration config)
 	{
@@ -103,6 +105,13 @@ public class FLAdminConfiguration
 			FreelancerPath = Server.FreelancerPath,
 			LaunchArgs = Server.LaunchArgs,
 			Port = Server.Port,
+		};
+
+		config.Mongo = new MongoSettings()
+		{
+			ConnectionString = Mongo.ConnectionString,
+			Host = Mongo.Host,
+			Port = Mongo.Port,
 		};
 	}
 }
