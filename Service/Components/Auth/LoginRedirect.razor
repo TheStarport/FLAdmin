@@ -5,8 +5,9 @@
 @code {
     protected override async void OnAfterRender(bool firstRender)
     {
-        var state = await AuthState.GetAuthenticationStateAsync();
-        if (state.User!.Identity!.IsAuthenticated)
+		var state = await AuthState.GetAuthenticationStateAsync();
+
+        if (state.User.Identity?.IsAuthenticated ?? false)
         {
             NavigationManager.NavigateTo("/");
         }

@@ -1,13 +1,13 @@
 @page "/admins"
 @using System.Text.RegularExpressions;
 @using Common.Auth;
-@attribute [Authorize(Roles = "ManageAdmins")]
-@inject IPersistentRoleProvider RoleProvider
+@attribute [Authorize(Roles = nameof(Role.ManageAdmins))]
 @inject IJwtProvider JwtProvider
 @inject IDispatcher Dispatcher
 @inject DialogService DialogService
 @inject NotificationService NotificationService
 
+@*
 <div style="display: flex; align-items: center; margin-bottom: 16px">
     <RadzenButton Click="@NewAdmin" Text="New User" ButtonStyle="ButtonStyle.Info" Style="margin: 3px;" />
     <RadzenButton Disabled="!Selected" Click="@ClearSelection" Text="Clear Selection" ButtonStyle="ButtonStyle.Secondary" Style="margin: 3px;" />
@@ -175,3 +175,4 @@
         InvokeAsync(StateHasChanged);
     }
 }
+*@

@@ -28,7 +28,7 @@ public class JwtProvider : IJwtProvider
 
 		try
 		{
-			handler.ValidateToken(token, tokenValidationParameters, out var validatedToken);
+			_ = handler.ValidateToken(token, tokenValidationParameters, out var validatedToken);
 			return validatedToken.ToString();
 		}
 		catch (Exception)
@@ -37,14 +37,10 @@ public class JwtProvider : IJwtProvider
 		}
 	}
 
-	public string GenerateToken(string name)
+	public string GenerateToken(ClaimsIdentity identity)
 	{
 		var signingKey = _keyProvider.GetSigningKey();
 		var encryptionKey = _keyProvider.GetEncryptionKey();
-
-		var claimName = new Claim(ClaimTypes.Name, name);
-
-		var identity = new ClaimsIdentity(new[] { claimName }, "jwt");
 
 		var descriptor = new SecurityTokenDescriptor()
 		{
@@ -53,7 +49,7 @@ public class JwtProvider : IJwtProvider
 			Expires = DateTime.UtcNow.AddYears(1),
 			SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(signingKey), SecurityAlgorithms.HmacSha256),
 			Issuer = "FLAdmin",
-			EncryptingCredentials = new(new SymmetricSecurityKey(encryptionKey), SecurityAlgorithms.Aes256KW, SecurityAlgorithms.Aes256CbcHmacSha512)
+			EncryptingCredentials = new EncryptingCredentials(new SymmetricSecurityKey(encryptionKey), SecurityAlgorithms.Aes256KW, SecurityAlgorithms.Aes256CbcHmacSha512)
 		};
 
 		var handler = new JwtSecurityTokenHandler();

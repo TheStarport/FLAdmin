@@ -1,0 +1,79 @@
+@using System.ComponentModel.DataAnnotations
+@using Common.Models.Forms
+@using Common.Storage
+@inject DialogService DialogService
+@inject NotificationService NotificationService
+@inject IAccountStorage AccountStorage
+
+<RadzenStack Gap="1rem">
+	<RadzenTemplateForm TItem="Model" Data="_model" Submit="OnSubmit">
+		<RadzenFieldset Text="New Admin">
+			<RadzenStack>
+				<RadzenTextBox Name="Name" @bind-Value="_model.Name" Placeholder="Username" />
+				<RadzenRequiredValidator Component="Name" Text="Admin name is required" />
+
+				<RadzenPassword Name="Password" @bind-Value="_model.Password" Placeholder="Password" />
+				<RadzenRequiredValidator Component="Password" Text="Password is required" />
+				<RadzenLengthValidator Component="Password" Min="12" Max="255" Visible="@(!string.IsNullOrEmpty(_model.Password))"
+				                      Text="Password must be between 12 and 255 characters"/>
+				<RadzenRegexValidator Component="Password" Pattern="@_regexPattern" Visible="@(_model.Password.Length is >= 11 and <= 255)"
+				                      Text="Password must contain at least one of the following: uppercase letter, lower case letter, special character, number"/>
+
+				<RadzenPassword Name="Confirm Password" @bind-Value="_model.ConfirmPassword" Placeholder="Confirm Password" />
+				<RadzenRequiredValidator Component="Confirm Password" Text="Password must be confirmed" />
+				<RadzenCompareValidator Component="Confirm Password" Visible="@(!string.IsNullOrEmpty(_model.ConfirmPassword))"
+				                        Value="@_model.Password" Text="Passwords should match" />
+
+				<RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Class="rz-mt-4">
+					<RadzenButton ButtonType="ButtonType.Submit" Text="Submit" />
+				</RadzenRow>
+			</RadzenStack>
+		</RadzenFieldset>
+	</RadzenTemplateForm>
+</RadzenStack>
+
+@code
+{
+	class Model
+	{
+		[Required]
+		public string Name { get; set; } = string.Empty;
+
+		[Required]
+		[DataType(DataType.Password)]
+		public string Password { get; set; } = string.Empty;
+
+		[Required]
+		[DataType(DataType.Password)]
+		public string ConfirmPassword { get; set; } = string.Empty;
+	}
+
+	private readonly string _regexPattern = "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$";
+
+	private readonly Model _model = new();
+
+	private async Task OnSubmit()
+	{
+		if (_model.Password.IndexOfAny(new[] { ' ', '\n', '\r', '\t' }) != -1)
+		{
+			NotificationService.Notify(NotificationSeverity.Error, "Your password contains forbidden characters");
+			return;
+		}
+
+		var error = await AccountStorage.CreateInstanceAdmin(new SignUp()
+		{
+			Name = _model.Name,
+			Password = _model.Password
+		});
+
+		if (error is not null)
+		{
+			NotificationService.Notify(NotificationSeverity.Error, "Unable to create admin", error);
+		}
+		else
+		{
+			NotificationService.Notify(NotificationSeverity.Success, "Admin user created! You may now login.");
+			DialogService.Close();
+		}
+	}
+}

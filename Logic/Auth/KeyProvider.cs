@@ -23,7 +23,7 @@ public class KeyProvider : IKeyProvider
 
 	public byte[] GetSigningKey()
 	{
-		if (!_signingKey.Any())
+		if (_signingKey.Length == 0)
 		{
 			ReadKey(KeyType.SigningKey);
 			return _signingKey;

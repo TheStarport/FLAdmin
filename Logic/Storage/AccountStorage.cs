@@ -1,6 +1,7 @@
 namespace Logic.Storage;
 
 using System.Linq.Expressions;
+using Auth;
 using Common.Auth;
 using Common.Configuration;
 using Common.Models;
@@ -121,9 +122,50 @@ public class AccountStorage : IAccountStorage
 	}
 
 	public Task<Pagination<Account>?> SearchForCharacter(string characterName, int amountPerPage = 20) => throw new NotImplementedException();
-	public Task CreateSuperAdmin(SignUp signUp)
+
+	public async Task SetAccountToken(Account account, string? token) =>
+		await AccountsCollection.FindOneAndUpdateAsync(x => x.Id == account.Id,
+			Builders<Account>.Update.Set(x => x.HashedToken, token));
+
+	public async Task<bool> InstanceAdminExists()
 	{
-		return Task.CompletedTask;
+		await EnsureCollection();
+
+		return await AccountsCollection!.CountDocumentsAsync(Builders<Account>.Filter.AnyStringIn(x => x.WebRoles, Role.InstanceAdmin.ToString())) != 0;
+	}
+
+	public async Task<string?> CreateInstanceAdmin(SignUp signUp)
+	{
+		await EnsureCollection();
+
+		if (await InstanceAdminExists())
+		{
+			return "Instance admin already exists.";
+		}
+
+		var name = signUp.Name.Trim();
+
+		// Ensure that if the roles are messed up duplicate accounts cannot be created
+		if (await AccountsCollection!.CountDocumentsAsync(Builders<Account>.Filter.Where(x => x.Username == name)) is
+			not 0)
+		{
+			return "An account with that name already exists.";
+		}
+
+		var password = signUp.Password.Trim();
+		byte[]? salt = null;
+		var account = new Account()
+		{
+			Id = Guid.NewGuid().ToString(),
+			PasswordHash = PasswordHasher.GenerateSaltedHash(password, ref salt),
+			Salt = salt,
+			Username = name,
+			WebRoles = new List<string> { Role.Web.ToString(), Role.InstanceAdmin.ToString() },
+		};
+
+		await AccountsCollection.InsertOneAsync(account);
+
+		return null;
 	}
 
 	private async Task EnsureCollection() => AccountsCollection ??= await _mongo.GetCollectionAsync<Account>(_configuration.Mongo.AccountCollectionName);

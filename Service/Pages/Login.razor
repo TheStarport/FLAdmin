@@ -1,38 +1,64 @@
 @page "/login"
-@using Common.Auth;
-@using Common.State.ModalInfo;
+@using Logic.Auth
+@using Service.Pages.Subpages
+@using Common.Storage
+
 @attribute [AllowAnonymous]
 @inject AuthStateProvider AuthState
 @inject NavigationManager NavigationManager
-@inject ILocalStorageService LocalStorage
-@inject IDispatcher Dispatcher
-@inject IPersistentRoleProvider RoleProvider
+@inject IAccountStorage AccountStorage
+@inject DialogService DialogService
 
-<div class="rz-p-12 rz-text-align-center" style="display: @(_render ? "inherit" : "none")">
-    <div>
-        <RadzenFormField Text="Login Token" Variant="Variant.Flat">
-            <Start>
-                <RadzenIcon Icon="account_circle" />
-            </Start>
-            <ChildContent>
-                <RadzenPassword @bind-Value="@_value" Placeholder="Enter Login Token" />
-            </ChildContent>
-        </RadzenFormField>
-    </div>
-    <div class="rz-p-3">
-        <RadzenCheckBox @bind-Value="@_rememberMe" Name="RememberMe" />
-        <RadzenLabel Text="Remember Me?" Component="RememberMe" Style="color: white" />
-    </div>
-    <div class="rz-p-3">
-        <RadzenButton Click="@(_ => SignIn(false))" Text="Login" Icon="lock_open" ButtonStyle="ButtonStyle.Primary" />
-    </div>
-</div>
+<RadzenStack class="vh-100" Gap="1rem" Style=@(_render ? "display: inherit" : "display: none") AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center">
+    <RadzenTemplateForm TItem="Model" Data="_model" Submit="OnSubmit">
+        <RadzenFieldset Text="Login">
+            <RadzenStack>
+                <RadzenTextBox Name="Name" @bind-Value="_model.Username" Placeholder="Username"/>
+                <RadzenRequiredValidator Component="Name" Text="Username is required"/>
+
+                <RadzenPassword Name="Password" @bind-Value="_model.Password" Placeholder="Password"/>
+                <RadzenRequiredValidator Component="Password" Text="Password is required"/>
+
+                <RadzenCheckBox Name="Remember Me" @bind-Value="_model.RememberMe"/>
+                <RadzenCustomValidator Component="Remember Me" Text="The username or password was incorrect." Validator="() => _hideInvalidLogin" />
+
+                <RadzenRow AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Class="rz-mt-4">
+                    <RadzenButton ButtonType="ButtonType.Submit" Text="Submit"></RadzenButton>
+                </RadzenRow>
+            </RadzenStack>
+        </RadzenFieldset>
+    </RadzenTemplateForm>
+</RadzenStack>
 
 @code
 {
+    private class Model
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public bool RememberMe { get; set; }
+    }
+
+    private readonly Model _model = new();
+    private bool _hideInvalidLogin = true;
+
     bool _render = false;
-    string? _value;
-    bool _rememberMe;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        if (!await AccountStorage.InstanceAdminExists())
+        {
+            await DialogService.OpenAsync<FirstTimeLogin>("First Time Setup", options: new DialogOptions()
+            {
+				AutoFocusFirstElement = true,
+				CloseDialogOnEsc = false,
+				CloseDialogOnOverlayClick = false,
+
+            });
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -43,48 +69,21 @@
             return;
         }
 
-	    if (RoleProvider.GenerateDefaultAdminUserIfNotExists())
-	    {
-		    return;
-	    }
-
-        _value = await LocalStorage.GetItemAsStringAsync("token");
-        if (_value is not null)
-        {
-            // Attempt to sign in if we already have a valid token
-            if(!await SignIn(true))
-            {
-                // Token was bad, clear it
-                await LocalStorage.RemoveItemAsync("token");
-            }
-            else
-            {
-                return;
-            }
-        }
+        // Attempt
+        var e = await AuthState.GetAuthenticationStateAsync();
 
         _render = true;
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task<bool> SignIn(bool automatic)
+    private async Task OnSubmit()
     {
-        if (AuthState.Authenticate(_value ?? ""))
+        if (await AuthState.Login(_model.Username, _model.Password, _model.RememberMe))
         {
             NavigationManager.NavigateTo("/");
+            return;
+        }
 
-            if (_rememberMe)
-            {
-                await LocalStorage.SetItemAsStringAsync("token", _value);
-            }
-            
-            return true;
-        }
-        else if (!automatic)
-        {
-            Dispatcher.Dispatch(new ModalInfoAction($"Invalid login token", true));
-        }
-        
-        return false;
+        _hideInvalidLogin = false;
     }
 }

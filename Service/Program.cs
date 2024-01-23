@@ -25,6 +25,8 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Filters;
 using Serilog.Formatting.Compact;
+using Microsoft.AspNetCore.Identity;
+
 
 // Debug only options
 #if DEBUG
@@ -36,9 +38,6 @@ var builder = WebApplication.CreateBuilder(args);
 var config = FLAdminConfiguration.Get();
 builder.Services.AddSingleton(config);
 
-builder.Services.AddSingleton<IKeyProvider, KeyProvider>();
-builder.Services.AddSingleton<IPersistentRoleProvider, PersistentRoleProvider>();
-builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
 builder.Services.AddSingleton<IStatsManager, StatsManager>();
 builder.Services.AddSingleton<IJobManager, JobManager>();
 builder.Services.AddSingleton<IFreelancerDataProvider, FreelancerDataProvider>();
@@ -80,9 +79,12 @@ builder.Services.AddScoped<DialogService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<TooltipService>();
 
-builder.Services.AddScoped<JwtAuthStateProvider>();
-builder.Services.AddScoped<AuthStateProvider>(x => x.GetRequiredService<JwtAuthStateProvider>());
-builder.Services.AddScoped<AuthenticationStateProvider>(x => x.GetRequiredService<JwtAuthStateProvider>());
+// Authentication
+builder.Services.AddSingleton<IKeyProvider, KeyProvider>();
+builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
+
+builder.Services.AddScoped<AuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>((x) => x.GetRequiredService<AuthStateProvider>());
 
 // Hosted Services
 builder.Services.AddSingleton<IServerLifetime, ServerLifetimeService>();
@@ -167,6 +169,9 @@ app.UseRouting();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.Run();
 

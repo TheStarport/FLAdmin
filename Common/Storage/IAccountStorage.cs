@@ -14,6 +14,7 @@ public interface IAccountStorage
 	Task<Account?> CreateNewCharacterAsync(string accountId, Character character);
 	Task<Character?> GetCharacterByNameAsync(string name);
 	Task<Pagination<Account>?> SearchForCharacter(string characterName, int amountPerPage = 20);
-	Task CreateSuperAdmin(SignUp signUp);
-
+	Task SetAccountToken(Account account, string? token);
+	Task<bool> InstanceAdminExists();
+	Task<string?> CreateInstanceAdmin(SignUp signUp);
 }
