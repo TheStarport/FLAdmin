@@ -3,77 +3,57 @@ namespace Logic.Jobs;
 using Common.Jobs;
 using Quartz;
 using System.Collections.Generic;
+using Common.Storage;
+using Quartz.Spi;
 
 public class JobManager : IJobManager
 {
 	private readonly ISchedulerFactory _schedulerFactory;
-	private HashSet<JobGroup> _jobGroups = new();
+	private readonly IJobStorage _jobStorage;
+	private readonly IMongoManager _mongo;
 
-	private static IReadOnlyDictionary<string, Type> JobTypes => new Dictionary<string, Type>()
-	{
-		{ RunShellJob.Id, typeof(RunShellJob) },
-	};
-
-	public JobManager(ISchedulerFactory schedulerFactory)
+	public JobManager(ISchedulerFactory schedulerFactory, IMongoManager mongo, IJobStorage jobStorage)
 	{
 		_schedulerFactory = schedulerFactory;
+		_mongo = mongo;
+		_jobStorage = jobStorage;
 
 		// TODO: Register all jobs that have cron timers set
 		// TODO: Load jobs from the redis database
 	}
 
-	public void AddJob(JobGroup group, Job job) => _jobGroups.Add(group);
-
 	public async Task ExecuteTrigger(JobTrigger trigger, CancellationToken token)
 	{
-		foreach (var group in _jobGroups)
+		var db = _mongo.GetDatabase();
+		var groups = await _jobStorage.GetJobGroupByTrigger(trigger);
+
+		foreach (var group in groups)
 		{
-			if (!group.Triggers.Contains(trigger))
+			foreach (var jobRef in group.Jobs)
 			{
-				continue;
+
 			}
 
-			foreach (var job in group.Jobs)
+			var jobType = job.Data.GetJobType();
+
+			var jobBuilder = JobBuilder.Create(jobType.Item1)
+				.WithIdentity(job.Name)
+				.WithDescription(job.Description);
+
+			// If job params were specified,
+			if (jobType.Item2 is not null)
 			{
-				if (!JobTypes.ContainsKey(job.JobId))
-				{
-					// TODO: Log invalid job with a warning
-					continue;
-				}
-
-				// TODO: Handle job parameters
-
-				var builtJob = JobBuilder.Create(JobTypes[job.JobId])
-					.WithIdentity(job.Name, group.Name)
-					.WithDescription(job.Description)
-					.Build();
-
-				var triggerNow = TriggerBuilder.Create()
-					.WithIdentity(job.Name, group.Name)
-					.WithSimpleSchedule()
-					.StartNow()
-					.Build();
-
-				var scheduler = await _schedulerFactory.GetScheduler(token);
-				_ = await scheduler.ScheduleJob(builtJob, triggerNow, token);
+				jobBuilder.SetJobData(jobType.Item2);
 			}
-		}
-	}
 
-	public JobGroup? GetGroup(string groupName) => _jobGroups.FirstOrDefault(x => x.Name == groupName);
-	public IReadOnlyCollection<JobGroup> GetGroups() => _jobGroups;
-	public void RemoveJob(JobGroup group, Job job) => group.Jobs.Remove(job);
-	public void RemoveJobByName(JobGroup group, string name)
-	{
-		if (group.Jobs.Count == 0)
-		{
-			return;
-		}
+			var triggerNow = TriggerBuilder.Create()
+				.WithIdentity(job.Name)
+				.WithSimpleSchedule()
+				.StartNow()
+				.Build();
 
-		var index = group.Jobs.FindIndex(x => x.Name == name);
-		if (index >= 0)
-		{
-			group.Jobs.RemoveAt(index);
+			var scheduler = await _schedulerFactory.GetScheduler(token);
+			_ = await scheduler.ScheduleJob(jobBuilder.Build(), triggerNow, token);
 		}
 	}
 }

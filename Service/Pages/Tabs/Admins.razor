@@ -1,7 +1,9 @@
 @page "/admins"
 @using System.Text.RegularExpressions;
 @using Common.Auth;
-@attribute [Authorize(Roles = nameof(Role.ManageAdmins))]
+@using Logic.Attributes
+@using Service.Components.Players.Admins
+@attribute [AdminAuthorize(Role.ManageAdmins)]
 @inject IJwtProvider JwtProvider
 @inject IDispatcher Dispatcher
 @inject DialogService DialogService
@@ -13,23 +15,19 @@
     <RadzenButton Disabled="!Selected" Click="@ClearSelection" Text="Clear Selection" ButtonStyle="ButtonStyle.Secondary" Style="margin: 3px;" />
     <RadzenButton Disabled="!Selected" Click="@UpdateAdmin" Text="Update User" ButtonStyle="ButtonStyle.Warning" Style="margin: 3px;" />
     <RadzenButton Disabled="!Selected" Click="@DeleteAdmin" Text="Delete User" ButtonStyle="ButtonStyle.Danger" Style="margin: 3px;" />
-</div>
+</div>*@
 
-<RadzenDataGrid AllowFiltering="true" FilterPopupRenderMode="PopupRenderMode.OnDemand" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" AllowPaging="true" PageSize="4"
-                AllowSorting="true" Data="@_users" TItem="AdminUser" ColumnWidth="200px" SelectionMode="DataGridSelectionMode.Single" @bind-Value="@_selectedUsers">
-    <Columns>
-        <RadzenDataGridColumn TItem="AdminUser" Property="Name" Title="Name" />
-        <RadzenDataGridColumn TItem="AdminUser" Property="Roles" Title="Permissions">
-            <Template Context="data">
-                @string.Join(", ", data.Roles.Select(RoleToString))
-            </Template>
-        </RadzenDataGridColumn>
-    </Columns>
-</RadzenDataGrid>
+@*
+	TODO: Create common 'Page' component for centering content with a min height
+*@
+<RadzenStack class="vh-100 py-5" Gap="1rem" AlignItems="AlignItems.Center">
+
+	<AdminTable/>
+</RadzenStack>
 
 @code
 {
-    IList<AdminUser>? _selectedUsers;
+    @*IList<AdminUser>? _selectedUsers;
     IEnumerable<Role> _allRoles = Enum.GetValues<Role>();
 
     IEnumerable<AdminUser> _users;
@@ -173,6 +171,5 @@
         _selectedUsers = null;
 
         InvokeAsync(StateHasChanged);
-    }
+    }*@
 }
-*@

@@ -5,7 +5,8 @@ using MongoDB.Driver;
 public interface IMongoManager
 {
 	Task<bool> ConnectAsync();
-	IMongoDatabase? GetDatabase(string database);
+	IMongoDatabase? LoadDatabase(string database);
+	IMongoDatabase? GetDatabase();
 
 	Task<IMongoCollection<T>?> GetCollectionAsync<T>(string collectionName, bool createIfNotExists = true);
 }

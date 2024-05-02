@@ -45,6 +45,7 @@ builder.Services.AddSingleton<IFreelancerDataProvider, FreelancerDataProvider>()
 // MongoDB
 builder.Services.AddSingleton<IMongoManager, MongoManager>();
 builder.Services.AddSingleton<IAccountStorage, AccountStorage>();
+builder.Services.AddSingleton<IJobStorage, JobStorage>();
 
 if (config.Messaging.EnableMessaging)
 {

@@ -31,7 +31,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Components\Players\" />
 		<Folder Include="wwwroot\images\" />
 	</ItemGroup>
 

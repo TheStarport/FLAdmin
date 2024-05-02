@@ -1,6 +1,7 @@
 namespace Common.Storage;
 
 using System.Linq.Expressions;
+using Auth;
 using Models;
 using Models.Database;
 using Models.Forms;
@@ -15,6 +16,8 @@ public interface IAccountStorage
 	Task<Character?> GetCharacterByNameAsync(string name);
 	Task<Pagination<Account>?> SearchForCharacter(string characterName, int amountPerPage = 20);
 	Task SetAccountToken(Account account, string? token);
+	Task SetAccountRoles(Account account, IEnumerable<Role> webRoles, List<string> gameRoles);
 	Task<bool> InstanceAdminExists();
 	Task<string?> CreateInstanceAdmin(SignUp signUp);
+	IQueryable<Account> GetAdmins();
 }

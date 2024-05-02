@@ -10,4 +10,5 @@ public class MongoSettings
 	public string AuthDatabase { get; set; } = string.Empty;
 	public string PrimaryDatabaseName { get; set; } = "FLHook";
 	public string AccountCollectionName { get; set; } = "accounts";
+	public string JobCollection { get; set; } = "jobs";
 }

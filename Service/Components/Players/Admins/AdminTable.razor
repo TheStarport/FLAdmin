@@ -1,0 +1,92 @@
+@using Common.Auth;
+@using Common.Models.Database
+@using Common.Storage
+@using Logic.Auth
+@inject NotificationService NotificationService
+@inject IAccountStorage AccountStorage
+@inject AuthStateProvider Auth
+
+<div style="display: flex; align-items: center; margin-bottom: 16px">
+	<RadzenButton Disabled="SelectedAccount is null" Click="ClearSelection" Text="Clear Selection" ButtonStyle="ButtonStyle.Secondary" Style="margin: 3px;" />
+	<RadzenButton Disabled="SelectedAccount is null" Text="Edit Admin" ButtonStyle="ButtonStyle.Warning" Style="margin: 3px;" />
+	<RadzenButton Disabled="SelectedAccount is null" Click="RevokeAdminPermissions" Text="Revoke Administrator Permissions" ButtonStyle="ButtonStyle.Danger" Style="margin: 3px;" />
+</div>
+
+<RadzenStack>
+	<RadzenDataGrid @ref="_adminGrid" AllowPaging="true" AllowSorting="true" AllowRowSelectOnRowClick="true" SelectionMode="DataGridSelectionMode.Single" @bind-Value="@_selectedAccounts"
+	                Data ="@(_filteredAccounts ?? _accounts)" TItem="Account" PageSize="20" Style="height: 80dvh">
+		<Columns>
+			<RadzenDataGridColumn TItem="Account" Property="Id" Title="ID"/>
+			<RadzenDataGridColumn TItem="Account" Property="Username" Title="Username" />
+			<RadzenDataGridColumn TItem="Account" Title="Web Roles">
+				<Template Context="account">
+					<RadzenText Style="max-width: 200px">@string.Join(", ", account.WebRoles)</RadzenText>
+				</Template>
+			</RadzenDataGridColumn>
+			<RadzenDataGridColumn TItem="Account" Title="Game Roles">
+				<Template Context="account">
+					<RadzenText Style="max-width: 200px">@string.Join(", ", account.GameRoles)</RadzenText>
+				</Template>
+			</RadzenDataGridColumn>
+		</Columns>
+		<FooterTemplate>
+			Displayed Admins: <b>@_adminGrid.View.Count()</b> of <b>@_accounts.Count()</b>
+		</FooterTemplate>
+	</RadzenDataGrid>
+</RadzenStack>
+
+@code
+{
+	private IQueryable<Account>? _filteredAccounts = null;
+	private IQueryable<Account> _accounts = null!;
+	private IList<Account> _selectedAccounts = null!;
+	private RadzenDataGrid<Account> _adminGrid = null!;
+
+	private Account? SelectedAccount => _selectedAccounts.FirstOrDefault();
+
+	private void ClearSelection() => _selectedAccounts.Clear();
+
+	private void EditAccount()
+	{
+
+	}
+
+	private void RevokeAdminPermissions()
+	{
+		var account = SelectedAccount;
+		if (account is null)
+		{
+			return;
+		}
+
+		if (account.WebRoles.Any(x => x.Equals(Role.InstanceAdmin.ToString(), StringComparison.InvariantCultureIgnoreCase)))
+		{
+			NotificationService.Notify(NotificationSeverity.Error, "Invalid Target", "Instance admins cannot have their permissions revoked.");
+			return;
+		}
+
+		if (account.Id.Equals(Auth.CurrentUser!.Id, StringComparison.InvariantCultureIgnoreCase))
+		{
+			NotificationService.Notify(NotificationSeverity.Error, "Invalid Target", "You cannot revoke your own permissions.");
+			return;
+		}
+
+		AccountStorage.SetAccountRoles(account, Array.Empty<Role>(), new List<string>());
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+
+		_accounts = AccountStorage.GetAdmins();
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await base.OnAfterRenderAsync(firstRender);
+
+		if (firstRender)
+		{
+		}
+	}
+}

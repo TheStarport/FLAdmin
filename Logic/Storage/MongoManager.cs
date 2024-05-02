@@ -63,7 +63,8 @@ public class MongoManager : IMongoManager
 		}
 	}
 
-	public IMongoDatabase? GetDatabase(string database) => MongoClient?.GetDatabase(database);
+	public IMongoDatabase? LoadDatabase(string database) => MongoClient?.GetDatabase(database);
+	public IMongoDatabase? GetDatabase() => Database;
 
 	public async Task<IMongoCollection<T>?> GetCollectionAsync<T>(string collectionName, bool createIfNotExists = true)
 	{

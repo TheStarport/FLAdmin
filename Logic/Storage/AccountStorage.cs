@@ -127,6 +127,13 @@ public class AccountStorage : IAccountStorage
 		await AccountsCollection.FindOneAndUpdateAsync(x => x.Id == account.Id,
 			Builders<Account>.Update.Set(x => x.HashedToken, token));
 
+	public async Task SetAccountRoles(Account account, IEnumerable<Role> webRoles, List<string> gameRoles) =>
+		await AccountsCollection.FindOneAndUpdateAsync(x => x.Id == account.Id,
+			Builders<Account>.Update
+				.Set(x => x.WebRoles, webRoles.Select(x => x.ToString()))
+				.Set(x => x.GameRoles, gameRoles));
+
+
 	public async Task<bool> InstanceAdminExists()
 	{
 		await EnsureCollection();
@@ -167,6 +174,10 @@ public class AccountStorage : IAccountStorage
 
 		return null;
 	}
+
+	public IQueryable<Account> GetAdmins() =>
+		AccountsCollection.AsQueryable()
+			.Where(account => account.GameRoles.Count != 0 || account.WebRoles.Count != 0);
 
 	private async Task EnsureCollection() => AccountsCollection ??= await _mongo.GetCollectionAsync<Account>(_configuration.Mongo.AccountCollectionName);
 }
