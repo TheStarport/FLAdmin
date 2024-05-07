@@ -152,8 +152,6 @@ if (!await app.Services.GetRequiredService<IMongoManager>().ConnectAsync())
 
 app.Services.GetRequiredService<IFreelancerDataProvider>().Reload();
 
-AppDomain.CurrentDomain.ProcessExit += (_, _) => OnProcessExit(app.Services);
-
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
@@ -177,7 +175,3 @@ app.UseAuthorization();
 app.Run();
 
 return 0;
-
-// Explicit process exit as some consoles being closed do not trigger automatic shutdown steps
-static void OnProcessExit(IServiceProvider services) =>
-	Task.WaitAll(services.GetServices<IHostedService>().Select(service => service.StopAsync(CancellationToken.None)).ToArray());

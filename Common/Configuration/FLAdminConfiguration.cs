@@ -99,7 +99,6 @@ public class FLAdminConfiguration
 			AutoDownloadLatestFLHook = Server.AutoDownloadLatestFLHook,
 			AutoStartFLServer = Server.AutoStartFLServer,
 			CheckForFLHookUpdates = Server.CheckForFLHookUpdates,
-			CloseFLServerIfAlreadyOpen = Server.CloseFLServerIfAlreadyOpen,
 			UseFLHook = Server.UseFLHook,
 			FLHookRepositry = Server.FLHookRepositry,
 			FreelancerPath = Server.FreelancerPath,

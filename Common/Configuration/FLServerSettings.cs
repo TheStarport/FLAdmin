@@ -9,6 +9,5 @@ public class FLServerSettings
 	public bool UseFLHook { get; set; } = true;
 	public bool CheckForFLHookUpdates { get; set; } = true;
 	public bool AutoDownloadLatestFLHook { get; set; } = true;
-	public bool CloseFLServerIfAlreadyOpen { get; set; } = true;
 	public string FLHookRepositry { get; set; } = "https://github.com/TheStarport/FLHook";
 }

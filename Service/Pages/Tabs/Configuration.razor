@@ -30,10 +30,6 @@
 				<RadzenFormField Text="FLServer Port" Variant="Variant.Outlined">
 					<RadzenNumeric @bind-Value="@_configuration.Server.Port"/>
 				</RadzenFormField>
-				<RadzenStack Gap="0.5rem" Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center">
-					<RadzenLabel Text="Close FLServer If It's Already Open':"/>
-					<RadzenSwitch @bind-Value="@_configuration.Server.CloseFLServerIfAlreadyOpen"/>
-				</RadzenStack>
 				<RadzenFormField Text="Freelancer Path" Variant="Variant.Outlined">
 					<RadzenTextBox @bind-Value="@_configuration.Server.FLHookRepositry"/>
 				</RadzenFormField>

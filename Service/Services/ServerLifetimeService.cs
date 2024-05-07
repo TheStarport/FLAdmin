@@ -2,6 +2,7 @@ namespace Service.Services;
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,6 +54,7 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 				{
 					_flServer.CancelOutputRead();
 					_flServer.Kill();
+					await _flServer.WaitForExitAsync(stoppingToken);
 					_flServer.Dispose();
 					_flServer = null;
 				}
@@ -63,7 +65,8 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 	public void SendCommandToConsole(string command) => _flServer?.StandardInput.WriteLine(command);
 	public void Terminate()
 	{
-		_ = (_flServer?.CloseMainWindow());
+		_flServer?.Kill();
+		_flServer?.WaitForExit();
 		_readyToStart = false;
 	}
 
@@ -82,22 +85,34 @@ public class ServerLifetimeService : BackgroundService, IServerLifetime
 			return false;
 		}
 
+		try
+		{
+			// Close FLServer if already open
+			Process[] activeProcesses;
+			do
+			{
+
+				activeProcesses = Process.GetProcessesByName("FLServer").Where(x => x.MainWindowTitle != "FLHook")
+					.ToArray();
+				foreach (var process in activeProcesses)
+				{
+					process.Kill();
+				}
+
+				await Task.Delay(TimeSpan.FromSeconds(0.5));
+			} while (activeProcesses.Length > 0);
+		}
+		catch (Win32Exception ex)
+		{
+			_logger.LogError(ex, "Unable to terminate existing FLServer. FLAdmin does not control active instance.");
+			_readyToStart = false;
+			return false;
+		}
+
 		var path = Environment.ExpandEnvironmentVariables(_configuration.Server.FreelancerPath);
 
 		var exePath = Path.Combine(path, "EXE");
 		var fileNamePath = Path.Combine(exePath, "FLServer.exe");
-
-		if (_configuration.Server.CloseFLServerIfAlreadyOpen)
-		{
-			var activeProcesses = Process.GetProcessesByName(fileNamePath);
-			if (activeProcesses.Length > 0)
-			{
-				foreach (var process in activeProcesses)
-				{
-					process.Close();
-				}
-			}
-		}
 
 		ProcessStartInfo startInfo = new()
 		{
