@@ -2,6 +2,8 @@ namespace Service.Services.Listeners;
 using Common.Managers;
 using Common.Messaging;
 using Common.Messaging.Messages;
+using Logic.Extensions;
+using RabbitMQ.Client;
 
 public class ServerStatsListener : AbstractMessageListener
 {
@@ -17,8 +19,10 @@ public class ServerStatsListener : AbstractMessageListener
 
 	protected override void Initialize(CancellationToken token)
 	{
-		var queueName = _exchangeSubscriber.GetQueueName(ExchangeName.ServerStats.ToString());
-		_exchangeSubscriber.Subscribe(ExchangeName.ServerStats.ToString(), queueName, async (_, ea) =>
+		_exchangeSubscriber.EnsureDeclared(ExchangeName.ServerStats, ExchangeType.Fanout);
+		
+		var queueName = _exchangeSubscriber.GetQueueName(ExchangeName.ServerStats);
+		_exchangeSubscriber.Subscribe(ExchangeName.ServerStats, queueName, async (_, ea) =>
 		{
 			CurrentTask = HandleMessageAsync<ServerStats>(ea, queueName, token);
 			await CurrentTask;

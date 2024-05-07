@@ -1,6 +1,7 @@
 namespace Logic.Messaging;
 
 using Common.Messaging;
+using Extensions;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client.Events;
 
@@ -18,9 +19,10 @@ public class ExchangeSubscriber : IExchangeSubscriber
 		_logger = logger;
 	}
 
-	public string GetQueueName(string exchangeName)
+	public string GetQueueName(ExchangeName name)
 	{
-		var queueName = $"{exchangeName}-{Guid.NewGuid()}";
+		var exchangeName = name.GetFriendlyName();
+		var queueName = $"{name}-{Guid.NewGuid()}";
 		if (_exchangeQueuePair.TryGetValue(exchangeName, out var value))
 		{
 			queueName = value;
@@ -33,7 +35,7 @@ public class ExchangeSubscriber : IExchangeSubscriber
 		return queueName;
 	}
 
-	public void Subscribe(string exchangeName, string queueName, AsyncEventHandler<BasicDeliverEventArgs> action)
+	public void Subscribe(ExchangeName name, string queueName, AsyncEventHandler<BasicDeliverEventArgs> action)
 	{
 		var channel = _channelProvider.ProvideChannel(queueName);
 
@@ -43,14 +45,20 @@ public class ExchangeSubscriber : IExchangeSubscriber
 		}
 
 		var queue = channel.QueueDeclare(queueName, false, true, true, new Dictionary<string, object>());
-		channel.QueueBind(queue.QueueName, exchangeName, string.Empty, new Dictionary<string, object>());
+		channel.QueueBind(queue.QueueName, name.GetFriendlyName(), string.Empty, new Dictionary<string, object>());
 
 		_messageSubscriber.Subscribe(queue.QueueName, action);
 	}
 
-	public void Unsubscribe(string exchangeName)
+	public void EnsureDeclared(ExchangeName name, string type, bool durable = true)
 	{
-		_logger.LogInformation("Unsubscribing from exchange: {}", exchangeName);
+		var channel = _channelProvider.ProvideChannel(name.GetFriendlyName());
+		channel?.ExchangeDeclare(name.GetFriendlyName(), type, durable, false, new Dictionary<string, object>());
+	}
+
+	public void Unsubscribe(ExchangeName name)
+	{
+		_logger.LogInformation("Unsubscribing from exchange: {}", name);
 		foreach (var queue in _exchangeQueuePair)
 		{
 			_messageSubscriber.Unsubscribe(queue.Value);
