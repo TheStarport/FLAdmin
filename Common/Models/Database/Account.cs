@@ -10,12 +10,12 @@ public class Account
 	[BsonId]
 	public required string Id { get; set; }
 
-	[BsonElement("characters")] public List<Character> Characters { get; set; } = new();
+	[BsonElement("characters")] public List<ObjectId> Characters { get; set; } = [];
 	[BsonElement("banned")] public bool Banned { get; set; }
 	[BsonElement("scheduledUnbanDate")] public DateTimeOffset? ScheduledUnbanDate { get; set; }
 	[BsonElement("gameRoles")] public List<string> GameRoles { get; set; } = new();
 	[BsonElement("webRoles")] public List<string> WebRoles { get; set; } = new();
-	[BsonElement("money")] public long Cash { get; set; }
+	[BsonElement("cash")] public long Cash { get; set; }
 	[BsonElement("username")] public string Username { get; set; } = string.Empty;
 	[BsonElement("password")] public string PasswordHash { get; set; } = string.Empty;
 	[BsonElement("hashedToken")] public string? HashedToken { get; set; }

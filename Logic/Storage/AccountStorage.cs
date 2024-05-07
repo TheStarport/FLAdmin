@@ -9,47 +9,35 @@ using Common.Models.Database;
 using Common.Models.Forms;
 using Common.Storage;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 public class AccountStorage : IAccountStorage
 {
 	private readonly ILogger<AccountStorage> _logger;
-	private readonly FLAdminConfiguration _configuration;
-	private readonly IMongoManager _mongo;
-
-	private IMongoCollection<Account>? AccountsCollection { get; set; }
+	private IMongoCollection<BsonDocument> AccountsCollection { get; }
 
 	public AccountStorage(ILogger<AccountStorage> logger, FLAdminConfiguration configuration, IMongoManager mongo)
 	{
 		_logger = logger;
-		_configuration = configuration;
-		_mongo = mongo;
+		AccountsCollection = mongo.GetCollection<BsonDocument>(configuration.Mongo.AccountCollectionName);
 	}
 
 	public async Task<long> GetAccountCountAsync()
 	{
-		await EnsureCollection();
-
 		var count = await AccountsCollection.Aggregate()
+			.Match(x => x["_id"].IsString)
 			.Count()
 			.FirstOrDefaultAsync();
 
 		return count.Count;
 	}
 
-	public async Task<int> GetCharacterCountAsync()
+	public async Task<Pagination<Account>?> GetAccountsAsync(int page, int amountPerPage = 20,
+		Expression<Func<Account, bool>>? filter = null)
 	{
-		await EnsureCollection();
-
-		return await AccountsCollection.Aggregate()
-			.Project(Builders<Account>.Projection.Expression(x => x.Characters.Count))
-			.FirstOrDefaultAsync();
-	}
-
-	public async Task<Pagination<Account>?> GetAccountsAsync(int page, int amountPerPage = 20, Expression<Func<Account, bool>>? filter = null)
-	{
-		await EnsureCollection();
-
 		_logger.LogDebug("Fetching accounts by page. Page: {Page}, AmountPerPage: {Amount}", page, amountPerPage);
 
 		var countFacet = AggregateFacet.Create("count",
@@ -59,15 +47,17 @@ public class AccountStorage : IAccountStorage
 			}));
 
 		var dataFacet = AggregateFacet.Create("data",
-		PipelineDefinition<Account, Account>.Create(new[]
-		{
+			PipelineDefinition<Account, Account>.Create(new[]
+			{
 				PipelineStageDefinitionBuilder.Skip<Account>((page - 1) * amountPerPage),
 				PipelineStageDefinitionBuilder.Limit<Account>(amountPerPage),
-		}));
+			}));
 
 		var filterDefinition = filter is null ? Builders<Account>.Filter.Empty : Builders<Account>.Filter.Where(filter);
 
 		var aggregation = await AccountsCollection.Aggregate()
+			.Match(Builders<BsonDocument>.Filter.Where(x => x["_id"].IsString))
+			.As<Account>()
 			.Match(filterDefinition)
 			.Facet(countFacet, dataFacet)
 			.ToListAsync();
@@ -83,68 +73,54 @@ public class AccountStorage : IAccountStorage
 			?.Facets.First(x => x.Name == "data")
 			.Output<Account>();
 
-		return data is null ? null : new Pagination<Account>()
-		{
-			CurrentPage = page,
-			PageCount = totalPages,
-			Data = data
-		};
+		return data is null
+			? null
+			: new Pagination<Account>() { CurrentPage = page, PageCount = totalPages, Data = data };
 	}
 
-	public async Task<Account?> GetAccountByIdAsync(string id)
-	{
-		await EnsureCollection();
-
-		return await AccountsCollection
-			.Find(Builders<Account>.Filter.Eq(account => account.Id, id))
+	public async Task<Account?> GetAccountByIdAsync(string id) =>
+		await AccountsCollection
+			.Find(Builders<BsonDocument>.Filter.Eq("_id", id))
+			.As<Account>()
 			.FirstOrDefaultAsync();
-	}
 
 	public async Task<Account?> CreateNewCharacterAsync(string accountId, Character character)
 	{
-		await EnsureCollection();
+		var filter = Builders<BsonDocument>.Filter.Eq("_id", accountId);
+		var update = Builders<BsonDocument>.Update.Push("characters", character.Id);
 
-		var filter = Builders<Account>.Filter.Eq(account => account.Id, accountId);
-		var update = Builders<Account>.Update.Push(account => account.Characters, character);
-
-		return await AccountsCollection.FindOneAndUpdateAsync(filter, update);
+		return BsonSerializer.Deserialize<Account>(await AccountsCollection.FindOneAndUpdateAsync(filter, update));
 	}
 
-	public async Task<Character?> GetCharacterByNameAsync(string name)
-	{
-		await EnsureCollection();
-
-		return await AccountsCollection.Aggregate()
-			.Match(account => account.Characters.Any(x => x.CharacterName == name))
-			.Project(Builders<Account>.Projection.Expression(x => x.Characters.Where(y => y.CharacterName == name)))
-			.ReplaceRoot(q => q.ElementAt(0))
+	public async Task<Character?> GetCharacterByNameAsync(string name) =>
+		await AccountsCollection.Aggregate()
+			.Match(Builders<BsonDocument>.Filter.And(
+				Builders<BsonDocument>.Filter.Where(x => x["_id"].IsString),
+				Builders<BsonDocument>.Filter.Where(x => x["characterName"] == name)
+			))
+			.As<Character>()
 			.FirstOrDefaultAsync();
-	}
 
-	public Task<Pagination<Account>?> SearchForCharacter(string characterName, int amountPerPage = 20) => throw new NotImplementedException();
+	public Task<Pagination<Account>?> SearchForCharacter(string characterName, int amountPerPage = 20) =>
+		throw new NotImplementedException();
 
 	public async Task SetAccountToken(Account account, string? token) =>
-		await AccountsCollection.FindOneAndUpdateAsync(x => x.Id == account.Id,
-			Builders<Account>.Update.Set(x => x.HashedToken, token));
+		await AccountsCollection.FindOneAndUpdateAsync(x => x["_id"] == account.Id,
+			Builders<BsonDocument>.Update.Set("hashedToken", token));
 
 	public async Task SetAccountRoles(Account account, IEnumerable<Role> webRoles, List<string> gameRoles) =>
-		await AccountsCollection.FindOneAndUpdateAsync(x => x.Id == account.Id,
-			Builders<Account>.Update
-				.Set(x => x.WebRoles, webRoles.Select(x => x.ToString()))
-				.Set(x => x.GameRoles, gameRoles));
+		await AccountsCollection.FindOneAndUpdateAsync(x => x["_id"] == account.Id,
+			Builders<BsonDocument>.Update
+				.Set("webRoles", webRoles.Select(x => x.ToString()))
+				.Set("gameRoles", gameRoles));
 
 
-	public async Task<bool> InstanceAdminExists()
-	{
-		await EnsureCollection();
-
-		return await AccountsCollection!.CountDocumentsAsync(Builders<Account>.Filter.AnyStringIn(x => x.WebRoles, Role.InstanceAdmin.ToString())) != 0;
-	}
+	public async Task<bool> InstanceAdminExists() =>
+		await AccountsCollection!.CountDocumentsAsync(
+			Builders<BsonDocument>.Filter.AnyStringIn("webRoles", Role.InstanceAdmin.ToString())) != 0;
 
 	public async Task<string?> CreateInstanceAdmin(SignUp signUp)
 	{
-		await EnsureCollection();
-
 		if (await InstanceAdminExists())
 		{
 			return "Instance admin already exists.";
@@ -153,8 +129,7 @@ public class AccountStorage : IAccountStorage
 		var name = signUp.Name.Trim();
 
 		// Ensure that if the roles are messed up duplicate accounts cannot be created
-		if (await AccountsCollection!.CountDocumentsAsync(Builders<Account>.Filter.Where(x => x.Username == name)) is
-			not 0)
+		if (await AccountsCollection!.CountDocumentsAsync(Builders<BsonDocument>.Filter.Eq("name", name)) is not 0)
 		{
 			return "An account with that name already exists.";
 		}
@@ -167,17 +142,17 @@ public class AccountStorage : IAccountStorage
 			PasswordHash = PasswordHasher.GenerateSaltedHash(password, ref salt),
 			Salt = salt,
 			Username = name,
-			WebRoles = new List<string> { Role.Web.ToString(), Role.InstanceAdmin.ToString() },
+			WebRoles = [Role.Web.ToString(), Role.InstanceAdmin.ToString()],
 		};
 
-		await AccountsCollection.InsertOneAsync(account);
+		await AccountsCollection.InsertOneAsync(account.ToBsonDocument());
 
 		return null;
 	}
 
 	public IQueryable<Account> GetAdmins() =>
 		AccountsCollection.AsQueryable()
-			.Where(account => account.GameRoles.Count != 0 || account.WebRoles.Count != 0);
-
-	private async Task EnsureCollection() => AccountsCollection ??= await _mongo.GetCollectionAsync<Account>(_configuration.Mongo.AccountCollectionName);
+			.Where(x => x["_id"].IsString) // Accounts only
+			.As<BsonDocument, Account>()
+			.Where(x => x.GameRoles.Count != 0 || x.WebRoles.Count != 0);
 }

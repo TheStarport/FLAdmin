@@ -4,7 +4,7 @@ using Jobs;
 
 public interface IJobStorage
 {
-	Task<List<JobGroup>> GetJobGroupByTrigger(JobTrigger trigger);
+	Task<List<JobGroup>> GetJobsByTrigger(JobTrigger trigger);
 	Task<Job?> GetJobByName(string name);
 	Task UpdateJob(Job jobUpdate);
 }

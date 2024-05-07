@@ -50,6 +50,7 @@ public class RunShellJob : IJob
 		}
 		catch (Exception ex)
 		{
+			
 			// TODO: Handle error
 		}
 

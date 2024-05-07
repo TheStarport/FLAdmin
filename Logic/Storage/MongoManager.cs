@@ -12,13 +12,15 @@ public class MongoManager : IMongoManager
 {
 	private readonly ILogger<MongoManager> _logger;
 	private readonly FLAdminConfiguration _configuration;
-	private MongoClient? MongoClient { get; set; }
-	private IMongoDatabase? Database { get; set; }
+	private MongoClient MongoClient { get; set; } = null!;
+	private IMongoDatabase Database { get; set; } = null!;
 
 	public MongoManager(ILogger<MongoManager> logger, FLAdminConfiguration configuration)
 	{
 		_logger = logger;
 		_configuration = configuration;
+
+		ConnectAsync().Wait();
 	}
 
 	public async Task<bool> ConnectAsync()
@@ -63,30 +65,6 @@ public class MongoManager : IMongoManager
 		}
 	}
 
-	public IMongoDatabase? LoadDatabase(string database) => MongoClient?.GetDatabase(database);
-	public IMongoDatabase? GetDatabase() => Database;
-
-	public async Task<IMongoCollection<T>?> GetCollectionAsync<T>(string collectionName, bool createIfNotExists = true)
-	{
-		if (Database is null)
-		{
-			return null;
-		}
-
-		if (!createIfNotExists)
-		{
-			return Database.GetCollection<T>(collectionName);
-		}
-
-		var filter = new BsonDocument("name", collectionName);
-		var options = new ListCollectionNamesOptions { Filter = filter };
-
-		if (!await (await Database.ListCollectionNamesAsync(options)).AnyAsync())
-		{
-			// collection does not exist, so we create it
-			await Database.CreateCollectionAsync(collectionName);
-		}
-
-		return Database.GetCollection<T>(collectionName);
-	}
+	public IMongoDatabase GetDatabase(string database) => MongoClient.GetDatabase(database);
+	public IMongoCollection<T> GetCollection<T>(string collection) => Database.GetCollection<T>(collection);
 }
