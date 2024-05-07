@@ -2,9 +2,13 @@
 @using Common.Configuration;
 @using Common.Freelancer
 @using Common.State.ModalInfo
+@using Logic.Attributes
+@using Common.Auth
 @inject FLAdminConfiguration ExistingConfig
 @inject IDispatcher Dispatcher
 @inject IFreelancerDataProvider FreelancerDataProvider
+
+@attribute [AdminAuthorize(Role.InstanceAdmin)]
 
 <PageTitle>Configuration</PageTitle>
 

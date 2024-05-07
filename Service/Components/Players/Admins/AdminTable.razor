@@ -39,12 +39,12 @@
 {
 	private IQueryable<Account>? _filteredAccounts = null;
 	private IQueryable<Account> _accounts = null!;
-	private IList<Account> _selectedAccounts = null!;
+	private IList<Account>? _selectedAccounts;
 	private RadzenDataGrid<Account> _adminGrid = null!;
 
-	private Account? SelectedAccount => _selectedAccounts.FirstOrDefault();
+	private Account? SelectedAccount => _selectedAccounts?.FirstOrDefault();
 
-	private void ClearSelection() => _selectedAccounts.Clear();
+	private void ClearSelection() => _selectedAccounts?.Clear();
 
 	private void EditAccount()
 	{

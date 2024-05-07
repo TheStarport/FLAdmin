@@ -20,7 +20,7 @@ public class ServerStatsListener : AbstractMessageListener
 	protected override void Initialize(CancellationToken token)
 	{
 		_exchangeSubscriber.EnsureDeclared(ExchangeName.ServerStats, ExchangeType.Fanout);
-		
+
 		var queueName = _exchangeSubscriber.GetQueueName(ExchangeName.ServerStats);
 		_exchangeSubscriber.Subscribe(ExchangeName.ServerStats, queueName, async (_, ea) =>
 		{

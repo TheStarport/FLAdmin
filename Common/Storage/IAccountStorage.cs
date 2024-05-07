@@ -9,6 +9,7 @@ using Models.Forms;
 public interface IAccountStorage
 {
 	Task<long> GetAccountCountAsync();
+	Task<Account?> GetAccountAsync(Expression<Func<Account, bool>> filter);
 	Task<Pagination<Account>?> GetAccountsAsync(int page, int amountPerPage = 20, Expression<Func<Account, bool>>? filter = null);
 	Task<Account?> GetAccountByIdAsync(string id);
 	Task<Account?> CreateNewCharacterAsync(string accountId, Character character);

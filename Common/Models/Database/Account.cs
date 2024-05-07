@@ -7,8 +7,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 public class Account
 {
-	[BsonId]
-	public required string Id { get; set; }
+	[BsonId] public required string Id { get; set; }
 
 	[BsonElement("characters")] public List<ObjectId> Characters { get; set; } = [];
 	[BsonElement("banned")] public bool Banned { get; set; }
@@ -28,16 +27,17 @@ public class Account
 		new ClaimsIdentity(
 			new Claim[]
 			{
-				new(ClaimTypes.NameIdentifier, Id),
-				new(ClaimTypes.Name, Username),
+				new(ClaimTypes.NameIdentifier, Id), new(ClaimTypes.Name, Username),
 				new(ClaimTypes.Hash, PasswordHash),
 			}.Concat(WebRoles.Select(x => new Claim(ClaimTypes.Role, x))), "fladmin"));
 
-	public static Account FromClaimsPrincipal(ClaimsPrincipal principal) => new()
-	{
-		Id = principal.FindFirst(ClaimTypes.NameIdentifier)!.Value,
-		Username = principal.FindFirst(ClaimTypes.Name)!.Value,
-		PasswordHash = principal.FindFirst(ClaimTypes.Hash)!.Value,
-		WebRoles = principal.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList(),
-	};
+	public static Account? FromClaimsPrincipal(ClaimsPrincipal principal) => principal.Claims.Count() is not 0
+		? new Account
+		{
+			Id = principal.FindFirst(ClaimTypes.NameIdentifier)!.Value,
+			Username = principal.FindFirst(ClaimTypes.Name)!.Value,
+			PasswordHash = principal.FindFirst(ClaimTypes.Hash)!.Value,
+			WebRoles = principal.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList(),
+		}
+		: null;
 }

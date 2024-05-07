@@ -8,6 +8,7 @@ using Common.Models;
 using Common.Models.Database;
 using Common.Models.Forms;
 using Common.Storage;
+using Extensions;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -28,11 +29,18 @@ public class AccountStorage : IAccountStorage
 	public async Task<long> GetAccountCountAsync()
 	{
 		var count = await AccountsCollection.Aggregate()
-			.Match(x => x["_id"].IsString)
+			.Match(FilterCollectionType(true))
 			.Count()
 			.FirstOrDefaultAsync();
 
 		return count.Count;
+	}
+
+	public async Task<Account?> GetAccountAsync(Expression<Func<Account, bool>> filter)
+	{
+		var doc = await (await AccountsCollection.FindAsync(FilterCollectionType(true,
+			Builders<Account>.Filter.Where(filter).RenderToBsonDocument()))).FirstOrDefaultAsync();
+		return doc is null ? null : BsonSerializer.Deserialize<Account>(doc);
 	}
 
 	public async Task<Pagination<Account>?> GetAccountsAsync(int page, int amountPerPage = 20,
@@ -56,9 +64,8 @@ public class AccountStorage : IAccountStorage
 		var filterDefinition = filter is null ? Builders<Account>.Filter.Empty : Builders<Account>.Filter.Where(filter);
 
 		var aggregation = await AccountsCollection.Aggregate()
-			.Match(Builders<BsonDocument>.Filter.Where(x => x["_id"].IsString))
+			.Match(FilterCollectionType(true, filterDefinition.RenderToBsonDocument()))
 			.As<Account>()
-			.Match(filterDefinition)
 			.Facet(countFacet, dataFacet)
 			.ToListAsync();
 
@@ -94,10 +101,8 @@ public class AccountStorage : IAccountStorage
 
 	public async Task<Character?> GetCharacterByNameAsync(string name) =>
 		await AccountsCollection.Aggregate()
-			.Match(Builders<BsonDocument>.Filter.And(
-				Builders<BsonDocument>.Filter.Where(x => x["_id"].IsString),
-				Builders<BsonDocument>.Filter.Where(x => x["characterName"] == name)
-			))
+			.Match(FilterCollectionType(true,
+				Builders<BsonDocument>.Filter.Where(x => x["characterName"] == name).RenderToBsonDocument()))
 			.As<Character>()
 			.FirstOrDefaultAsync();
 
@@ -152,7 +157,17 @@ public class AccountStorage : IAccountStorage
 
 	public IQueryable<Account> GetAdmins() =>
 		AccountsCollection.AsQueryable()
-			.Where(x => x["_id"].IsString) // Accounts only
-			.As<BsonDocument, Account>()
-			.Where(x => x.GameRoles.Count != 0 || x.WebRoles.Count != 0);
+			.AppendStage(PipelineStageDefinitionBuilder.Match<BsonDocument>(FilterCollectionType(true)))
+			.As<BsonDocument, Account>();
+
+	private static BsonDocument FilterCollectionType(bool accounts, BsonDocument? extraFilter = null)
+	{
+		var doc = new BsonDocument { { "_id", new BsonDocument { { "$type", accounts ? "string" : "objectId" }, } } };
+		if (extraFilter is not null)
+		{
+			doc.Merge(extraFilter);
+		}
+
+		return doc;
+	}
 }

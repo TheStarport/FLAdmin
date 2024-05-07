@@ -36,7 +36,7 @@ public sealed class AuthStateProvider : AuthenticationStateProvider, IDisposable
 		}
 
 		var principal = new ClaimsPrincipal();
-		var account = (await _accountStorage.GetAccountsAsync(1, filter: account => account.Username == username))?.Data.FirstOrDefault();
+		var account = (await _accountStorage.GetAccountAsync(account => account.Username == username));
 		var success = false;
 
 		if (account?.Salt is not null && PasswordHasher.VerifyPassword(password, account.PasswordHash, account.Salt))
