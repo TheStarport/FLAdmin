@@ -2,6 +2,8 @@ namespace Service.Services.Listeners;
 using System.Text;
 using System.Text.Json;
 using Common.Messaging;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using RabbitMQ.Client.Events;
 
 public abstract class AbstractMessageListener : IHostedService
@@ -70,21 +72,21 @@ public abstract class AbstractMessageListener : IHostedService
 
 		try
 		{
-			var body = JsonSerializer.Deserialize<T>(Encoding.UTF8.GetString(ea.Body.ToArray()), JsonSerializerOptions);
+			var body = BsonSerializer.Deserialize<T>(ea.Body.ToArray());
 
 			await ProcessMessageAsync(body!, stoppingToken);
 
 			Subscriber.Complete(queueName, ea);
 		}
-		catch (JsonException jsonException)
+		catch (BsonException exception)
 		{
 			Subscriber.Reject(queueName, ea, false);
-			Logger.LogCritical(jsonException, "Failed to deserialise message");
+			Logger.LogCritical(exception, "Failed to deserialize message as BSON");
 		}
 		catch (Exception e)
 		{
 			Logger.LogError(e, "Failed to process message");
-			Subscriber.Reject(queueName, ea, true);
+			Subscriber.Reject(queueName, ea, !ea.Redelivered);
 		}
 	}
 }

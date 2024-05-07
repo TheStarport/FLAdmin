@@ -2,10 +2,10 @@ namespace Common.State.ServerStats;
 
 public class Load
 {
-	public uint MS { get; }
+	public int MS { get; }
 	public string Time { get; }
 
-	public Load(uint ms)
+	public Load(int ms)
 	{
 		MS = ms;
 		Time = DateTime.UtcNow.ToLongTimeString();

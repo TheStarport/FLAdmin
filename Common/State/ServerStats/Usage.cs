@@ -2,7 +2,7 @@ namespace Common.State.ServerStats;
 
 public class Usage
 {
-	public uint UsageBytes { get; }
+	public int UsageBytes { get; }
 	public string Time { get; }
 
 	public double UsageDenomination
@@ -21,7 +21,7 @@ public class Usage
 		}
 	}
 
-	public Usage(uint usage)
+	public Usage(int usage)
 	{
 		UsageBytes = usage;
 		Time = DateTime.UtcNow.ToLongTimeString();
