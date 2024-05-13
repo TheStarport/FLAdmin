@@ -28,7 +28,7 @@ public class JobStorage : IJobStorage
 	public async Task<List<JobGroup>> GetJobsByTrigger(JobTrigger trigger)
 	{
 		var aggregation = await JobsGroupCollection.Aggregate()
-			.Match(Builders<JobGroup>.Filter.BitsAnySet(x => x.Triggers, (long)trigger))
+			.Match(Builders<JobGroup>.Filter.BitsAnySet(x => x.Trigger, (long)trigger))
 			.Lookup(_configuration.Mongo.JobCollection, "jobs", "_id", "jobObjects")
 			.ToListAsync();
 
@@ -44,7 +44,7 @@ public class JobStorage : IJobStorage
 			Description = doc["description"].AsString,
 			Created = doc["created"].AsBsonDateTime.ToLocalTime(),
 			Updated = doc["updated"].AsBsonDateTime.ToLocalTime(),
-			Triggers = (JobTrigger)doc["triggers"].AsInt32,
+			Trigger = (JobTrigger)doc["triggers"].AsInt32,
 			CronTrigger = doc["cronTrigger"].AsString,
 			JobsRefs = doc["jobs"].AsBsonArray.Select(x => x.AsObjectId).ToList(),
 			Jobs = doc["jobObjects"].AsBsonArray.Select(x => BsonSerializer.Deserialize<Job>(x.AsBsonDocument)).ToList(),

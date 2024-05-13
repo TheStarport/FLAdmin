@@ -1,0 +1,87 @@
+@page "/automation"
+@using Logic.Attributes
+@using Common.Auth
+@using Common.Jobs
+
+@attribute [AdminAuthorize(Role.ManageAutomation)]
+
+<PageTitle>Automation</PageTitle>
+
+<h1>Automation</h1>
+<br/>
+
+<RadzenPanel Tex="Job Groups">
+	<HeaderTemplate>
+		<RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Start">
+			<RadzenIcon Icon="donut_small" style="font-size: 1.5rem;"/>
+			<RadzenText TextStyle="TextStyle.H6" Class="rz-display-flex rz-align-items-center" Style="margin-top: 0.25rem;">Job Groups</RadzenText>
+		</RadzenStack>
+		<RadzenButton Variant="Variant.Outlined" Text="Create Job Group" ButtonStyle="ButtonStyle.Light"/>
+	</HeaderTemplate>
+	<ChildContent>
+		<RadzenRow>
+			@foreach (var jobGroup in _jobGroups)
+			{
+				<RadzenColumn Size="3" Wrap="FlexWrap.Wrap">
+					<RadzenPanel Tex="@jobGroup.Name" Style="background-color: #445861" Class="rz-my-4 rz-mx-auto">
+						<HeaderTemplate>
+							<div>
+								<RadzenText TextStyle="TextStyle.Body2" Class="rz-m-0">@jobGroup.Name</RadzenText>
+								<RadzenText TextStyle="TextStyle.Caption" Class="rz-m-0">@jobGroup.Description</RadzenText>
+							</div>
+							<RadzenButton Class="rz-my-4" Variant="Variant.Text" Text="⚙️ Edit" ButtonStyle="ButtonStyle.Light"/>
+						</HeaderTemplate>
+						<ChildContent>
+							<RadzenStack Orientation="Orientation.Vertical" JustifyContent="JustifyContent.SpaceBetween" Gap="0.5rem">
+								<RadzenStack Orientation="Orientation.Vertical" AlignItems="AlignItems.Start" Gap="0.5rem">
+									<RadzenText TextStyle="TextStyle.Body2" Class="rz-m-0">Trigger: @jobGroup.Trigger.ToString()</RadzenText>
+									<RadzenText TextStyle="TextStyle.Body2" Class="rz-m-0">Created: @jobGroup.Created.ToLongTimeString()</RadzenText>
+									<RadzenText TextStyle="TextStyle.Body2" Class="rz-m-0">Updated: @jobGroup.Updated.ToLongTimeString()</RadzenText>
+									@if (jobGroup.Trigger is JobTrigger.Timed)
+									{
+										<RadzenText TextStyle="TextStyle.Body2" Class="rz-m-0">Cron: @jobGroup.CronTrigger</RadzenText>
+									}
+								</RadzenStack>
+
+								<RadzenButton Style="width: 25%;" Variant="Variant.Flat" Text="Run Now" ButtonStyle="ButtonStyle.Secondary"/>
+							</RadzenStack>
+						</ChildContent>
+					</RadzenPanel>
+				</RadzenColumn>
+			}
+		</RadzenRow>
+	</ChildContent>
+</RadzenPanel>
+
+@code {
+
+	List<JobGroup> _jobGroups =
+	[
+		new JobGroup()
+		{
+			Name = "Test",
+			Description = "a group that exists for testing purposes",
+		},
+		new JobGroup()
+		{
+			Name = "Test",
+			Description = "a group that exists for testing purposes",
+		},
+		new JobGroup()
+		{
+			Name = "Test",
+			Description = "a group that exists for testing purposes",
+		},
+		new JobGroup()
+		{
+			Name = "Test",
+			Description = "a group that exists for testing purposes",
+		},
+		new JobGroup()
+		{
+			Name = "Test",
+			Description = "a group that exists for testing purposes",
+		},
+	];
+
+}
