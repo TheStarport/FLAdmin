@@ -7,7 +7,7 @@ using FlAdmin.Logic.Services.Auth;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
-namespace FlAdmin.Logic.Services;
+namespace FlAdmin.Logic.Services.Database;
 
 public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config, ILogger<AccountService> logger)
     : IAccountService
