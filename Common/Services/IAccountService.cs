@@ -6,7 +6,7 @@ namespace FlAdmin.Common.Services;
 
 public interface IAccountService
 {
-    List<Account> GetAllAccounts();
+    Task<List<Account>> GetAllAccounts();
 
     List<Account> QueryAccounts(IQueryable<Account> query);
 
@@ -23,4 +23,14 @@ public interface IAccountService
     Task<bool> CreateWebMaster(LoginModel loginModel);
 
     Task<Account?> GetAccountByUserName(string userName);
+    Task<List<Account>> GetAccountsActiveAfterDate(DateTimeOffset date);
+    Task AddRolesToAccount(string id, List<Role> roles);
+
+    Task BanAccount(string id, TimeSpan? duration);
+
+    Task UnBanAccount(string id);
+    
+    Task RemoveRolesFromAccount(string id, List<Role> roles);
+    
+
 }

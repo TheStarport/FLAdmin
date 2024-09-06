@@ -1,4 +1,4 @@
-﻿namespace FlAdmin.DataAccess.Messaging;
+﻿namespace FlAdmin.Common.DataAccess.Messaging;
 
 public interface IMessagePublisher
 {

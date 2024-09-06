@@ -1,6 +1,6 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 
-namespace FlAdmin.DataAccess.Messaging.MessageTypes;
+namespace FlAdmin.Common.DataAccess.Messaging.MessageTypes;
 
 [Serializable]
 [BsonIgnoreExtraElements]

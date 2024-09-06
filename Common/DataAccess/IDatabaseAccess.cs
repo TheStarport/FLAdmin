@@ -1,6 +1,6 @@
 ﻿using MongoDB.Driver;
 
-namespace FlAdmin.DataAccess;
+namespace FlAdmin.Common.DataAccess;
 
 public interface IDatabaseAccess
 {

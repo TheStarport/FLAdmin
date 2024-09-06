@@ -1,4 +1,5 @@
-﻿using FlAdmin.Common.Models.Auth;
+﻿using FlAdmin.Common.DataAccess;
+using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Services;
 using FlAdmin.Configs;
@@ -17,9 +18,10 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
 
     private readonly ILogger<AccountService> _logger = logger;
 
-    public List<Account> GetAllAccounts()
+    public async Task<List<Account>> GetAllAccounts()
     {
-        return _accounts.Find(account => true).ToList();
+        var foundDoc = await _accounts.FindAsync(account => true);
+        return foundDoc.ToList();
     }
 
     public List<Account> QueryAccounts(IQueryable<Account> query)
@@ -29,8 +31,7 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
 
     public async Task<Account?> GetAccountById(string id)
     {
-        var account = await _accounts.FindAsync(account => account.Id == id);
-        return account.FirstOrDefault();
+        return (await _accounts.FindAsync(account => account.Id == id)).FirstOrDefault();
     }
 
     public async Task AddAccounts(params Account[] accounts)
@@ -51,10 +52,8 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
 
     public async Task UpdateFieldOnAccount(BsonElement bsonElement, string accountId)
     {
-        var foundDocument = await _accounts.FindAsync(acc => acc.Id == accountId);
-        
-        var account = foundDocument.FirstOrDefault().ToBsonDocument();
-        
+        var account = (await _accounts.FindAsync(acc => acc.Id == accountId)).FirstOrDefault().ToBsonDocument();
+
         if (account is null) return;
 
         var pair = account.Elements.FirstOrDefault(field => field.Name == bsonElement.Name);
@@ -96,12 +95,49 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
         var foundDocument = await _accounts.FindAsync(account => account.Username == userName);
         var account = foundDocument.FirstOrDefault();
         //TODO: Log warning of account not having a password with a username existing.
-        
+
         return account?.PasswordHash is null ? null : account;
     }
 
-    public void SetUpFlAdminAccount(string accountId, string password)
+    public async Task<List<Account>> GetAccountsActiveAfterDate(DateTimeOffset date)
     {
-        throw new NotImplementedException();
+        return (await _accounts.FindAsync(x => x.LastOnline >= date)).ToList();
+    }
+
+    public async Task AddRolesToAccount(string id, List<Role> roles)
+    {
+        var filter = Builders<Account>.Filter.Eq(a => a.Id, id);
+        var update = Builders<Account>.Update.AddToSetEach(a => a.WebRoles, roles.Select(x => x.ToString()).ToList());
+        await _accounts.FindOneAndUpdateAsync(filter, update);
+    }
+
+    public async Task BanAccount(string id, TimeSpan? duration)
+    {
+        if (duration is null)
+        {
+            duration = TimeSpan.FromDays(109500);
+        }
+
+        var filter = Builders<Account>.Filter.Eq(a => a.Id, id);
+        var update = Builders<Account>.Update.Set(a => a.ScheduledUnbanDate, DateTimeOffset.Now + duration);
+        await _accounts.FindOneAndUpdateAsync(filter, update);
+    }
+
+    public async Task UnBanAccount(string id)
+    {
+        var filter = Builders<Account>.Filter.Eq(a => a.Id, id);
+        var update = Builders<Account>.Update.Set(a => a.ScheduledUnbanDate, null);
+        await _accounts.FindOneAndUpdateAsync(filter, update);
+    }
+
+    public async Task RemoveRolesFromAccount(string id, List<Role> roles)
+    {
+        var account = (await _accounts.FindAsync(account => account.Id == id)).FirstOrDefault();
+        if (account is null) return;
+
+        var roleStrList =  roles.Select(x => x.ToString()).ToList();
+        account.WebRoles.RemoveAll(r => roleStrList.Exists(str => str == r));
+        var filter = Builders<Account>.Filter.Eq(a => a.Id, account.Id);
+        await _accounts.ReplaceOneAsync(filter, account);
     }
 }

@@ -1,4 +1,5 @@
 using FlAdmin.Common.Auth;
+using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Services;
 using FlAdmin.Configs;
 using FlAdmin.DataAccess;

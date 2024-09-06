@@ -25,6 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="DataAccess\Messaging\" />
       <Folder Include="Logic\" />
     </ItemGroup>
 

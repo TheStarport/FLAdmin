@@ -9,7 +9,6 @@ public class Account
     [BsonId] public required string Id { get; set; }
 
     [BsonElement("characters")] public List<ObjectId> Characters { get; set; } = [];
-    [BsonElement("banned")] public bool Banned { get; set; }
     [BsonElement("scheduledUnbanDate")] public DateTimeOffset? ScheduledUnbanDate { get; set; }
     [BsonElement("gameRoles")] public List<string> GameRoles { get; set; } = new();
     [BsonElement("webRoles")] public List<string> WebRoles { get; set; } = new();
@@ -17,9 +16,12 @@ public class Account
     [BsonElement("username")] public string? Username { get; set; }
     [BsonElement("password")] public string? PasswordHash { get; set; }
     [BsonElement("salt")] public byte[]? Salt { get; set; }
+    [BsonElement("lastOnline")] public DateTimeOffset? LastOnline { get; set; }
 
     public bool IsGameAdmin => GameRoles.Count is not 0;
     public bool HasWebAccess => WebRoles.Count is not 0;
+    
+    public bool Banned => ScheduledUnbanDate is null;
 
 
     public ClaimsPrincipal ToClaimsPrincipal()
@@ -28,8 +30,8 @@ public class Account
             new ClaimsIdentity(
                 new Claim[]
                 {
-                    new(ClaimTypes.NameIdentifier, Id), new(ClaimTypes.Name, Username),
-                    new(ClaimTypes.Hash, PasswordHash)
+                    new(ClaimTypes.NameIdentifier, Id), new(ClaimTypes.Name, Username!),
+                    new(ClaimTypes.Hash, PasswordHash!)
                 }.Concat(WebRoles.Select(x => new Claim(ClaimTypes.Role, x))), "fladmin"));
     }
 
