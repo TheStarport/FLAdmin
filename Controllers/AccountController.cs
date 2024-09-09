@@ -2,9 +2,8 @@
 using FlAdmin.Common.Models;
 using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Services;
-using Microsoft.AspNetCore.Mvc;
 using FlAdmin.Logic.Services;
-using FlAdmin.Logic.Services.Database;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FlAdmin.Controllers;
 
@@ -19,23 +18,19 @@ public class AccountController(IAccountService accountService) : ControllerBase
     {
         var roles = new List<Role>();
         foreach (var roleStr in rolesStr)
-        {
             if (Enum.TryParse(roleStr, out Role role))
             {
                 if (role == Role.SuperAdmin)
                     continue;
                 roles.Add(role);
             }
-        }
-        if (roles.Count is 0)
-        {
-            return BadRequest("No valid Roles were supplied");
-        }
+
+        if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
 
         await accountService.AddRolesToAccount(id, roles);
         return Ok("Roles successfully added to account");
     }
-    
+
     [HttpGet("all")]
     public async Task<IActionResult> GetAllAccounts()
     {
@@ -51,18 +46,14 @@ public class AccountController(IAccountService accountService) : ControllerBase
         var account = await accountService.GetAccountById(id);
         if (account is null)
             return NotFound();
-        else
-            return Ok(account.ToAccountModel());
+        return Ok(account.ToAccountModel());
     }
 
     [HttpGet("activeafterdate")]
     public async Task<IActionResult> GetAccountsActiveAfterDate([FromQuery] DateTimeOffset date)
     {
         var accounts = await accountService.GetAccountsActiveAfterDate(date);
-        if (accounts.Count == 0)
-        {
-            return NotFound();
-        }
+        if (accounts.Count == 0) return NotFound();
         var accountModels = new List<AccountModel>();
         accounts.ForEach(account => accountModels.Add(account.ToAccountModel()));
         return Ok(accountModels);
@@ -71,12 +62,9 @@ public class AccountController(IAccountService accountService) : ControllerBase
     [HttpDelete("delete")]
     public async Task<IActionResult> DeleteAccounts([FromQuery] string[] id)
     {
-        if (id.Length is 0)
-        {
-            return BadRequest();
-        }
+        if (id.Length is 0) return BadRequest();
         await accountService.DeleteAccounts(id);
-        
+
         return Ok("Account(s) deleted successfully");
     }
 
@@ -84,9 +72,22 @@ public class AccountController(IAccountService accountService) : ControllerBase
     public async Task<IActionResult> UpdateAccount([FromBody] AccountModel accountModel)
     {
         var account = accountModel.ToDatabaseAccount();
+
+        //Since our external model is different from the database we need to check if any old information is on it and
+        // preserve it if it exists (such as password and salts. and username)
+        var dbAccount = await accountService.GetAccountById(account.Id);
+
+        if (dbAccount is not null)
+        {
+            if (dbAccount.Username is not null)
+                account.Username = dbAccount.Username;
+            if (dbAccount.PasswordHash is not null)
+                account.PasswordHash = dbAccount.PasswordHash;
+            if (dbAccount.Salt is not null)
+                account.Salt = dbAccount.Salt;
+        }
+
         await accountService.UpdateAccount(account);
         return Ok("Account updated successfully");
     }
-    
-
 }

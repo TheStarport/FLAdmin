@@ -18,6 +18,8 @@ public class Account
     [BsonElement("salt")] public byte[]? Salt { get; set; }
     [BsonElement("lastOnline")] public DateTimeOffset? LastOnline { get; set; }
 
+    [BsonExtraElements] public BsonDocument? Extra { get; set; }
+    
     public bool IsGameAdmin => GameRoles.Count is not 0;
     public bool HasWebAccess => WebRoles.Count is not 0;
     

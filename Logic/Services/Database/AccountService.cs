@@ -42,7 +42,8 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
     public async Task UpdateAccount(Account account)
     {
         var filter = Builders<Account>.Filter.Eq(a => a.Id, account.Id);
-        await _accounts.ReplaceOneAsync(filter, account);
+        var update = Builders<Account>.Update.Set( acc => acc , account);
+        await _accounts.UpdateOneAsync(filter, update);
     }
 
     public async Task DeleteAccounts(params string[] ids)

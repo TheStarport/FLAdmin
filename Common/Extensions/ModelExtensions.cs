@@ -16,6 +16,7 @@ public static class ModelExtensions
             GameRoles = account.GameRoles,
             WebRoles = account.WebRoles,
             LastOnline = account.LastOnline,
+            Extra = account.Extra
         };
     }
 
@@ -30,6 +31,7 @@ public static class ModelExtensions
             GameRoles = account.GameRoles,
             WebRoles = account.WebRoles,
             LastOnline = account.LastOnline,
+            Extra = account.Extra
         };
     }
     

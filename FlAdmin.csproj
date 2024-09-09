@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="LibreLancer.Data" Version="0.0.2" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8"/>
         <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.8" />
         <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.0.2"/>

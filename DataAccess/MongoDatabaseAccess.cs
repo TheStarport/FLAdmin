@@ -16,10 +16,17 @@ public class MongoDatabaseAccess : IDatabaseAccess
         _logger = logger;
         //TODO: Configurable. 
         _database = _client.GetDatabase(config.Mongo.DatabaseName);
+
+        var session = _client.StartSession();
     }
 
     public IMongoDatabase GetDatabase()
     {
         return _database;
+    }
+
+    public MongoClient GetClient()
+    {
+        return _client;
     }
 }

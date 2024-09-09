@@ -5,9 +5,11 @@ namespace FlAdmin.Common.Services;
 
 public interface ICharacterService
 {
-    Task<List<Character>> GetCharactersOfAccount(Account account);
+    Task<List<Character>> GetCharactersOfAccount(string accountId);
     Task<Character?> GetCharacterByName(string name);
     Task<List<Character>> QueryCharacters(IQueryable<Character> query);
+    
+    Task AddCharacter(Character character);
 
     Task DeleteAllCharactersOnAccount(string accountId);
     Task DeleteCharacter(string name);
@@ -18,5 +20,5 @@ public interface ICharacterService
 
 
     Task UpdateCharacter(Character character);
-    Task UpdateFieldOnCharacter(ObjectId id, BsonElement bsonElement);
+    Task UpdateFieldOnCharacter(string name, BsonElement bsonElement);
 }
