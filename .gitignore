@@ -3,3 +3,7 @@
 /bin/
 /.idea/
 /obj/
+appsettings.Development.json
+appsettings.json
+FlAdmin.sln.DotSettings.user
+/Properties
