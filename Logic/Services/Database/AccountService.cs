@@ -3,7 +3,6 @@ using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Services;
 using FlAdmin.Configs;
-using FlAdmin.DataAccess;
 using FlAdmin.Logic.Services.Auth;
 using MongoDB.Bson;
 using MongoDB.Driver;

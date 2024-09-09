@@ -2,7 +2,7 @@
 using FlAdmin.Configs;
 using MongoDB.Driver;
 
-namespace FlAdmin.DataAccess;
+namespace FlAdmin.Logic.DataAccess;
 
 public class MongoDatabaseAccess : IDatabaseAccess
 {

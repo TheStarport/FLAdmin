@@ -60,6 +60,7 @@ public class CharacterController(ICharacterService characterService) : Controlle
         return Ok($"Characters on account {accountId} deleted.");
     }
 
+    [HttpPut("add")]
     public async Task<IActionResult> AddCharacter([FromBody] Character character)
     {
         await characterService.AddCharacter(character);

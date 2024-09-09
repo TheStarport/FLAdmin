@@ -1,4 +1,4 @@
-﻿namespace FlAdmin.Configs;
+﻿namespace FlAdmin.Common.Configs;
 
 public class AuthenticationConfig
 {
