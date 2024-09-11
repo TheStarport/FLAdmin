@@ -1,4 +1,5 @@
-﻿using FlAdmin.Common.DataAccess;
+﻿using System.Diagnostics;
+using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Services;
@@ -41,7 +42,7 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
     public async Task UpdateAccount(Account account)
     {
         var filter = Builders<Account>.Filter.Eq(a => a.Id, account.Id);
-        var update = Builders<Account>.Update.Set( acc => acc , account);
+        var update = Builders<Account>.Update.Set(acc => acc, account);
         await _accounts.UpdateOneAsync(filter, update);
     }
 
@@ -77,7 +78,7 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
 
         var password = loginModel.Password.Trim();
         byte[]? salt = null;
-        var hashedPass = PasswordHasher.GenerateSaltedHash(loginModel.Password, ref salt);
+        var hashedPass = PasswordHasher.GenerateSaltedHash(password, ref salt);
         var account = new Account
         {
             Id = ObjectId.GenerateNewId().ToString(),
@@ -89,6 +90,7 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
         await _accounts.InsertOneAsync(account);
         return true;
     }
+
 
     public async Task<Account?> GetAccountByUserName(string userName)
     {
@@ -111,12 +113,56 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
         await _accounts.FindOneAndUpdateAsync(filter, update);
     }
 
+    public async Task SetUpAdminAccount(string accountId, LoginModel login)
+    {
+        var account = (await _accounts.FindAsync(acc => acc.Id == accountId)).FirstOrDefault();
+        if (account is null) return;
+
+        var username = login.Username.Trim();
+        //Make sure the username is unique. 
+        var found = ((await _accounts.FindAsync(acc => acc.Username == username)).FirstOrDefault() is null);
+        if (found) return;
+
+        //Make sure the account does not already have a username. 
+        if (account.Username != null)
+            return;
+
+        var password = login.Password.Trim();
+        byte[]? salt = null;
+        var hashedPass = PasswordHasher.GenerateSaltedHash(password, ref salt);
+
+        account.PasswordHash = hashedPass;
+        account.Salt = salt;
+        account.Username = username;
+
+        var update = Builders<Account>.Update.Set(a => a.PasswordHash, hashedPass).Set(a => a.Salt, salt)
+            .Set(a => a.Username, account.Username);
+        var filter = Builders<Account>.Filter.Eq(a => a.Id, accountId);
+        await _accounts.FindOneAndUpdateAsync(filter, update);
+    }
+
+    public async Task ChangePassword(LoginModel login, string oldPassword)
+    {
+        var username = login.Username.Trim();
+        var account = (await _accounts.FindAsync(acc => acc.Username == username)).FirstOrDefault();
+        if (account?.PasswordHash is null || account.Salt is null) return;
+
+        //Make sure the old password is correct before changing it.
+        var verified = PasswordHasher.VerifyPassword(oldPassword, account.PasswordHash, account.Salt);
+        if (!verified) return;
+        
+        var password = login.Password.Trim();
+        byte[]? salt = null;
+        var hashedPass = PasswordHasher.GenerateSaltedHash(password, ref salt);
+
+        var update = Builders<Account>.Update.Set(a => a.PasswordHash, hashedPass).Set(a => a.Salt, salt);
+        var filter = Builders<Account>.Filter.Eq(a => a.Username, username);
+        await _accounts.FindOneAndUpdateAsync(filter, update);
+    }
+
     public async Task BanAccount(string id, TimeSpan? duration)
     {
-        if (duration is null)
-        {
-            duration = TimeSpan.FromDays(109500);
-        }
+        duration ??= TimeSpan.FromDays(109500);
 
         var filter = Builders<Account>.Filter.Eq(a => a.Id, id);
         var update = Builders<Account>.Update.Set(a => a.ScheduledUnbanDate, DateTimeOffset.Now + duration);
@@ -135,7 +181,7 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
         var account = (await _accounts.FindAsync(account => account.Id == id)).FirstOrDefault();
         if (account is null) return;
 
-        var roleStrList =  roles.Select(x => x.ToString()).ToList();
+        var roleStrList = roles.Select(x => x.ToString()).ToList();
         account.WebRoles.RemoveAll(r => roleStrList.Exists(str => str == r));
         var filter = Builders<Account>.Filter.Eq(a => a.Id, account.Id);
         await _accounts.ReplaceOneAsync(filter, account);

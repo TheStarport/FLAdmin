@@ -2,7 +2,7 @@ using FlAdmin.Common.Auth;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Services;
 using FlAdmin.Configs;
-using FlAdmin.DataAccess;
+using FlAdmin.Logic.DataAccess;
 using FlAdmin.Logic.Services;
 using FlAdmin.Logic.Services.Auth;
 using FlAdmin.Logic.Services.Database;
@@ -14,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 var config = new FlAdminConfig();
 var keyProvider = new KeyProvider();
 
+
 builder.Services.AddAuthentication(x =>
 {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -24,7 +25,7 @@ builder.Services.AddAuthentication(x =>
     x.SaveToken = true;
     x.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidIssuers = new[] {"FLAdmin"},
+        ValidIssuers = ["FLAdmin"],
         IssuerSigningKey = new SymmetricSecurityKey(keyProvider.GetSigningKey()),
         TokenDecryptionKey = new SymmetricSecurityKey(keyProvider.GetSigningKey()),
         ValidateAudience = false

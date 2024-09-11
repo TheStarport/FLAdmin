@@ -25,7 +25,10 @@ public interface IAccountService
     Task<Account?> GetAccountByUserName(string userName);
     Task<List<Account>> GetAccountsActiveAfterDate(DateTimeOffset date);
     Task AddRolesToAccount(string id, List<Role> roles);
+    Task SetUpAdminAccount(string accountId, LoginModel login);
 
+    Task ChangePassword(LoginModel login, string oldPassword);
+    
     Task BanAccount(string id, TimeSpan? duration);
 
     Task UnBanAccount(string id);

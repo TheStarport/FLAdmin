@@ -5,19 +5,12 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace FlAdmin.Logic.Services.Auth;
 
-public class JwtProvider : IJwtProvider
+public class JwtProvider(IKeyProvider keyProvider) : IJwtProvider
 {
-    private readonly IKeyProvider _keyProvider;
-
-    public JwtProvider(IKeyProvider keyProvider)
-    {
-        _keyProvider = keyProvider;
-    }
-
     public string? DecryptToken(string token)
     {
-        var signingKey = _keyProvider.GetSigningKey();
-        var encryptionKey = _keyProvider.GetEncryptionKey();
+        var signingKey = keyProvider.GetSigningKey();
+        var encryptionKey = keyProvider.GetEncryptionKey();
 
         // Verification
         var tokenValidationParameters = new TokenValidationParameters
@@ -43,8 +36,8 @@ public class JwtProvider : IJwtProvider
 
     public string GenerateToken(ClaimsIdentity identity)
     {
-        var signingKey = _keyProvider.GetSigningKey();
-        var encryptionKey = _keyProvider.GetEncryptionKey();
+        var signingKey = keyProvider.GetSigningKey();
+        var encryptionKey = keyProvider.GetEncryptionKey();
 
         var descriptor = new SecurityTokenDescriptor
         {
