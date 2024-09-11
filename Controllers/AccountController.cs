@@ -90,4 +90,24 @@ public class AccountController(IAccountService accountService) : ControllerBase
         await accountService.UpdateAccount(account);
         return Ok("Account updated successfully");
     }
+
+    [HttpPatch("addusername")]
+    [AdminAuthorize(Role.ManageAdmins)]
+    public async Task<IActionResult> AddUsernameToAccount([FromQuery] string accountId, [FromQuery] LoginModel login)
+    {
+        if (login?.Username is null || login?.Password is null || login.Password.Trim().Length is 0 ||
+            login.Username.Trim().Length is 0) return BadRequest();
+
+        await accountService.SetUpAdminAccount(accountId, login);
+
+        return Ok("Account set up successfully");
+    }
+
+    [HttpPatch("updatepassword")]
+    public async Task<IActionResult> UpdatePassword([FromQuery] LoginModel login, [FromQuery] string newPassword)
+    {
+        if (newPassword.Trim().Length is 0) return BadRequest();
+        await accountService.ChangePassword(login, newPassword);
+        return Ok("Password changed successfully");
+    }
 }

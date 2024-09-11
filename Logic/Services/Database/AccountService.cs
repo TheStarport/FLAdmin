@@ -141,19 +141,19 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
         await _accounts.FindOneAndUpdateAsync(filter, update);
     }
 
-    public async Task ChangePassword(LoginModel login, string oldPassword)
+    public async Task ChangePassword(LoginModel login, string newPassword)
     {
         var username = login.Username.Trim();
         var account = (await _accounts.FindAsync(acc => acc.Username == username)).FirstOrDefault();
         if (account?.PasswordHash is null || account.Salt is null) return;
-
+      
         //Make sure the old password is correct before changing it.
-        var verified = PasswordHasher.VerifyPassword(oldPassword, account.PasswordHash, account.Salt);
+        var password = login.Password.Trim();
+        var verified = PasswordHasher.VerifyPassword(password, account.PasswordHash, account.Salt);
         if (!verified) return;
         
-        var password = login.Password.Trim();
         byte[]? salt = null;
-        var hashedPass = PasswordHasher.GenerateSaltedHash(password, ref salt);
+        var hashedPass = PasswordHasher.GenerateSaltedHash(password.Trim(), ref salt);
 
         var update = Builders<Account>.Update.Set(a => a.PasswordHash, hashedPass).Set(a => a.Salt, salt);
         var filter = Builders<Account>.Filter.Eq(a => a.Username, username);

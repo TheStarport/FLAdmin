@@ -27,7 +27,7 @@ public interface IAccountService
     Task AddRolesToAccount(string id, List<Role> roles);
     Task SetUpAdminAccount(string accountId, LoginModel login);
 
-    Task ChangePassword(LoginModel login, string oldPassword);
+    Task ChangePassword(LoginModel login, string newPassword);
     
     Task BanAccount(string id, TimeSpan? duration);
 
