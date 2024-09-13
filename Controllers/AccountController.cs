@@ -1,8 +1,11 @@
 ﻿using FlAdmin.Common.Extensions;
 using FlAdmin.Common.Models;
 using FlAdmin.Common.Models.Auth;
+using FlAdmin.Common.Models.Database;
+using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
 using FlAdmin.Logic.Services;
+using LanguageExt;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FlAdmin.Controllers;
@@ -26,9 +29,11 @@ public class AccountController(IAccountService accountService) : ControllerBase
             }
 
         if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
-
-        await accountService.AddRolesToAccount(id, roles);
-        return Ok("Roles successfully added to account");
+        var res = await accountService.AddRolesToAccount(id, roles);
+        return res.Match<IActionResult>(
+            Some: err => err.ParseAccountError(this),
+            None: Ok("Role(s) added to account succesfully.")
+        );
     }
 
     [HttpGet("all")]
@@ -36,7 +41,12 @@ public class AccountController(IAccountService accountService) : ControllerBase
     {
         var accounts = await accountService.GetAllAccounts();
         var accountModels = new List<AccountModel>();
-        accounts.ForEach(account => accountModels.Add(account.ToAccountModel()));
+        accounts.ForEach(account => accountModels.Add(account.ToModel()));
+        if (accountModels.Count is 0)
+        {
+            return NotFound("No accounts were found,");
+        }
+
         return Ok(accountModels);
     }
 
@@ -44,28 +54,40 @@ public class AccountController(IAccountService accountService) : ControllerBase
     public async Task<IActionResult> GetAccountById(string id)
     {
         var account = await accountService.GetAccountById(id);
-        if (account is null)
-            return NotFound();
-        return Ok(account.ToAccountModel());
+        var accountModel = account.Match<Either<AccountError, AccountModel>>(
+            Left: err => err,
+            Right: val => val.ToModel());
+        return accountModel.Match<IActionResult>(
+            Left: err =>
+                err.ParseAccountError(this),
+            Right: val => Ok(val)
+        );
     }
 
     [HttpGet("activeafterdate")]
     public async Task<IActionResult> GetAccountsActiveAfterDate([FromQuery] DateTimeOffset date)
     {
         var accounts = await accountService.GetAccountsActiveAfterDate(date);
-        if (accounts.Count == 0) return NotFound();
-        var accountModels = new List<AccountModel>();
-        accounts.ForEach(account => accountModels.Add(account.ToAccountModel()));
-        return Ok(accountModels);
+
+        var accountModels = accounts.Match<Either<AccountError, List<AccountModel>>>(
+            Left: err => err,
+            Right: accs => accs.Select(a => a.ToModel()).ToList());
+        return accountModels.Match<IActionResult>(
+            Left: err => err.ParseAccountError(this),
+            Right: val => Ok(val)
+        );
     }
 
     [HttpDelete("delete")]
     public async Task<IActionResult> DeleteAccounts([FromQuery] string[] id)
     {
         if (id.Length is 0) return BadRequest();
-        await accountService.DeleteAccounts(id);
+        var res = await accountService.DeleteAccounts(id);
 
-        return Ok("Account(s) deleted successfully");
+        return res.Match<IActionResult>(
+            Some: err => err.ParseAccountError(this),
+            None: Ok("Account(s) successfully deleted.")
+        );
     }
 
     [HttpPatch("update")]
@@ -75,18 +97,30 @@ public class AccountController(IAccountService accountService) : ControllerBase
 
         //Since our external model is different from the database we need to check if any old information is on it and
         // preserve it if it exists (such as password and salts. and username)
-        var dbAccount = await accountService.GetAccountById(account.Id);
+        var dbAccount = (await accountService.GetAccountById(account.Id)).Match<Option<Account>>(
+            Left: err => new Option<Account>(),
+            Right: val =>
+            {
+                if (val.Username is not null)
+                {
+                    account.Username = val.Username;
+                }
 
-        if (dbAccount is not null)
-        {
-            if (dbAccount.Username is not null)
-                account.Username = dbAccount.Username;
-            if (dbAccount.PasswordHash is not null)
-                account.PasswordHash = dbAccount.PasswordHash;
-            if (dbAccount.Salt is not null)
-                account.Salt = dbAccount.Salt;
-        }
+                if (val.PasswordHash is not null)
+                {
+                    account.PasswordHash = val.PasswordHash;
+                }
 
+                if (val.Salt is not null)
+                {
+                    account.Salt = val.Salt;
+                }
+
+                account.Extra = val.Extra;
+
+                return val;
+            }
+        );
         await accountService.UpdateAccount(account);
         return Ok("Account updated successfully");
     }
@@ -98,16 +132,23 @@ public class AccountController(IAccountService accountService) : ControllerBase
         if (login?.Username is null || login?.Password is null || login.Password.Trim().Length is 0 ||
             login.Username.Trim().Length is 0) return BadRequest();
 
-        await accountService.SetUpAdminAccount(accountId, login);
+        var res = await accountService.SetUpAdminAccount(accountId, login);
 
-        return Ok("Account set up successfully");
+        return res.Match<IActionResult>(
+            Some: err => err.ParseAccountError(this),
+            None: Ok("Username and password set successfully.")
+        );
     }
 
     [HttpPatch("updatepassword")]
     public async Task<IActionResult> UpdatePassword([FromQuery] LoginModel login, [FromQuery] string newPassword)
     {
         if (newPassword.Trim().Length is 0) return BadRequest();
-        await accountService.ChangePassword(login, newPassword);
-        return Ok("Password changed successfully");
+        var res = await accountService.ChangePassword(login, newPassword);
+
+        return res.Match<IActionResult>(
+            Some: err => err.ParseAccountError(this),
+            None: Ok("Password changed successfully.")
+        );
     }
 }

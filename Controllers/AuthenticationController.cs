@@ -1,4 +1,6 @@
-﻿using FlAdmin.Common.Models.Auth;
+﻿using FlAdmin.Common.Extensions;
+using FlAdmin.Common.Models.Auth;
+using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,10 +31,11 @@ public class AuthenticationController(IAuthService authService, IAccountService 
             Username = username,
             Password = password
         };
-
-        if (!await accountService.CreateWebMaster(login)) return BadRequest("Setup has already been executed.");
-
-        return Ok("Super Admin successfully created.");
+        var res = await accountService.CreateWebMaster(login);
+        return res.Match<IActionResult>(
+            Some: err => err.ParseAccountError(this),
+            None: Ok("SuperAdmin successfully created.")
+        );
     }
 
     [Authorize]

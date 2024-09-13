@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using FlAdmin.Common.Models.Database;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace FlAdmin.Common.Models;
@@ -13,11 +14,10 @@ public class AccountModel
     [BsonElement("gameRoles")] public List<string> GameRoles { get; set; } = new();
     [BsonElement("webRoles")] public List<string> WebRoles { get; set; } = new();
     [BsonElement("cash")] public long Cash { get; set; }
-    
+
     [BsonExtraElements] public BsonDocument? Extra { get; set; }
 
     public bool IsGameAdmin => GameRoles.Count is not 0;
     public bool HasWebAccess => WebRoles.Count is not 0;
     public bool Banned => ScheduledUnbanDate is null;
-
 }

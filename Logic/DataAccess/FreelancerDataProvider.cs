@@ -14,8 +14,6 @@ public class FreelancerDataProvider(FlAdminConfig config) : IFreelancerDataProvi
     private FreelancerIni? Ini { get; set; }
     private FreelancerData? Data { get; set; }
 
-    private readonly FlAdminConfig _config = config;
-
     public bool Loaded() => Vfs != null;
 
     public void Reload()
@@ -24,14 +22,14 @@ public class FreelancerDataProvider(FlAdminConfig config) : IFreelancerDataProvi
         {
             return;
         }
-        if (!Directory.Exists(_config.Server.FreelancerPath))
+        if (!Directory.Exists(config.Server.FreelancerPath))
         {
             return;
         }
 
         try
         {
-            Vfs = FileSystem.FromPath(_config.Server.FreelancerPath);
+            Vfs = FileSystem.FromPath(config.Server.FreelancerPath);
             Ini = new FreelancerIni(Vfs);
             Data = new FreelancerData(Ini, Vfs);
         }

@@ -5,7 +5,7 @@ namespace FlAdmin.Common.Extensions;
 
 public static class ModelExtensions
 {
-    public static AccountModel ToAccountModel(this Account account)
+    public static AccountModel ToModel(this Account account)
     {
         return new AccountModel()
         {
@@ -33,6 +33,13 @@ public static class ModelExtensions
             LastOnline = account.LastOnline,
             Extra = account.Extra
         };
+    }
+
+    public static List<AccountModel> ToAccountModelList(this List<Account> accounts)
+    {
+        var list = new List<AccountModel>();
+        accounts.ForEach(acc => list.Add(acc.ToModel()));
+        return list;
     }
     
 }
