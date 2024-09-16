@@ -1,7 +1,7 @@
-﻿using FlAdmin.Common.DataAccess;
+﻿using FlAdmin.Common.Configs;
+using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Services;
-using FlAdmin.Configs;
 using MongoDB.Bson;
 using MongoDB.Driver;
 

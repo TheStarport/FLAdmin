@@ -1,5 +1,5 @@
+using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
-using FlAdmin.Configs;
 
 namespace FlAdmin.Logic.DataAccess;
 

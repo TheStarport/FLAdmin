@@ -17,7 +17,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
 {
     [HttpPatch("addroles")]
     [AdminAuthorize(Role.ManageRoles)]
-    public async Task<IActionResult> AddRolesToAccount([FromQuery] string id, string[] rolesStr)
+    public async Task<IActionResult> AddRolesToAccount([FromQuery] string accountId, string[] rolesStr)
     {
         var roles = new List<Role>();
         foreach (var roleStr in rolesStr)
@@ -29,7 +29,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
             }
 
         if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
-        var res = await accountService.AddRolesToAccount(id, roles);
+        var res = await accountService.AddRolesToAccount(accountId.Trim(), roles);
         return res.Match<IActionResult>(
             Some: err => err.ParseAccountError(this),
             None: Ok("Role(s) added to account successfully.")

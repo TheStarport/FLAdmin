@@ -9,7 +9,7 @@ namespace FlAdmin.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthenticationController(IAuthService authService, IAccountService accountService) : ControllerBase
+public class AuthenticationController(IAuthService authService, IAccountService accountService, ILogger<AuthenticationController> logger) : ControllerBase
 {
     [HttpPost("login")]
     [AllowAnonymous]

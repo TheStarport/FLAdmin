@@ -1,13 +1,15 @@
 using FlAdmin.Common.Auth;
+using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Services;
-using FlAdmin.Configs;
 using FlAdmin.Logic.DataAccess;
-using FlAdmin.Logic.Services;
 using FlAdmin.Logic.Services.Auth;
 using FlAdmin.Logic.Services.Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,8 +52,19 @@ builder.Services.AddSingleton<IAccountService, AccountService>();
 builder.Services.AddSingleton<ICharacterService, CharacterService>();
 builder.Services.AddSingleton<IAuthService, AuthService>();
 
-builder.Services.AddControllers();
+// Extend the shutdown timer to allow FLServer time to gracefully shutdown
+builder.Services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(10));
 
+builder.Host.UseSerilog((_, lc) =>
+{
+    lc.Enrich.FromLogContext();
+    if (config.Logging.LoggingLocation == LoggingLocation.Console)
+    {
+        lc.WriteTo.Console(new CompactJsonFormatter(), LogEventLevel.Information);
+    }
+});
+
+builder.Services.AddControllers();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

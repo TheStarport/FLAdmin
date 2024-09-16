@@ -12,24 +12,9 @@ public static class ResultExtensions
         return value.GetType()
             .GetField(value.ToString())
             ?.GetCustomAttributes(typeof(DescriptionAttribute), false)
-            .SingleOrDefault() is not DescriptionAttribute attribute ? value.ToString() : attribute.Description;
-    }
-    
-    
-    public static IActionResult ToResponse<L, R>(this Either<L, R> either, ControllerBase controller) where L : Enum
-    {
-        return either.Match<IActionResult>(
-            Left: error => controller.BadRequest(error),
-            Right: value => controller.Ok(value)
-        );
-    }
-
-    public static IActionResult ToResponse<T>(this Option<T> option, ControllerBase controller, string okResponse) where T : Enum
-    {
-        return option.Match<IActionResult>(
-            Some: error => controller.BadRequest(error),
-            None: controller.Ok(okResponse)
-        );
+            .SingleOrDefault() is not DescriptionAttribute attribute
+            ? value.ToString()
+            : attribute.Description;
     }
 
     public static IActionResult ParseAccountError(this AccountError accountError, ControllerBase controller)
@@ -47,5 +32,4 @@ public static class ResultExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(accountError), accountError, null)
         };
     }
-    
 }

@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics;
+using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
-using FlAdmin.Configs;
 using FlAdmin.Logic.Services.Auth;
 using LanguageExt;
 using MongoDB.Bson;

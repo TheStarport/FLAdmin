@@ -16,7 +16,7 @@ public enum AccountError
     DatabaseError,
     [Description("The type provided does not match the type on the document in the database.")]
     ElementTypeMismatch,
-    [Description("The type provided does not match the type on the document in the database.")]
+    [Description("This account already has a username.")]
     AccountAlreadyHasUsername,
     [Description("The specified field does not exist on this document.")]
     FieldDoesNotExist,
