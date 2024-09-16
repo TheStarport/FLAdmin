@@ -32,7 +32,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         var res = await accountService.AddRolesToAccount(id, roles);
         return res.Match<IActionResult>(
             Some: err => err.ParseAccountError(this),
-            None: Ok("Role(s) added to account succesfully.")
+            None: Ok("Role(s) added to account successfully.")
         );
     }
 
@@ -98,7 +98,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         //Since our external model is different from the database we need to check if any old information is on it and
         // preserve it if it exists (such as password and salts. and username)
         var dbAccount = (await accountService.GetAccountById(account.Id)).Match<Option<Account>>(
-            Left: err => new Option<Account>(),
+            Left: _ => new Option<Account>(),
             Right: val =>
             {
                 if (val.Username is not null)
@@ -115,9 +115,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
                 {
                     account.Salt = val.Salt;
                 }
-
                 account.Extra = val.Extra;
-
                 return val;
             }
         );

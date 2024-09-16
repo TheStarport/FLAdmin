@@ -16,8 +16,10 @@ public class AuthenticationController(IAuthService authService, IAccountService 
     public async Task<IActionResult> Login([FromBody] LoginModel login)
     {
         var token = await authService.Authenticate(login.Username, login.Password);
-        if (token is null) return Unauthorized("Invalid username or password");
-        return Ok(token);
+        return  token.Match<IActionResult>(
+            Some: response => Ok(response),
+            None: () => Unauthorized("Invalid username or password.")
+            );
     }
 
     [HttpPost("setup")]
