@@ -21,8 +21,6 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
 
     private readonly MongoClient _client = databaseAccess.GetClient();
 
-    private readonly ILogger<AccountService> _logger = logger;
-
     public async Task<List<Account>> GetAllAccounts()
     {
         var foundDoc = await _accounts.FindAsync(account => true);
@@ -50,9 +48,9 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
             await _accounts.InsertManyAsync(accounts);
             return new Option<AccountError>();
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
-            //TODO: Logging
+            logger.LogError("Encountered a mongo database issue when adding accounts, info:{}", ex.ToString());
             return AccountError.DatabaseError;
         }
     }
@@ -67,8 +65,10 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
             await _accounts.UpdateOneAsync(filter, update);
             return new Option<AccountError>();
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            logger.LogError("Encountered a mongo database issue when updating account {}, info:{}", account.Id,
+                ex.ToString());
             return AccountError.DatabaseError;
         }
     }
@@ -81,8 +81,10 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
             await _accounts.DeleteManyAsync(account => ids.Contains(account.Id));
             return new Option<AccountError>();
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            logger.LogError("Encountered a mongo database issue when attempting to delete account(s) {}, info:{}", ids,
+                ex);
             return AccountError.DatabaseError;
         }
     }
@@ -109,14 +111,17 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
             await _accounts.UpdateOneAsync(filter, account);
             return new Option<AccountError>();
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            logger.LogError("Encountered a mongo database when updating account {} on field {}, info:{}", accountId,
+                bsonElement.Name, ex.ToString());
             return AccountError.DatabaseError;
         }
     }
 
     public List<Account> GetOnlineAccounts()
     {
+        logger.LogError("Attempted usage of unimplemented function.");
         throw new NotImplementedException();
     }
 
@@ -145,29 +150,36 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
             await _accounts.InsertOneAsync(account);
             return new Option<AccountError>();
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            logger.LogCritical(ex, "Failed to create webmaster on database.");
             return AccountError.DatabaseError;
         }
     }
-
 
     public async Task<Either<AccountError, Account>> GetAccountByUserName(string userName)
     {
         try
         {
-            var foundDocument = await _accounts.FindAsync(account => account.Username == userName);
-            var account = foundDocument.FirstOrDefault();
+            var account = (await _accounts.FindAsync(account => account.Username == userName)).FirstOrDefault();
+
             if (account is null)
             {
                 return AccountError.AccountNotFound;
             }
 
             //TODO: Log warning of account not having a password with a username existing.
+            if (account.PasswordHash is null || account.Salt is null)
+            {
+                logger.LogWarning("Account {} has a username {} with a null password", account.Id, userName);
+            }
+
             return account;
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            logger.LogError(ex, "Encountered a mongo database issue when fetching account with username of {}",
+                userName);
             return AccountError.DatabaseError;
         }
     }
@@ -178,8 +190,10 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
         {
             return (await _accounts.FindAsync(x => x.LastOnline >= date)).ToList();
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            logger.LogError(ex, "Encountered a mongo database issue when fetching accounts after active date {}",
+                date.ToString());
             return AccountError.DatabaseError;
         }
     }
@@ -195,8 +209,10 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
             await _accounts.FindOneAndUpdateAsync(filter, update);
             return new Option<AccountError>();
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            logger.LogError(ex, "Encountered a mongo database issue when fetching accounts after active date {}.",
+                roles);
             return AccountError.DatabaseError;
         }
     }
@@ -214,15 +230,20 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
 
             var username = login.Username.Trim();
             //Make sure the username is unique. 
-            var found = ((await _accounts.FindAsync(acc => acc.Username == username)).FirstOrDefault() is null);
+            var found = (await _accounts.FindAsync(acc => acc.Username == username)).FirstOrDefault() is not null;
             if (found)
             {
+                logger.LogWarning(
+                    "Attempt to add username {} to account {} when the username exists on another account.", username,
+                    accountId);
                 return AccountError.UsernameAlreadyExists;
             }
 
             //Make sure the account does not already have a username. 
             if (account.Username != null)
             {
+                logger.LogWarning("There was an attempt to add the username {} to account {} when it already has one.",
+                    username, account.Id);
                 return AccountError.AccountAlreadyHasUsername;
             }
 
@@ -240,8 +261,10 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
             await _accounts.FindOneAndUpdateAsync(filter, update);
             return new Option<AccountError>();
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            logger.LogError(ex, "Encountered a mongo database issue when setting up admin account for accountId {}.",
+                accountId);
             return AccountError.DatabaseError;
         }
     }
@@ -279,8 +302,10 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
 
             return new Option<AccountError>();
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            logger.LogError(ex, "Encountered a mongo database issue when attempting to change password for username {}",
+                login.Username);
             return AccountError.DatabaseError;
         }
     }
@@ -297,8 +322,10 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
             await _accounts.FindOneAndUpdateAsync(filter, update);
             return new Option<AccountError>();
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            logger.LogError(ex, "Encountered a mongo database issue when attempting to ban account with id of {}",
+                id);
             return AccountError.DatabaseError;
         }
     }
@@ -313,8 +340,10 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
             await _accounts.FindOneAndUpdateAsync(filter, update);
             return new Option<AccountError>();
         }
-        catch (MongoException)
+        catch (MongoException ex)
         {
+            logger.LogError(ex, "Encountered a mongo database issue when attempting to unban account with id of {}",
+                id);
             return AccountError.DatabaseError;
         }
     }
@@ -329,14 +358,18 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
             {
                 return AccountError.AccountNotFound;
             }
+
             var roleStrList = roles.Select(x => x.ToString()).ToList();
             account.WebRoles.RemoveAll(r => roleStrList.Exists(str => str == r));
             var filter = Builders<Account>.Filter.Eq(a => a.Id, account.Id);
             await _accounts.ReplaceOneAsync(filter, account);
             return new Option<AccountError>();
         }
-        catch (MongoException )
+        catch (MongoException ex)
         {
+            logger.LogError(ex,
+                "Encountered a mongo database issue when attempting to remove roles from account with id of {}",
+                id);
             return AccountError.DatabaseError;
         }
     }
