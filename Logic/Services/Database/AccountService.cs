@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using FlAdmin.Common.Configs;
+﻿using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
@@ -9,7 +8,6 @@ using FlAdmin.Logic.Services.Auth;
 using LanguageExt;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using Optional = LanguageExt.Optional;
 
 namespace FlAdmin.Logic.Services.Database;
 

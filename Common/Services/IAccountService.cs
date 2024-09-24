@@ -13,8 +13,7 @@ public interface IAccountService
     List<Account> QueryAccounts(IQueryable<Account> query);
 
     Task<Either<AccountError, Account>> GetAccountById(string id);
-
-    //TODO: Return type enums for error handling and logging. 
+    
     Task<Option<AccountError>> AddAccounts(params Account[] accounts);
     Task<Option<AccountError>> UpdateAccount(Account account);
     Task<Option<AccountError>> DeleteAccounts(params string[] ids);

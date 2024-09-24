@@ -32,7 +32,30 @@ public class AccountController(IAccountService accountService) : ControllerBase
         var res = await accountService.AddRolesToAccount(accountId.Trim(), roles);
         return res.Match<IActionResult>(
             Some: err => err.ParseAccountError(this),
-            None: Ok("Role(s) added to account successfully.")
+            None: Ok($"Role(s) added to {accountId} successfully.")
+        );
+    }
+
+    [HttpPatch("removerolls")]
+    [AdminAuthorize(Role.ManageRoles)]
+    public async Task<IActionResult> RemoveRolesFromAccount([FromQuery] string accountId, string[] rolesStr)
+    {
+        var roles = new List<Role>();
+        foreach (var roleStr in rolesStr)
+            if (Enum.TryParse(roleStr, out Role role))
+            {
+                if (role == Role.SuperAdmin)
+                    continue;
+                roles.Add(role);
+            }
+
+        if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
+        
+        
+        var res = await accountService.RemoveRolesFromAccount(accountId.Trim(), roles);
+        return res.Match<IActionResult>(
+            Some: err => err.ParseAccountError(this),
+            None: Ok($"Role(s) removed from account {accountId} successfully.")
         );
     }
 
@@ -54,12 +77,13 @@ public class AccountController(IAccountService accountService) : ControllerBase
     public async Task<IActionResult> GetAccountById(string id)
     {
         var account = await accountService.GetAccountById(id);
+
         var accountModel = account.Match<Either<AccountError, AccountModel>>(
             Left: err => err,
             Right: val => val.ToModel());
+
         return accountModel.Match<IActionResult>(
-            Left: err =>
-                err.ParseAccountError(this),
+            Left: err => err.ParseAccountError(this),
             Right: val => Ok(val)
         );
     }
@@ -72,6 +96,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         var accountModels = accounts.Match<Either<AccountError, List<AccountModel>>>(
             Left: err => err,
             Right: accs => accs.Select(a => a.ToModel()).ToList());
+
         return accountModels.Match<IActionResult>(
             Left: err => err.ParseAccountError(this),
             Right: val => Ok(val)
@@ -97,7 +122,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
 
         //Since our external model is different from the database we need to check if any old information is on it and
         // preserve it if it exists (such as password and salts. and username)
-        var dbAccount = (await accountService.GetAccountById(account.Id)).Match<Option<Account>>(
+        _ = (await accountService.GetAccountById(account.Id)).Match(
             Left: _ => new Option<Account>(),
             Right: val =>
             {
@@ -115,12 +140,14 @@ public class AccountController(IAccountService accountService) : ControllerBase
                 {
                     account.Salt = val.Salt;
                 }
+
                 account.Extra = val.Extra;
                 return val;
             }
         );
+
         await accountService.UpdateAccount(account);
-        return Ok("Account updated successfully");
+        return Ok($"Account {account.Id} updated successfully");
     }
 
     [HttpPatch("addusername")]
@@ -128,7 +155,10 @@ public class AccountController(IAccountService accountService) : ControllerBase
     public async Task<IActionResult> AddUsernameToAccount([FromQuery] string accountId, [FromQuery] LoginModel login)
     {
         if (login?.Username is null || login?.Password is null || login.Password.Trim().Length is 0 ||
-            login.Username.Trim().Length is 0) return BadRequest();
+            login.Username.Trim().Length is 0)
+        {
+            return BadRequest();
+        }
 
         var res = await accountService.SetUpAdminAccount(accountId, login);
 
@@ -149,4 +179,30 @@ public class AccountController(IAccountService accountService) : ControllerBase
             None: Ok("Password changed successfully.")
         );
     }
+
+    [HttpPatch("ban")]
+    public async Task<IActionResult> BanAccount([FromQuery] string accountId, [FromQuery] TimeSpan? duration)
+    {
+        var okMessage = duration is not null
+            ? $"Account {accountId} banned for {duration}"
+            : $"Account {accountId} has been banned.";
+        var res = await accountService.BanAccount(accountId, duration);
+        return res.Match<IActionResult>(
+            Some: err => err.ParseAccountError(this),
+            None: Ok(okMessage)
+        );
+    }
+
+    [HttpPatch("unban")]
+    public async Task<IActionResult> UnbanAccount([FromQuery] string accountId)
+    {
+        var res = await accountService.UnBanAccount(accountId);
+        return res.Match<IActionResult>(
+            Some: err => err.ParseAccountError(this),
+            None: Ok($"Account {accountId} has been unbanned.")
+        );
+    }
+    
+    
+    
 }
