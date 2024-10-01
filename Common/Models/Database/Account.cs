@@ -10,8 +10,8 @@ public class Account
 
     [BsonElement("characters")] public List<ObjectId> Characters { get; set; } = [];
     [BsonElement("scheduledUnbanDate")] public DateTimeOffset? ScheduledUnbanDate { get; set; }
-    [BsonElement("gameRoles")] public List<string> GameRoles { get; set; } = new();
-    [BsonElement("webRoles")] public List<string> WebRoles { get; set; } = new();
+    [BsonElement("gameRoles")] public HashSet<string> GameRoles { get; set; } = new();
+    [BsonElement("webRoles")] public HashSet<string> WebRoles { get; set; } = new();
     [BsonElement("cash")] public long Cash { get; set; }
     [BsonElement("username")] public string? Username { get; set; }
     [BsonElement("password")] public string? PasswordHash { get; set; }
@@ -19,10 +19,10 @@ public class Account
     [BsonElement("lastOnline")] public DateTimeOffset? LastOnline { get; set; }
 
     [BsonExtraElements] public BsonDocument? Extra { get; set; }
-    
+
     public bool IsGameAdmin => GameRoles.Count is not 0;
     public bool HasWebAccess => WebRoles.Count is not 0;
-    
+
     public bool Banned => ScheduledUnbanDate is null;
 
 
@@ -45,9 +45,8 @@ public class Account
                 Id = principal.FindFirst(ClaimTypes.NameIdentifier)!.Value,
                 Username = principal.FindFirst(ClaimTypes.Name)!.Value,
                 PasswordHash = principal.FindFirst(ClaimTypes.Hash)!.Value,
-                WebRoles = principal.FindAll(ClaimTypes.Role).Select(x => x.Value).ToList()
+                WebRoles = principal.FindAll(ClaimTypes.Role).Select(x => x.Value).ToHashSet()
             }
             : null;
     }
-    
 }

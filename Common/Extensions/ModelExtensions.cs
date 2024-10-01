@@ -7,14 +7,14 @@ public static class ModelExtensions
 {
     public static AccountModel ToModel(this Account account)
     {
-        return new AccountModel()
+        return new AccountModel
         {
             Id = account.Id,
             Characters = account.Characters,
             Cash = account.Cash,
             ScheduledUnbanDate = account.ScheduledUnbanDate,
-            GameRoles = account.GameRoles,
-            WebRoles = account.WebRoles,
+            GameRoles = account.GameRoles.ToList(),
+            WebRoles = account.WebRoles.ToList(),
             LastOnline = account.LastOnline,
             Extra = account.Extra
         };
@@ -22,14 +22,14 @@ public static class ModelExtensions
 
     public static Account ToDatabaseAccount(this AccountModel account)
     {
-        return new Account()
+        return new Account
         {
             Id = account.Id,
             Characters = account.Characters,
             Cash = account.Cash,
             ScheduledUnbanDate = account.ScheduledUnbanDate,
-            GameRoles = account.GameRoles,
-            WebRoles = account.WebRoles,
+            GameRoles = account.GameRoles.ToHashSet(),
+            WebRoles = account.WebRoles.ToHashSet(),
             LastOnline = account.LastOnline,
             Extra = account.Extra
         };
@@ -41,5 +41,4 @@ public static class ModelExtensions
         accounts.ForEach(acc => list.Add(acc.ToModel()));
         return list;
     }
-    
 }

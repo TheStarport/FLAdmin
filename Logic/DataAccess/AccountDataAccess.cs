@@ -37,10 +37,7 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
     public async Task<Option<AccountError>> UpdateAccount(BsonDocument account)
     {
         var accountId = account.GetValue("_id").ToString();
-        if (accountId is null || accountId.Length is 0)
-        {
-            return AccountError.AccountIdIsNull;
-        }
+        if (accountId is null || accountId.Length is 0) return AccountError.AccountIdIsNull;
 
         using var session = await _client.StartSessionAsync();
         try
@@ -59,19 +56,17 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         }
     }
 
-    public async Task<Option<AccountError>> DeleteAccount(string accountId)
+    public async Task<Option<AccountError>> DeleteAccounts(params string[] ids)
     {
         using var session = await _client.StartSessionAsync();
         try
         {
-            var filter = Builders<Account>.Filter.Eq(a => a.Id, accountId);
-            await _accounts.DeleteOneAsync(filter);
+            await _accounts.DeleteManyAsync(account => ids.Contains(account.Id));
             return new Option<AccountError>();
         }
         catch (MongoException ex)
         {
-            logger.LogError(ex, "Mongo exception thrown when attempting to delete account with id {accountId}",
-                accountId);
+            logger.LogError(ex, "Mongo exception thrown when attempting to delete accounts");
             return AccountError.DatabaseError;
         }
     }
@@ -101,18 +96,12 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         using var session = await _client.StartSessionAsync();
         try
         {
-            BsonElement bsonElement = new BsonElement(fieldName, BsonValue.Create(value));
+            var bsonElement = new BsonElement(fieldName, BsonValue.Create(value));
             var account = (await _accounts.FindAsync(acc => acc.Id == accountId)).FirstOrDefault().ToBsonDocument();
-            if (account is null)
-            {
-                return AccountError.AccountNotFound;
-            }
+            if (account is null) return AccountError.AccountNotFound;
 
             var pair = account.Elements.FirstOrDefault(field => field.Name == bsonElement.Name);
-            if (pair.Value.GetType != bsonElement.Value.GetType)
-            {
-                return AccountError.ElementTypeMismatch;
-            }
+            if (pair.Value.GetType != bsonElement.Value.GetType) return AccountError.ElementTypeMismatch;
 
             account.SetElement(bsonElement);
             var filter = Builders<Account>.Filter.Eq(a => a.Id, accountId);

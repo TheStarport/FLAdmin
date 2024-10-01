@@ -1,7 +1,6 @@
 ﻿using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
-using MongoDB.Bson;
 using LanguageExt;
 
 namespace FlAdmin.Common.Services;
@@ -13,28 +12,26 @@ public interface IAccountService
     List<Account> QueryAccounts(IQueryable<Account> query);
 
     Task<Either<AccountError, Account>> GetAccountById(string id);
-    
-    Task<Option<AccountError>> AddAccounts(params Account[] accounts);
+
+    Task<Option<AccountError>> CreateAccounts(params Account[] accounts);
     Task<Option<AccountError>> UpdateAccount(Account account);
     Task<Option<AccountError>> DeleteAccounts(params string[] ids);
 
-    Task<Option<AccountError>> UpdateFieldOnAccount(BsonElement bsonElement, string accountId);
+    Task<Option<AccountError>> UpdateFieldOnAccount<T>(string accountId, string name, T value);
 
     List<Account> GetOnlineAccounts();
     Task<Option<AccountError>> CreateWebMaster(LoginModel loginModel);
 
     Task<Either<AccountError, Account>> GetAccountByUserName(string userName);
-    Task<Either<AccountError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date);
+    Task<Either<AccountError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date, int page, int pageSize);
     Task<Option<AccountError>> AddRolesToAccount(string id, List<Role> roles);
     Task<Option<AccountError>> SetUpAdminAccount(string accountId, LoginModel login);
 
     Task<Option<AccountError>> ChangePassword(LoginModel login, string newPassword);
-    
+
     Task<Option<AccountError>> BanAccount(string id, TimeSpan? duration);
 
     Task<Option<AccountError>> UnBanAccount(string id);
-    
-    Task<Option<AccountError>> RemoveRolesFromAccount(string id, List<Role> roles);
-    
 
+    Task<Option<AccountError>> RemoveRolesFromAccount(string id, List<Role> roles);
 }

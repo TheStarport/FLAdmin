@@ -88,7 +88,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
     [HttpGet("activeafterdate")]
     public async Task<IActionResult> GetAccountsActiveAfterDate([FromQuery] DateTimeOffset date)
     {
-        var accounts = await accountService.GetAccountsActiveAfterDate(date);
+        var accounts = await accountService.GetAccountsActiveAfterDate(date, TODO, TODO);
 
         var accountModels = accounts.Match<Either<AccountError, List<AccountModel>>>(
             Left: err => err,
