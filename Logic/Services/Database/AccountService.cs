@@ -1,4 +1,5 @@
-﻿using FlAdmin.Common.Configs;
+﻿using System.Linq.Expressions;
+using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
@@ -15,7 +16,7 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
     : IAccountService
 {
     private readonly IMongoCollection<Account>
-        _accounts = databaseAccess.GetDatabase().GetCollection<Account>(config.Mongo.AccountCollectionName);
+        _accounts = databaseAccess.GetCollection<Account>(config.Mongo.AccountCollectionName);
 
     private readonly MongoClient _client = databaseAccess.GetClient();
 
@@ -161,12 +162,13 @@ public class AccountService(IDatabaseAccess databaseAccess, FlAdminConfig config
         {
             var account = (await _accounts.FindAsync(account => account.Username == userName)).FirstOrDefault();
 
+            
+            
             if (account is null)
             {
                 return AccountError.AccountNotFound;
             }
-
-            //TODO: Log warning of account not having a password with a username existing.
+            
             if (account.PasswordHash is null || account.Salt is null)
             {
                 logger.LogWarning("Account {} has a username {} with a null password", account.Id, userName);

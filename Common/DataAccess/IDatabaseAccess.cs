@@ -4,7 +4,7 @@ namespace FlAdmin.Common.DataAccess;
 
 public interface IDatabaseAccess
 {
-    IMongoDatabase GetDatabase();
+    IMongoCollection<T> GetCollection<T>(string collectionName);
 
     MongoClient GetClient();
 }

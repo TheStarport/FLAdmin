@@ -31,8 +31,8 @@ public class AccountController(IAccountService accountService) : ControllerBase
         if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
         var res = await accountService.AddRolesToAccount(accountId.Trim(), roles);
         return res.Match<IActionResult>(
-            Some: err => err.ParseAccountError(this),
-            None: Ok($"Role(s) added to {accountId} successfully.")
+            err => err.ParseAccountError(this),
+            Ok($"Role(s) added to {accountId} successfully.")
         );
     }
 
@@ -50,12 +50,12 @@ public class AccountController(IAccountService accountService) : ControllerBase
             }
 
         if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
-        
-        
+
+
         var res = await accountService.RemoveRolesFromAccount(accountId.Trim(), roles);
         return res.Match<IActionResult>(
-            Some: err => err.ParseAccountError(this),
-            None: Ok($"Role(s) removed from account {accountId} successfully.")
+            err => err.ParseAccountError(this),
+            Ok($"Role(s) removed from account {accountId} successfully.")
         );
     }
 
@@ -65,10 +65,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         var accounts = await accountService.GetAllAccounts();
         var accountModels = new List<AccountModel>();
         accounts.ForEach(account => accountModels.Add(account.ToModel()));
-        if (accountModels.Count is 0)
-        {
-            return NotFound("No accounts were found,");
-        }
+        if (accountModels.Count is 0) return NotFound("No accounts were found,");
 
         return Ok(accountModels);
     }
@@ -110,8 +107,8 @@ public class AccountController(IAccountService accountService) : ControllerBase
         var res = await accountService.DeleteAccounts(id);
 
         return res.Match<IActionResult>(
-            Some: err => err.ParseAccountError(this),
-            None: Ok("Account(s) successfully deleted.")
+            err => err.ParseAccountError(this),
+            Ok("Account(s) successfully deleted.")
         );
     }
 
@@ -126,20 +123,11 @@ public class AccountController(IAccountService accountService) : ControllerBase
             Left: _ => new Option<Account>(),
             Right: val =>
             {
-                if (val.Username is not null)
-                {
-                    account.Username = val.Username;
-                }
+                if (val.Username is not null) account.Username = val.Username;
 
-                if (val.PasswordHash is not null)
-                {
-                    account.PasswordHash = val.PasswordHash;
-                }
+                if (val.PasswordHash is not null) account.PasswordHash = val.PasswordHash;
 
-                if (val.Salt is not null)
-                {
-                    account.Salt = val.Salt;
-                }
+                if (val.Salt is not null) account.Salt = val.Salt;
 
                 account.Extra = val.Extra;
                 return val;
@@ -156,15 +144,13 @@ public class AccountController(IAccountService accountService) : ControllerBase
     {
         if (login?.Username is null || login?.Password is null || login.Password.Trim().Length is 0 ||
             login.Username.Trim().Length is 0)
-        {
             return BadRequest();
-        }
 
         var res = await accountService.SetUpAdminAccount(accountId, login);
 
         return res.Match<IActionResult>(
-            Some: err => err.ParseAccountError(this),
-            None: Ok("Username and password set successfully.")
+            err => err.ParseAccountError(this),
+            Ok("Username and password set successfully.")
         );
     }
 
@@ -175,8 +161,8 @@ public class AccountController(IAccountService accountService) : ControllerBase
         var res = await accountService.ChangePassword(login, newPassword);
 
         return res.Match<IActionResult>(
-            Some: err => err.ParseAccountError(this),
-            None: Ok("Password changed successfully.")
+            err => err.ParseAccountError(this),
+            Ok("Password changed successfully.")
         );
     }
 
@@ -188,8 +174,8 @@ public class AccountController(IAccountService accountService) : ControllerBase
             : $"Account {accountId} has been banned.";
         var res = await accountService.BanAccount(accountId, duration);
         return res.Match<IActionResult>(
-            Some: err => err.ParseAccountError(this),
-            None: Ok(okMessage)
+            err => err.ParseAccountError(this),
+            Ok(okMessage)
         );
     }
 
@@ -198,11 +184,8 @@ public class AccountController(IAccountService accountService) : ControllerBase
     {
         var res = await accountService.UnBanAccount(accountId);
         return res.Match<IActionResult>(
-            Some: err => err.ParseAccountError(this),
-            None: Ok($"Account {accountId} has been unbanned.")
+            err => err.ParseAccountError(this),
+            Ok($"Account {accountId} has been unbanned.")
         );
     }
-    
-    
-    
 }

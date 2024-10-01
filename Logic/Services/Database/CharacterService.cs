@@ -11,13 +11,12 @@ public class CharacterService(IDatabaseAccess databaseAccess, FlAdminConfig conf
     : ICharacterService
 {
     private readonly IMongoCollection<Account>
-        _accounts = databaseAccess.GetDatabase().GetCollection<Account>(config.Mongo.AccountCollectionName);
+        _accounts = databaseAccess.GetCollection<Account>(config.Mongo.AccountCollectionName);
 
     private readonly IMongoCollection<Character> _characters =
-        databaseAccess.GetDatabase().GetCollection<Character>(config.Mongo.CharacterCollectionName);
+        databaseAccess.GetCollection<Character>(config.Mongo.CharacterCollectionName);
 
     private readonly MongoClient _client = databaseAccess.GetClient();
-
     private readonly ILogger<CharacterService> _logger = logger;
 
     public async Task<List<Character>> GetCharactersOfAccount(string accountId)
