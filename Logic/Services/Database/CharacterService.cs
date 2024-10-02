@@ -2,6 +2,7 @@
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Services;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 

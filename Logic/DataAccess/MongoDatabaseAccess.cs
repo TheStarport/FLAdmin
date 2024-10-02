@@ -1,5 +1,6 @@
 ﻿using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace FlAdmin.Logic.DataAccess;

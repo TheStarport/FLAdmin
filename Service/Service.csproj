@@ -4,6 +4,8 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>FlAdmin.Service</RootNamespace>
+        <AssemblyName>FlAdmin.Service</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,9 +14,9 @@
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8"/>
         <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.8" />
         <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.0.2"/>
-        <PackageReference Include="MongoDB.Bson" Version="2.28.0"/>
-        <PackageReference Include="MongoDB.Driver" Version="2.28.0"/>
-        <PackageReference Include="MongoDB.Driver.Core" Version="2.28.0"/>
+        <PackageReference Include="MongoDB.Bson" Version="2.29.0"/>
+        <PackageReference Include="MongoDB.Driver" Version="2.29.0"/>
+        <PackageReference Include="MongoDB.Driver.Core" Version="2.29.0"/>
         <PackageReference Include="RabbitMQ.Client" Version="7.0.0-rc.8"/>
         <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
@@ -27,24 +29,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Remove="Models\Auth\AccessToken.cs"/>
-        <Compile Remove="Tests\**" />
+      <ProjectReference Include="..\Common\Common.csproj" />
+      <ProjectReference Include="..\Logic\Logic.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Logic\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <EmbeddedResource Remove="Tests\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Content Remove="Tests\**" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="Tests\**" />
-    </ItemGroup>
-
 </Project>

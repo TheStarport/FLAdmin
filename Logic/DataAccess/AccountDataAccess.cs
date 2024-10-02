@@ -4,6 +4,7 @@ using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;

@@ -7,6 +7,8 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+        <RootNamespace>FlAdmin.Tests</RootNamespace>
+        <AssemblyName>FlAdmin.Tests</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
@@ -23,7 +25,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\FlAdmin.csproj" />
+      <ProjectReference Include="..\Logic\Logic.csproj" />
+      <ProjectReference Include="..\Service\Service.csproj" />
     </ItemGroup>
 
-</Project>
+</Project> 

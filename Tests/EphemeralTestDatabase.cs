@@ -4,7 +4,7 @@ using FlAdmin.Common.DataAccess;
 using FlAdmin.Logic.DataAccess;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Tests;
+namespace FlAdmin.Tests;
 
 public class EphemeralTestDatabase : IDisposable
 {

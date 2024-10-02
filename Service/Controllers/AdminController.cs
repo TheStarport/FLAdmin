@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace FlAdmin.Controllers;
+namespace FlAdmin.Service.Controllers;
 
 [ApiController]
 [Route("api/admin")]

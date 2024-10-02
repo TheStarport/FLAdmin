@@ -1,11 +1,10 @@
-﻿using FlAdmin.Common.Extensions;
-using FlAdmin.Common.Models.Auth;
-using FlAdmin.Common.Models.Error;
+﻿using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Services;
+using FlAdmin.Service.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FlAdmin.Controllers;
+namespace FlAdmin.Service.Controllers;
 
 [ApiController]
 [Route("api/auth")]

@@ -4,7 +4,7 @@ using FlAdmin.Logic.DataAccess;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Tests;
+namespace FlAdmin.Tests;
 
 //IDatabaseAccess databaseAccess, FlAdminConfig config, Logger<AccountDataAccess> logger
 

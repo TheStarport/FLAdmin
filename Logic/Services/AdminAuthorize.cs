@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using FlAdmin.Common.Models.Auth;
+﻿using FlAdmin.Common.Models.Auth;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FlAdmin.Logic.Services;
 

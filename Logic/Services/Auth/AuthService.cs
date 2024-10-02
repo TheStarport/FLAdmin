@@ -2,6 +2,7 @@
 using FlAdmin.Common.Auth;
 using FlAdmin.Common.Services;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 
 namespace FlAdmin.Logic.Services.Auth;
 

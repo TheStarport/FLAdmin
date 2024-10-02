@@ -1,9 +1,8 @@
 using System.ComponentModel;
 using FlAdmin.Common.Models.Error;
-using LanguageExt;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FlAdmin.Common.Extensions;
+namespace FlAdmin.Service.Extensions;
 
 public static class ResultExtensions
 {

@@ -6,6 +6,7 @@ using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
 using FlAdmin.Logic.Services.Auth;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 
 namespace FlAdmin.Logic.Services.Database;

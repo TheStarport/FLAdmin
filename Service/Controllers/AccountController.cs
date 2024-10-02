@@ -5,10 +5,11 @@ using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
 using FlAdmin.Logic.Services;
+using FlAdmin.Service.Extensions;
 using LanguageExt;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FlAdmin.Controllers;
+namespace FlAdmin.Service.Controllers;
 
 [ApiController]
 [Route("api/accounts")]

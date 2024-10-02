@@ -3,9 +3,8 @@ using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Services;
 using FlAdmin.Logic.Services;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 
-namespace FlAdmin.Controllers;
+namespace FlAdmin.Service.Controllers;
 
 [ApiController]
 [Route("api/characters")]
