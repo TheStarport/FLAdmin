@@ -66,7 +66,6 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         var accountCheck = await _accounts.GetAccountsByFilter(account => account.Username == name, 1, 1);
         if (accountCheck.Count != 0) return AccountError.UsernameAlreadyExists;
 
-
         var password = loginModel.Password.Trim();
         byte[]? salt = null;
         var hashedPass = PasswordHasher.GenerateSaltedHash(password, ref salt);
@@ -96,8 +95,8 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return accounts[0];
     }
 
-    public async Task<Either<AccountError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date, int page,
-        int pageSize)
+    public async Task<Either<AccountError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date, int page = 1,
+        int pageSize = 100)
     {
         var accounts = await _accounts.GetAccountsByFilter(x => x.LastOnline >= date, page, pageSize);
 

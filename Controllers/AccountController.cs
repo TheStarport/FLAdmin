@@ -36,7 +36,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         );
     }
 
-    [HttpPatch("removerolls")]
+    [HttpPatch("removeroles")]
     [AdminAuthorize(Role.ManageRoles)]
     public async Task<IActionResult> RemoveRolesFromAccount([FromQuery] string accountId, string[] rolesStr)
     {
@@ -86,9 +86,9 @@ public class AccountController(IAccountService accountService) : ControllerBase
     }
 
     [HttpGet("activeafterdate")]
-    public async Task<IActionResult> GetAccountsActiveAfterDate([FromQuery] DateTimeOffset date)
+    public async Task<IActionResult> GetAccountsActiveAfterDate([FromQuery] DateTimeOffset date, [FromQuery] int pageNumber, [FromQuery] int pageSize)
     {
-        var accounts = await accountService.GetAccountsActiveAfterDate(date, TODO, TODO);
+        var accounts = await accountService.GetAccountsActiveAfterDate(date,pageNumber,pageSize);
 
         var accountModels = accounts.Match<Either<AccountError, List<AccountModel>>>(
             Left: err => err,

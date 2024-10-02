@@ -42,6 +42,7 @@ builder.Services.AddSingleton<FlAdminConfig>();
 
 //Data Access
 builder.Services.AddSingleton<IDatabaseAccess, MongoDatabaseAccess>();
+builder.Services.AddSingleton<IAccountDataAccess, AccountDataAccess>();
 
 //Authentication
 builder.Services.AddSingleton<IKeyProvider, KeyProvider>(_ => keyProvider);

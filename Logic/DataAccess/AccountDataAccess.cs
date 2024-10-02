@@ -10,7 +10,7 @@ using MongoDB.Driver;
 
 namespace FlAdmin.Logic.DataAccess;
 
-public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig config, Logger<AccountDataAccess> logger)
+public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig config, ILogger<AccountDataAccess> logger)
     : IAccountDataAccess
 {
     private readonly IMongoCollection<Account> _accounts =
