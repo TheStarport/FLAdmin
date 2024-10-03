@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text.Json;
 using Bogus;
 using EphemeralMongo;
 using FlAdmin.Common.Configs;
@@ -33,6 +34,7 @@ public class EphemeralTestDatabase : IDisposable
             KillMongoProcessesWhenCurrentProcessExits = true,
             MongoPort = Port
         };
+        
         _mongoRunner = MongoRunner.Run(options);
 
         Config = new FlAdminConfig
@@ -45,31 +47,50 @@ public class EphemeralTestDatabase : IDisposable
 
 
         var testAccountsGenerator = new Faker<Account>()
-            .RuleFor(a => a.Id, f => $"Value {f.UniqueIndex}")
-            .RuleFor(a => a.Username, f => f.Person.UserName.OrNull(f, .9f))
-            .RuleFor(a => a.Cash, f => f.Random.Int(0, int.MaxValue - 1))
-            .RuleFor(a => a.LastOnline, f => f.Date.Past(5))
-            .RuleFor(a => a.WebRoles, f => GenerateRandomWebRoles())
-            .RuleFor(a => a.PasswordHash,
-                (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
-            .RuleFor(a => a.Salt, (f, a) => TestSalter(a.PasswordHash));
+                .RuleFor(a => a.Id, f => $"Value {f.UniqueIndex}")
+                .RuleFor(a => a.Username, f => f.Person.UserName.OrNull(f, .9f))
+                .RuleFor(a => a.Cash, f => f.Random.Int(0, int.MaxValue - 1))
+                .RuleFor(a => a.LastOnline, f => f.Date.Past(5))
+                .RuleFor(a => a.WebRoles, f => GenerateRandomWebRoles())
+                .RuleFor(a => a.PasswordHash,
+                    (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
+                .RuleFor(a => a.Salt, (f, a) => TestSalter(a.PasswordHash))
+                .RuleFor(a => a.ScheduledUnbanDate, f => f.Date.Future(5).OrNull(f, .8f));
 
+        var superAdmin = new Account
+        {
+            Id = "abc123456",
+            Username = "SuperAdmin ",
+            PasswordHash = PasswordTestHasher("SuperAdmin ", "SuperAdmin Password"),
+            WebRoles = {Role.SuperAdmin.GetEnumDescription()},
+            Salt = TestSalter("SuperAdmin")
+        };
+        
         var testAccounts = testAccountsGenerator.Generate(150);
+        testAccounts.Add(superAdmin);
+        var jsonOptions = new JsonSerializerOptions {WriteIndented = true};
+        string jsonString = JsonSerializer.Serialize(testAccounts, jsonOptions);
+        
         try
         {
-            var file = File.Create(@"C:\Projects\FlAdmin\Tests\SeedData/Accounts.json");
+            var file = File.OpenWrite(@"C:\Projects\FlAdmin\Tests\SeedData/Accounts.json");
+
             using (var sw = new StreamWriter(file))
             {
-                sw.Write(testAccounts);
-                _mongoRunner.Import(Config.Mongo.DatabaseName, Config.Mongo.AccountCollectionName, @"C:\Projects\FlAdmin\Tests\SeedData\Accounts.json");
+                sw.Write(jsonString);
+                
+                _mongoRunner.Import(Config.Mongo.DatabaseName, Config.Mongo.AccountCollectionName,
+                    @"C:\Projects\FlAdmin\Tests\SeedData\Accounts.json", null, true);
             }
+
             file.Close();
         }
+        
         catch (IOException e)
         {
             Console.WriteLine(e);
         }
-       
+
         DatabaseAccess = new MongoDatabaseAccess(Config, new NullLogger<MongoDatabaseAccess>());
     }
 
@@ -110,7 +131,8 @@ public class EphemeralTestDatabase : IDisposable
 
         //Using an old obsolete hashing algorithm since this is just test data. 
         using HashAlgorithm algorithm = SHA1.Create();
-        return algorithm.ComputeHash(Encoding.UTF8.GetBytes(password)).ToString();
+        var hash = algorithm.ComputeHash(Encoding.UTF8.GetBytes(password));
+        return Convert.ToHexString(hash);
     }
 
     private byte[]? TestSalter(string? username)
