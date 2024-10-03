@@ -1,4 +1,5 @@
-﻿using FlAdmin.Common.Models.Auth;
+﻿using FlAdmin.Common.Configs;
+using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Services;
 using FlAdmin.Service.Extensions;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +12,8 @@ namespace FlAdmin.Service.Controllers;
 public class AuthenticationController(
     IAuthService authService,
     IAccountService accountService,
-    ILogger<AuthenticationController> logger) : ControllerBase
+    ILogger<AuthenticationController> logger,
+    FlAdminConfig flconfig) : ControllerBase
 {
     [HttpPost("login")]
     [AllowAnonymous]
@@ -28,13 +30,14 @@ public class AuthenticationController(
     [AllowAnonymous]
     public async Task<IActionResult> Setup(string password)
     {
-        const string username = "SuperAdmin";
+        var username = flconfig.SuperAdminName;
 
         var login = new LoginModel
         {
             Username = username,
             Password = password
         };
+        
         var res = await accountService.CreateWebMaster(login);
         return res.Match<IActionResult>(
             Some: err => err.ParseAccountError(this),

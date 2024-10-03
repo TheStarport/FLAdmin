@@ -29,4 +29,6 @@ public enum AccountError
     FieldDoesNotExist,
     [Description("An account with this id already exists")]
     AccountIdAlreadyExists,
+    [Description("Editing this account or its fields is disallowed.")]
+    AccountIsProtected
 }

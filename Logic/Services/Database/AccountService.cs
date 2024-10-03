@@ -14,43 +14,41 @@ namespace FlAdmin.Logic.Services.Database;
 public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig config, ILogger<AccountService> logger)
     : IAccountService
 {
-    private readonly IAccountDataAccess
-        _accounts = accountDataAccess;
-
-
+    
     public async Task<List<Account>> GetAllAccounts()
     {
-        return await _accounts.GetAccountsByFilter(account => true);
+        return await accountDataAccess.GetAccountsByFilter(account => true);
     }
 
     public List<Account> QueryAccounts(IQueryable<Account> query)
     {
+        logger.LogError("Attempted usage of unimplemented function.");
         throw new NotImplementedException();
     }
 
     public async Task<Either<AccountError, Account>> GetAccountById(string id)
     {
-        return await _accounts.GetAccount(id);
+        return await accountDataAccess.GetAccount(id);
     }
 
     public async Task<Option<AccountError>> CreateAccounts(params Account[] accounts)
     {
-        return await _accounts.CreateAccounts(accounts);
+        return await accountDataAccess.CreateAccounts(accounts);
     }
 
     public async Task<Option<AccountError>> UpdateAccount(Account account)
     {
-        return await _accounts.UpdateAccount(account.ToBsonDocument());
+        return await accountDataAccess.UpdateAccount(account.ToBsonDocument());
     }
 
     public async Task<Option<AccountError>> DeleteAccounts(params string[] ids)
     {
-        return await _accounts.DeleteAccounts(ids);
+        return await accountDataAccess.DeleteAccounts(ids);
     }
 
     public async Task<Option<AccountError>> UpdateFieldOnAccount<T>(string accountId, string name, T value)
     {
-        return await _accounts.UpdateFieldOnAccount(accountId, name, value);
+        return await accountDataAccess.UpdateFieldOnAccount(accountId, name, value);
     }
 
     public List<Account> GetOnlineAccounts()
@@ -64,7 +62,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
     {
         var name = loginModel.Username.Trim();
 
-        var accountCheck = await _accounts.GetAccountsByFilter(account => account.Username == name, 1, 1);
+        var accountCheck = await accountDataAccess.GetAccountsByFilter(account => account.Username == name, 1, 1);
         if (accountCheck.Count != 0) return AccountError.UsernameAlreadyExists;
 
         var password = loginModel.Password.Trim();
@@ -72,19 +70,19 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         var hashedPass = PasswordHasher.GenerateSaltedHash(password, ref salt);
         var account = new Account
         {
-            Id = ObjectId.GenerateNewId().ToString(),
+            Id = "SuperAdmin",
             PasswordHash = hashedPass,
             Salt = salt,
             Username = name,
             WebRoles = []
         };
-        await _accounts.CreateAccounts(account);
+        await accountDataAccess.CreateAccounts(account);
         return new Option<AccountError>();
     }
 
     public async Task<Either<AccountError, Account>> GetAccountByUserName(string userName)
     {
-        var accounts = await _accounts.GetAccountsByFilter(account => account.Username == userName);
+        var accounts = await accountDataAccess.GetAccountsByFilter(account => account.Username == userName);
         if (accounts.Count == 0) return AccountError.AccountNotFound;
 
         if (accounts.Count != 1)
@@ -99,7 +97,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
     public async Task<Either<AccountError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date, int page = 1,
         int pageSize = 100)
     {
-        var accounts = await _accounts.GetAccountsByFilter(x => x.LastOnline >= date, page, pageSize);
+        var accounts = await accountDataAccess.GetAccountsByFilter(x => x.LastOnline >= date, page, pageSize);
 
         if (accounts.Count == 0) return AccountError.AccountNotFound;
 
@@ -109,9 +107,9 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
 
     public async Task<Option<AccountError>> SetUpAdminAccount(string accountId, LoginModel login)
     {
-        var accountEnum = await _accounts.GetAccount(accountId);
+        var accountEnum = await accountDataAccess.GetAccount(accountId);
         var account = accountEnum.Match<Account>(
-            Left: err => null!,
+            Left: _ => null!,
             Right: val => val
         );
         if (account == null) return AccountError.AccountNotFound;
@@ -119,7 +117,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
 
         var username = login.Username.Trim();
         //Make sure the username is unique. 
-        var found = (await _accounts.GetAccountsByFilter(acc => acc.Username == username)).Count is not 0;
+        var found = (await accountDataAccess.GetAccountsByFilter(acc => acc.Username == username)).Count is not 0;
         if (found)
         {
             logger.LogWarning(
@@ -144,14 +142,14 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         account.Salt = salt;
         account.Username = username;
 
-        await _accounts.UpdateAccount(account.ToBsonDocument());
+        await accountDataAccess.UpdateAccount(account.ToBsonDocument());
         return new Option<AccountError>();
     }
 
     public async Task<Option<AccountError>> ChangePassword(LoginModel login, string newPassword)
     {
         var username = login.Username.Trim();
-        var foundAccounts = await _accounts.GetAccountsByFilter(acc => acc.Username == username);
+        var foundAccounts = await accountDataAccess.GetAccountsByFilter(acc => acc.Username == username);
         if (foundAccounts.Count == 0) return AccountError.AccountNotFound;
 
         if (foundAccounts.Count != 1)
@@ -171,7 +169,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         var hashedPass = PasswordHasher.GenerateSaltedHash(password.Trim(), ref salt);
         account.PasswordHash = hashedPass;
         account.Salt = salt;
-        return await _accounts.UpdateAccount(account.ToBsonDocument());
+        return await accountDataAccess.UpdateAccount(account.ToBsonDocument());
     }
 
     public async Task<Option<AccountError>> BanAccount(string id, TimeSpan? duration)
@@ -182,7 +180,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
             {"_id", id},
             {"duration", BsonValue.Create(duration.Value)}
         };
-        return await _accounts.UpdateAccount(doc);
+        return await accountDataAccess.UpdateAccount(doc);
     }
 
     public async Task<Option<AccountError>> UnBanAccount(string id)
@@ -192,32 +190,32 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
             {"_id", id},
             {"duration", BsonValue.Create(null)}
         };
-        return await _accounts.UpdateAccount(doc);
+        return await accountDataAccess.UpdateAccount(doc);
     }
 
     public async Task<Option<AccountError>> RemoveRolesFromAccount(string id, List<Role> roles)
     {
         var set = roles.Select(x => x.ToString()).ToHashSet();
-        var accountEnum = await _accounts.GetAccount(id);
+        var accountEnum = await accountDataAccess.GetAccount(id);
         var acc = accountEnum.Match<Account>(
-            Left: err => null!,
+            Left: _ => null!,
             Right: val => val
         );
         if (acc == null) return AccountError.AccountNotFound;
         acc.WebRoles.ExceptWith(set);
-        return await _accounts.UpdateFieldOnAccount(id, "webRoles", acc.WebRoles);
+        return await accountDataAccess.UpdateFieldOnAccount(id, "webRoles", acc.WebRoles);
     }
 
     public async Task<Option<AccountError>> AddRolesToAccount(string id, List<Role> roles)
     {
         var set = roles.Select(x => x.ToString()).ToHashSet();
-        var accountEnum = await _accounts.GetAccount(id);
+        var accountEnum = await accountDataAccess.GetAccount(id);
         var acc = accountEnum.Match<Account>(
-            Left: err => null!,
+            Left: _ => null!,
             Right: val => val
         );
         if (acc == null) return AccountError.AccountNotFound;
         acc.WebRoles.UnionWith(set);
-        return await _accounts.UpdateFieldOnAccount(id, "webRoles", acc.WebRoles);
+        return await accountDataAccess.UpdateFieldOnAccount(id, "webRoles", acc.WebRoles);
     }
 }

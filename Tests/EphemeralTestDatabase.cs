@@ -108,8 +108,8 @@ public class EphemeralTestDatabase : IDisposable
         var superAdmin = new Account
         {
             Id = "abc123456",
-            Username = "SuperAdmin ",
-            PasswordHash = PasswordTestHasher("SuperAdmin ", "SuperAdmin Password"),
+            Username = "SuperAdmin",
+            PasswordHash = PasswordTestHasher("SuperAdmin", "SuperAdmin Password"),
             WebRoles = {Role.SuperAdmin.GetEnumDescription()},
             Salt = TestSalter("SuperAdmin")
         };

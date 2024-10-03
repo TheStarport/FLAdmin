@@ -80,6 +80,12 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
     public async Task<Option<AccountError>> DeleteAccounts(params string[] ids)
     {
         using var session = await _client.StartSessionAsync();
+
+        if (ids.Contains("SuperAdmin"))
+        {
+            return AccountError.AccountIsProtected;
+        }
+
         try
         {
             var result = await _accounts.DeleteManyAsync(account => ids.Contains(account.Id));
@@ -123,16 +129,46 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         using var session = await _client.StartSessionAsync();
         try
         {
-            var bsonElement = new BsonElement(fieldName, BsonValue.Create(value));
+            BsonElement newValuePair;
+            if (typeof(T) == typeof(int))
+            {
+                newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToDouble());
+            }
+            else
+            {
+                newValuePair = new BsonElement(fieldName, BsonValue.Create(value));
+            }
+
             var account = (await _accounts.FindAsync(acc => acc.Id == accountId)).FirstOrDefault().ToBsonDocument();
-            if (account is null) return AccountError.AccountNotFound;
+            if (account is null)
+            {
+                return AccountError.AccountNotFound;
+            }
 
-            var pair = account.Elements.FirstOrDefault(field => field.Name == bsonElement.Name);
-            if (pair.Value.GetType != bsonElement.Value.GetType) return AccountError.ElementTypeMismatch;
+            var oldValuePair = account.Elements.FirstOrDefault(field => field.Name == newValuePair.Name);
 
-            account.SetElement(bsonElement);
-            var filter = Builders<Account>.Filter.Eq(a => a.Id, accountId);
-            await _accounts.UpdateOneAsync(filter, account);
+            if (oldValuePair.Value.GetType() != newValuePair.Value.GetType())
+            {
+                return AccountError.ElementTypeMismatch;
+            }
+
+            account[newValuePair.Name] = newValuePair.Value;
+
+
+            var accObj = BsonSerializer.Deserialize<Account>(account);
+            var result = await _accounts.ReplaceOneAsync(acc => acc.Id == accountId, accObj);
+
+            if (result.ModifiedCount is 0)
+            {
+                logger.LogError("{accountId} failed to update for field {fieldName} to value {value}", accountId,
+                    fieldName, value);
+                return AccountError.DatabaseError;
+            }
+
             return new Option<AccountError>();
         }
         catch (MongoException ex)

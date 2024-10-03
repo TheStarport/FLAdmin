@@ -13,16 +13,14 @@ public class AccountDataAccessTests : IDisposable
 {
     private readonly EphemeralTestDatabase _fixture;
     private readonly IAccountDataAccess _accountDataAccess;
-
-
+    
     public AccountDataAccessTests()
     {
         _fixture = new EphemeralTestDatabase();
         _accountDataAccess =
             new AccountDataAccess(_fixture.DatabaseAccess, _fixture.Config, new NullLogger<AccountDataAccess>());
     }
-
-
+    
     [Fact]
     public async Task When_Grabbing_All_Accounts_Should_Count_Of_150()
     {
@@ -30,7 +28,7 @@ public class AccountDataAccessTests : IDisposable
 
         result.Count.Should().Be(150);
     }
-    
+
     [Fact]
     public async Task When_Grabbing_Page_Of_Accounts_Should_Count_Of_50()
     {
@@ -50,12 +48,20 @@ public class AccountDataAccessTests : IDisposable
         };
 
         var result = await _accountDataAccess.GetAccount("123abc456");
-        
+
         result.Match(
             Left: err => false,
             Right: acc => acc.Id == fixedTestAccount.Id).Should().BeTrue();
     }
-    
+
+    [Fact]
+    public async Task When_Getting_Nonexistent_Account_Should_Return_Account_NotFound()
+    {
+        var result = await _accountDataAccess.GetAccount("123");
+        
+        result.IsLeft.Should().BeTrue();
+    }
+
     [Fact]
     public async Task When_Creating_Account_With_Valid_Id_Should_Be_Created_Successfully()
     {
@@ -68,7 +74,6 @@ public class AccountDataAccessTests : IDisposable
 
         result.IsNone.Should().BeTrue();
     }
-
 
     [Fact]
     public async Task When_Adding_Duplicate_Account_Should_Return_AccountId_Already_Exists()
@@ -107,11 +112,10 @@ public class AccountDataAccessTests : IDisposable
         };
 
         var result = await _accountDataAccess.UpdateAccount(account.ToBsonDocument());
-        
+
         result.Match(err => err == AccountError.AccountNotFound, false).Should().BeTrue();
     }
     
-
     [Fact]
     public async Task When_Deleting_Existing_Account_Should_Delete_Successfully()
     {
@@ -125,6 +129,38 @@ public class AccountDataAccessTests : IDisposable
     {
         var result = await _accountDataAccess.DeleteAccounts("123");
 
+        result.Match(err => err == AccountError.AccountNotFound, false).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Attempting_To_Delete_SuperAdmin_Should_Return_Account_Is_Protected()
+    {
+        var result = await _accountDataAccess.DeleteAccounts("SuperAdmin");
+
+        result.Match(err => err == AccountError.AccountIsProtected, false).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Editing_Field_On_Account_With_Correct_Type_Should_Update_Successfully()
+    {
+        var result = await _accountDataAccess.UpdateFieldOnAccount("123abc456", "cash", 12345);
+        
+        result.IsNone.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Editing_Field_On_Account_With_Incorrect_Type_Should_Return_Type_Element_Mismatch()
+    {
+        var result = await _accountDataAccess.UpdateFieldOnAccount("123abc456", "cash", "bob");
+        
+        result.Match(err => err == AccountError.ElementTypeMismatch, false).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Attempting_To_Edit_Field_On_Non_Existing_Account_Should_Return_Account_Not_Found()
+    {
+        var result = await _accountDataAccess.UpdateFieldOnAccount("123", "cash", 123);
+        
         result.Match(err => err == AccountError.AccountNotFound, false).Should().BeTrue();
     }
 
