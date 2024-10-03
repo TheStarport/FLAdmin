@@ -45,10 +45,11 @@ public class EphemeralTestDatabase : IDisposable
                 ConnectionString = "mongodb://localhost:" + Port
             }
         };
-
-        var database = new MongoClient(_mongoRunner.ConnectionString).GetDatabase(Config.Mongo.DatabaseName);
+        
+        var client = new MongoClient(Config.Mongo.ConnectionString);
+        client.DropDatabase(Config.Mongo.DatabaseName);
+        var database = client.GetDatabase(Config.Mongo.DatabaseName);
         var accountCollection = database.GetCollection<Account>(Config.Mongo.AccountCollectionName);
-
         var testAccounts = GenerateRandomAccounts();
         accountCollection.InsertMany(testAccounts);
 
@@ -67,7 +68,7 @@ public class EphemeralTestDatabase : IDisposable
         Directory.Delete("./TestData", true);
     }
 
-    List<Account> GenerateRandomAccounts()
+    private List<Account> GenerateRandomAccounts()
     {
         var userAccountGenerator = new Faker<Account>()
             .RuleFor(a => a.Id, f => Guid.NewGuid().ToString())
@@ -113,18 +114,24 @@ public class EphemeralTestDatabase : IDisposable
             Salt = TestSalter("SuperAdmin")
         };
 
-        var testAccounts = userAccountGenerator.Generate(100);
+        var fixedTestAccount = new Account
+        {
+            Id = "123abc456",
+            LastOnline = DateTime.Now - TimeSpan.FromDays(30),
+            Cash = 12345678
+        };
+
+        var testAccounts = userAccountGenerator.Generate(99);
         
         testAccounts.Add(superAdmin);
+        testAccounts.Add(fixedTestAccount);
         testAccounts.AddRange(bannedAccountGenerator.Generate(40));
         testAccounts.AddRange(webAccountGenerator.Generate(9));
 
         return testAccounts;
     }
-
-
-
-//Helper method to randomly generate rules without superAdmin or no roles at all.
+    
+//Helper method to randomly generate roles without superAdmin.
     private static HashSet<string> GenerateRandomWebRoles(string? username)
     {
         if (username is null)
@@ -136,9 +143,6 @@ public class EphemeralTestDatabase : IDisposable
         var roleNames = new List<string>();
 
         var rnd = new Random();
-
-        var returnEmpty = rnd.Next(0, 100);
-        if (returnEmpty < 50) return [];
 
         var ints = Enumerable.Range(0, roles.Length - 1)
             .Select(i => new Tuple<int, int>(rnd.Next(0, roles.Length - 1), i))

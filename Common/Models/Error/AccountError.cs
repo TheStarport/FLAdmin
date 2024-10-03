@@ -27,4 +27,6 @@ public enum AccountError
 
     [Description("The specified field does not exist on this document.")]
     FieldDoesNotExist,
+    [Description("An account with this id already exists")]
+    AccountIdAlreadyExists,
 }

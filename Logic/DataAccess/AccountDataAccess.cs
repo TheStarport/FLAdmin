@@ -31,6 +31,20 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         catch (MongoException ex)
         {
             logger.LogError(ex, "Encountered a mongo database issue when adding accounts.");
+
+            if (ex is MongoBulkWriteException wx)
+            {
+                if (wx.WriteErrors.Count is not 0)
+                {
+                    var writeError = wx.WriteErrors[0];
+
+                    if (writeError.Code is 11000)
+                    {
+                        return AccountError.AccountIdAlreadyExists;
+                    }
+                }
+            }
+
             return AccountError.DatabaseError;
         }
     }
@@ -47,7 +61,13 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
             var filter = Builders<Account>.Filter.Eq(a => a.Id, accountId);
             var updateDoc = Builders<Account>.Update.Set(acc => acc, newAccount);
 
-            await _accounts.UpdateOneAsync(filter, updateDoc);
+            var result = await _accounts.UpdateOneAsync(filter, updateDoc);
+
+            if (result.ModifiedCount is 0)
+            {
+                return AccountError.AccountNotFound;
+            }
+
             return new Option<AccountError>();
         }
         catch (MongoException ex)
@@ -62,7 +82,13 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         using var session = await _client.StartSessionAsync();
         try
         {
-            await _accounts.DeleteManyAsync(account => ids.Contains(account.Id));
+            var result = await _accounts.DeleteManyAsync(account => ids.Contains(account.Id));
+
+            if (result.DeletedCount is 0)
+            {
+                return AccountError.AccountNotFound;
+            }
+
             return new Option<AccountError>();
         }
         catch (MongoException ex)
