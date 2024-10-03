@@ -37,7 +37,7 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
 
     public async Task<Option<AccountError>> UpdateAccount(BsonDocument account)
     {
-        var accountId = account.GetValue("_id").ToString();
+        var accountId = account.GetValue("_id").AsString;
         if (accountId is null || accountId.Length is 0) return AccountError.AccountIdIsNull;
 
         using var session = await _client.StartSessionAsync();
