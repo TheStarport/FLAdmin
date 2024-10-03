@@ -18,6 +18,8 @@ public class AccountDataAccessTests : IClassFixture<EphemeralTestDatabase>
         _fixture = fixture;
         _accountDataAccess =
             new AccountDataAccess(fixture.DatabaseAccess, _fixture.Config, new NullLogger<AccountDataAccess>());
+        
+        
     }
 
     [Fact]
@@ -32,6 +34,19 @@ public class AccountDataAccessTests : IClassFixture<EphemeralTestDatabase>
 
         result.IsNone.Should().BeTrue();
     }
-    
+
+    [Fact]
+    public async Task When_Grabbing_All_Accounts_Should_Count_150()
+    {
+        var account = new Account()
+        {
+            Id = "123abc"
+        };
+
+        await _accountDataAccess.CreateAccounts(account);
+        var result = await _accountDataAccess.GetAccountsByFilter( a => true);
+
+        result.Count.Should().Be(1);
+    }
     
 }
