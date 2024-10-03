@@ -77,6 +77,6 @@ public class Character
     [BsonElement("npcVisits")] public List<NpcVisit> NpcVisits { get; set; } = new();
 
     [BsonElement("weaponGroups")] public Dictionary<int, List<string>> WeaponGroups { get; set; } = new();
-    
+
     [BsonExtraElements] public BsonDocument? Extra { get; set; }
 }

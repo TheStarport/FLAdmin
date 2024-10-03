@@ -22,6 +22,7 @@ public class AuthService(IJwtProvider jwtProvider, IAccountService accountServic
                 {
                     return new Option<string>();
                 }
+
                 var token = jwtProvider.GenerateToken((val.ToClaimsPrincipal().Identity as ClaimsIdentity)!);
                 return token;
             }

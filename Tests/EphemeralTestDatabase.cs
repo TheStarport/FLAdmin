@@ -11,6 +11,7 @@ using FlAdmin.Service.Extensions;
 using LibreLancer;
 using Microsoft.Extensions.Logging.Abstractions;
 using MongoDB.Bson;
+using MongoDB.Driver;
 using SharpDX.Text;
 using Encoding = System.Text.Encoding;
 
@@ -34,7 +35,7 @@ public class EphemeralTestDatabase : IDisposable
             KillMongoProcessesWhenCurrentProcessExits = true,
             MongoPort = Port
         };
-        
+
         _mongoRunner = MongoRunner.Run(options);
 
         Config = new FlAdminConfig
@@ -45,51 +46,16 @@ public class EphemeralTestDatabase : IDisposable
             }
         };
 
+        var database = new MongoClient(_mongoRunner.ConnectionString).GetDatabase(Config.Mongo.DatabaseName);
+        var accountCollection = database.GetCollection<Account>(Config.Mongo.AccountCollectionName);
 
-        var testAccountsGenerator = new Faker<Account>()
-                .RuleFor(a => a.Id, f => $"Value {f.UniqueIndex}")
-                .RuleFor(a => a.Username, f => f.Person.UserName.OrNull(f, .9f))
-                .RuleFor(a => a.Cash, f => f.Random.Int(0, int.MaxValue - 1))
-                .RuleFor(a => a.LastOnline, f => f.Date.Past(5))
-                .RuleFor(a => a.WebRoles, f => GenerateRandomWebRoles())
-                .RuleFor(a => a.PasswordHash,
-                    (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
-                .RuleFor(a => a.Salt, (f, a) => TestSalter(a.PasswordHash))
-                .RuleFor(a => a.ScheduledUnbanDate, f => f.Date.Future(5).OrNull(f, .8f));
+        var testAccounts = GenerateRandomAccounts();
+        accountCollection.InsertMany(testAccounts);
 
-        var superAdmin = new Account
-        {
-            Id = "abc123456",
-            Username = "SuperAdmin ",
-            PasswordHash = PasswordTestHasher("SuperAdmin ", "SuperAdmin Password"),
-            WebRoles = {Role.SuperAdmin.GetEnumDescription()},
-            Salt = TestSalter("SuperAdmin")
-        };
-        
-        var testAccounts = testAccountsGenerator.Generate(150);
-        testAccounts.Add(superAdmin);
+        /*
         var jsonOptions = new JsonSerializerOptions {WriteIndented = true};
         string jsonString = JsonSerializer.Serialize(testAccounts, jsonOptions);
-        
-        try
-        {
-            var file = File.OpenWrite(@"C:\Projects\FlAdmin\Tests\SeedData/Accounts.json");
-
-            using (var sw = new StreamWriter(file))
-            {
-                sw.Write(jsonString);
-                
-                _mongoRunner.Import(Config.Mongo.DatabaseName, Config.Mongo.AccountCollectionName,
-                    @"C:\Projects\FlAdmin\Tests\SeedData\Accounts.json", null, true);
-            }
-
-            file.Close();
-        }
-        
-        catch (IOException e)
-        {
-            Console.WriteLine(e);
-        }
+        */
 
         DatabaseAccess = new MongoDatabaseAccess(Config, new NullLogger<MongoDatabaseAccess>());
     }
@@ -101,16 +67,78 @@ public class EphemeralTestDatabase : IDisposable
         Directory.Delete("./TestData", true);
     }
 
-    //Helper method to randomly generate rules without superAdmin or no roles at all.
-    private static HashSet<string> GenerateRandomWebRoles()
+    List<Account> GenerateRandomAccounts()
     {
+        var userAccountGenerator = new Faker<Account>()
+            .RuleFor(a => a.Id, f => Guid.NewGuid().ToString())
+            .RuleFor(a => a.Username, f => null)
+            .RuleFor(a => a.Cash, f => f.Random.Int(0, int.MaxValue - 1))
+            .RuleFor(a => a.LastOnline, f => f.Date.Past(5))
+            .RuleFor(a => a.WebRoles, (f, a) => GenerateRandomWebRoles(a.Username))
+            .RuleFor(a => a.PasswordHash,
+                (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
+            .RuleFor(a => a.Salt, (f, a) => TestSalter(a.PasswordHash))
+            .RuleFor(a => a.ScheduledUnbanDate, f => null);
+
+        var bannedAccountGenerator = new Faker<Account>()
+            .RuleFor(a => a.Id, f => Guid.NewGuid().ToString())
+            .RuleFor(a => a.Username, f => null)
+            .RuleFor(a => a.Cash, f => f.Random.Int(0, int.MaxValue - 1))
+            .RuleFor(a => a.LastOnline, f => f.Date.Past(5))
+            .RuleFor(a => a.WebRoles, (f, a) => GenerateRandomWebRoles(a.Username))
+            .RuleFor(a => a.PasswordHash,
+                (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
+            .RuleFor(a => a.Salt, (f, a) => TestSalter(a.PasswordHash))
+            .RuleFor(a => a.ScheduledUnbanDate, f => f.Date.Future(5));
+
+
+        var webAccountGenerator = new Faker<Account>()
+            .RuleFor(a => a.Id, f => Guid.NewGuid().ToString())
+            .RuleFor(a => a.Username, f => f.Person.UserName)
+            .RuleFor(a => a.Cash, f => f.Random.Int(0, int.MaxValue - 1))
+            .RuleFor(a => a.LastOnline, f => null)
+            .RuleFor(a => a.WebRoles, (f, a) => GenerateRandomWebRoles(a.Username))
+            .RuleFor(a => a.PasswordHash,
+                (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
+            .RuleFor(a => a.Salt, (f, a) => TestSalter(a.PasswordHash))
+            .RuleFor(a => a.ScheduledUnbanDate, f => null);
+
+
+        var superAdmin = new Account
+        {
+            Id = "abc123456",
+            Username = "SuperAdmin ",
+            PasswordHash = PasswordTestHasher("SuperAdmin ", "SuperAdmin Password"),
+            WebRoles = {Role.SuperAdmin.GetEnumDescription()},
+            Salt = TestSalter("SuperAdmin")
+        };
+
+        var testAccounts = userAccountGenerator.Generate(100);
+        
+        testAccounts.Add(superAdmin);
+        testAccounts.AddRange(bannedAccountGenerator.Generate(40));
+        testAccounts.AddRange(webAccountGenerator.Generate(9));
+
+        return testAccounts;
+    }
+
+
+
+//Helper method to randomly generate rules without superAdmin or no roles at all.
+    private static HashSet<string> GenerateRandomWebRoles(string? username)
+    {
+        if (username is null)
+        {
+            return new HashSet<string>();
+        }
+
         Role[] roles = {Role.Web, Role.ManageAccounts, Role.ManageAdmins, Role.ManageRoles, Role.ManageAutomation};
         var roleNames = new List<string>();
 
         var rnd = new Random();
 
         var returnEmpty = rnd.Next(0, 100);
-        if (returnEmpty < 90) return [];
+        if (returnEmpty < 50) return [];
 
         var ints = Enumerable.Range(0, roles.Length - 1)
             .Select(i => new Tuple<int, int>(rnd.Next(0, roles.Length - 1), i))
@@ -140,7 +168,7 @@ public class EphemeralTestDatabase : IDisposable
         if (username is null) return null;
 
         Random rnd = new Random();
-        byte[] b = new byte[256];
+        byte[] b = new byte[32];
         rnd.NextBytes(b);
         return b;
     }

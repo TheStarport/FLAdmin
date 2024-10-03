@@ -8,17 +8,20 @@ namespace FlAdmin.Service.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthenticationController(IAuthService authService, IAccountService accountService, ILogger<AuthenticationController> logger) : ControllerBase
+public class AuthenticationController(
+    IAuthService authService,
+    IAccountService accountService,
+    ILogger<AuthenticationController> logger) : ControllerBase
 {
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginModel login)
     {
         var token = await authService.Authenticate(login.Username, login.Password);
-        return  token.Match<IActionResult>(
+        return token.Match<IActionResult>(
             Some: response => Ok(response),
             None: () => Unauthorized("Invalid username or password.")
-            );
+        );
     }
 
     [HttpPost("setup")]

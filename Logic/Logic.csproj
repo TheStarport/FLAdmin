@@ -9,19 +9,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Common\Common.csproj" />
+        <ProjectReference Include="..\Common\Common.csproj"/>
     </ItemGroup>
-    
+
     <ItemGroup>
-        <InternalsVisibleTo Include="FlAdmin.Tests" />
+        <InternalsVisibleTo Include="FlAdmin.Tests"/>
     </ItemGroup>
-    
+
     <ItemGroup>
-      <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8" />
-      <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.8" />
-      <PackageReference Include="MongoDB.Driver" Version="2.29.0" />
-      <PackageReference Include="MongoDB.Driver.Core" Version="2.29.0" />
+        <PackageReference Include="LanguageExt.Core" Version="4.4.9"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.8"/>
+        <PackageReference Include="MongoDB.Driver" Version="2.29.0"/>
+        <PackageReference Include="MongoDB.Driver.Core" Version="2.29.0"/>
     </ItemGroup>
 
 </Project>

@@ -9,27 +9,27 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
-        <PackageReference Include="LibreLancer.Data" Version="0.0.2" />
+        <PackageReference Include="LanguageExt.Core" Version="4.4.9"/>
+        <PackageReference Include="LibreLancer.Data" Version="0.0.2"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.8"/>
-        <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.8" />
+        <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.8"/>
         <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.0.2"/>
         <PackageReference Include="MongoDB.Bson" Version="2.29.0"/>
         <PackageReference Include="MongoDB.Driver" Version="2.29.0"/>
         <PackageReference Include="MongoDB.Driver.Core" Version="2.29.0"/>
         <PackageReference Include="RabbitMQ.Client" Version="7.0.0-rc.8"/>
-        <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-        <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
-        <PackageReference Include="Serilog.Sinks.MongoDB" Version="5.4.1" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.7.3" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.7.3" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.7.3" />
+        <PackageReference Include="Serilog.AspNetCore" Version="8.0.2"/>
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0"/>
+        <PackageReference Include="Serilog.Sinks.File" Version="6.0.0"/>
+        <PackageReference Include="Serilog.Sinks.MongoDB" Version="5.4.1"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.7.3"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.7.3"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.7.3"/>
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Common\Common.csproj" />
-      <ProjectReference Include="..\Logic\Logic.csproj" />
+        <ProjectReference Include="..\Common\Common.csproj"/>
+        <ProjectReference Include="..\Logic\Logic.csproj"/>
     </ItemGroup>
 </Project>

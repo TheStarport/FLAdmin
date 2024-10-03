@@ -6,7 +6,6 @@ namespace FlAdmin.Logic.DataAccess;
 using LibreLancer.Data;
 using LibreLancer.Data.IO;
 
-
 public class FreelancerDataProvider(FlAdminConfig config) : IFreelancerDataProvider
 {
     private FileSystem? Vfs { get; set; }
@@ -21,6 +20,7 @@ public class FreelancerDataProvider(FlAdminConfig config) : IFreelancerDataProvi
         {
             return;
         }
+
         if (!Directory.Exists(config.Server.FreelancerPath))
         {
             return;
@@ -36,11 +36,10 @@ public class FreelancerDataProvider(FlAdminConfig config) : IFreelancerDataProvi
         {
             //TODO: Logging
             Vfs = null;
-            Ini = null; 
+            Ini = null;
             Data = null;
         }
     }
 
     public FreelancerData? GetFreelancerData() => Data;
-    
 }

@@ -6,5 +6,4 @@ namespace FlAdmin.Service.Controllers;
 [Route("api/admin")]
 public class AdminController : ControllerBase
 {
-    
 }

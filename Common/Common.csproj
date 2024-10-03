@@ -9,16 +9,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <InternalsVisibleTo Include="FlAdmin.Tests" />
+        <InternalsVisibleTo Include="FlAdmin.Tests"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
-      <PackageReference Include="LibreLancer.Data" Version="0.0.2" />
-      <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.Extensions" Version="6.0.33" />
-      <PackageReference Include="MongoDB.Driver" Version="2.29.0" />
-      <PackageReference Include="MongoDB.Driver.Core" Version="2.29.0" />
-      <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+        <PackageReference Include="LanguageExt.Core" Version="4.4.9"/>
+        <PackageReference Include="LibreLancer.Data" Version="0.0.2"/>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.Extensions" Version="6.0.33"/>
+        <PackageReference Include="MongoDB.Driver" Version="2.29.0"/>
+        <PackageReference Include="MongoDB.Driver.Core" Version="2.29.0"/>
+        <PackageReference Include="RabbitMQ.Client" Version="6.8.1"/>
     </ItemGroup>
-    
+
 </Project>

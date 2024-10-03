@@ -52,6 +52,7 @@ public class CharacterController(ICharacterService characterService) : Controlle
         await characterService.MoveCharacter(characterName, newAccountId);
         return Ok("Character moved.");
     }
+
     [HttpDelete("removeallfromaccount")]
     public async Task<IActionResult> DeleteCharactersFromAccount([FromQuery] string accountId)
     {
@@ -65,7 +66,4 @@ public class CharacterController(ICharacterService characterService) : Controlle
         await characterService.AddCharacter(character);
         return Ok($"Character {character.CharacterName} added.");
     }
-    
-    
-    
 }

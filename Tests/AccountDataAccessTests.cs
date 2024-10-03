@@ -6,8 +6,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace FlAdmin.Tests;
 
-//IDatabaseAccess databaseAccess, FlAdminConfig config, Logger<AccountDataAccess> logger
-
 public class AccountDataAccessTests : IClassFixture<EphemeralTestDatabase>
 {
     private readonly EphemeralTestDatabase _fixture;
@@ -18,8 +16,6 @@ public class AccountDataAccessTests : IClassFixture<EphemeralTestDatabase>
         _fixture = fixture;
         _accountDataAccess =
             new AccountDataAccess(fixture.DatabaseAccess, _fixture.Config, new NullLogger<AccountDataAccess>());
-        
-        
     }
 
     [Fact]
@@ -36,17 +32,11 @@ public class AccountDataAccessTests : IClassFixture<EphemeralTestDatabase>
     }
 
     [Fact]
-    public async Task When_Grabbing_All_Accounts_Should_Count_150()
+    public async Task When_Grabbing_All_Accounts_Should_Count_Of_150()
     {
-        var account = new Account()
-        {
-            Id = "123abc"
-        };
+        var result = await _accountDataAccess.GetAccountsByFilter(a => true,1,999);
 
-        await _accountDataAccess.CreateAccounts(account);
-        var result = await _accountDataAccess.GetAccountsByFilter( a => true);
-
-        result.Count.Should().Be(1);
+        result.Count.Should().Be(150);
     }
     
 }

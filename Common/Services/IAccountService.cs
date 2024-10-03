@@ -23,7 +23,10 @@ public interface IAccountService
     Task<Option<AccountError>> CreateWebMaster(LoginModel loginModel);
 
     Task<Either<AccountError, Account>> GetAccountByUserName(string userName);
-    Task<Either<AccountError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date, int page = 1, int pageSize = 100);
+
+    Task<Either<AccountError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date, int page = 1,
+        int pageSize = 100);
+
     Task<Option<AccountError>> AddRolesToAccount(string id, List<Role> roles);
     Task<Option<AccountError>> SetUpAdminAccount(string accountId, LoginModel login);
 

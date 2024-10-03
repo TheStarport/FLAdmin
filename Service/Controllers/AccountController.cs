@@ -87,9 +87,10 @@ public class AccountController(IAccountService accountService) : ControllerBase
     }
 
     [HttpGet("activeafterdate")]
-    public async Task<IActionResult> GetAccountsActiveAfterDate([FromQuery] DateTimeOffset date, [FromQuery] int pageNumber, [FromQuery] int pageSize)
+    public async Task<IActionResult> GetAccountsActiveAfterDate([FromQuery] DateTimeOffset date,
+        [FromQuery] int pageNumber, [FromQuery] int pageSize)
     {
-        var accounts = await accountService.GetAccountsActiveAfterDate(date,pageNumber,pageSize);
+        var accounts = await accountService.GetAccountsActiveAfterDate(date, pageNumber, pageSize);
 
         var accountModels = accounts.Match<Either<AccountError, List<AccountModel>>>(
             Left: err => err,
