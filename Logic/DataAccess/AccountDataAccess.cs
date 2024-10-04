@@ -149,6 +149,11 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
                 return AccountError.AccountNotFound;
             }
 
+            if (account[fieldName] is null)
+            {
+                return AccountError.FieldDoesNotExist;
+            }
+
             var oldValuePair = account.Elements.FirstOrDefault(field => field.Name == newValuePair.Name);
 
             if (oldValuePair.Value.GetType() != newValuePair.Value.GetType())
@@ -166,6 +171,8 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
             {
                 logger.LogError("{accountId} failed to update for field {fieldName} to value {value}", accountId,
                     fieldName, value);
+
+
                 return AccountError.DatabaseError;
             }
 
@@ -178,6 +185,23 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
                 value);
             return AccountError.DatabaseError;
         }
+        catch (KeyNotFoundException ex)
+        {
+            logger.LogWarning(ex, "Attempting to edit nonexistent field {fieldName} on account {accountId}", fieldName,
+                accountId);
+            return AccountError.FieldDoesNotExist;
+        }
+    }
+
+    public async Task<Option<AccountError>> CreateNewFieldOnAccount<T>(string accountId, string fieldName, T value)
+    {
+        using var session = await _client.StartSessionAsync();
+        throw new NotImplementedException();
+    }
+
+    public Task<Option<AccountError>> RemoveFieldOnAccount<T>(string accountId, string fieldName, T value)
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<List<Account>> GetAccountsByFilter(Expression<Func<Account, bool>> filter, int page = 1,

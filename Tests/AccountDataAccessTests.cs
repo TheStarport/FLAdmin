@@ -164,6 +164,14 @@ public class AccountDataAccessTests : IDisposable
         result.Match(err => err == AccountError.AccountNotFound, false).Should().BeTrue();
     }
 
+    [Fact]
+    public async Task When_Attempting_To_Edit_Field_On_Non_Existing_Field_Should_Return_Field_Does_Not_Exist()
+    {
+        var result = await _accountDataAccess.UpdateFieldOnAccount("123abc456", "gabsdf", "bob");
+        
+        result.Match(err => err == AccountError.FieldDoesNotExist, false).Should().BeTrue();
+    }
+
     public void Dispose()
     {
         _fixture.Dispose();

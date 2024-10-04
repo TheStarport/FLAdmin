@@ -13,6 +13,9 @@ public interface IAccountDataAccess
     Task<Option<AccountError>> DeleteAccounts(params string[] ids);
     Task<Either<AccountError, Account>> GetAccount(string accountId);
     Task<Option<AccountError>> UpdateFieldOnAccount<T>(string accountId, string fieldName, T value);
+    Task<Option<AccountError>> CreateNewFieldOnAccount<T>(string accountId, string fieldName, T value);
+    Task<Option<AccountError>> RemoveFieldOnAccount<T>(string accountId, string fieldName, T value);
+    
     Task<List<Account>> GetAccountsByFilter(Expression<Func<Account, bool>> filter, int page = 1, int pageSize = 100);
     Task<Option<AccountError>> ReplaceAccount(Account account);
 }
