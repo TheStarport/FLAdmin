@@ -171,8 +171,6 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
             {
                 logger.LogError("{accountId} failed to update for field {fieldName} to value {value}", accountId,
                     fieldName, value);
-
-
                 return AccountError.DatabaseError;
             }
 
@@ -196,12 +194,95 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
     public async Task<Option<AccountError>> CreateNewFieldOnAccount<T>(string accountId, string fieldName, T value)
     {
         using var session = await _client.StartSessionAsync();
-        throw new NotImplementedException();
+        try
+        {
+            BsonElement keyValuePair;
+            if (typeof(T) == typeof(int))
+            {
+                keyValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                keyValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToDouble());
+            }
+            else
+            {
+                keyValuePair = new BsonElement(fieldName, BsonValue.Create(value));
+            }
+
+            var account = (await _accounts.FindAsync(acc => acc.Id == accountId)).FirstOrDefault().ToBsonDocument();
+            if (account is null)
+            {
+                return AccountError.AccountNotFound;
+            }
+
+            account.TryGetValue(fieldName, out var val);
+            if (val is not null)
+            {
+                return AccountError.FieldAlreadyExists;
+            }
+
+            account.Add(keyValuePair);
+
+            var accObj = BsonSerializer.Deserialize<Account>(account);
+            var result = await _accounts.ReplaceOneAsync(acc => acc.Id == accountId, accObj);
+            if (result.ModifiedCount is 0)
+            {
+                logger.LogError("{accountId} failed to add new field of name {fieldName} with value of {value}",
+                    accountId,
+                    fieldName, value);
+                return AccountError.DatabaseError;
+            }
+
+            return new Option<AccountError>();
+        }
+        catch (MongoException ex)
+        {
+            logger.LogError(ex, "Encountered a mongo database when adding new field {fieldname} on account {accountId}",
+                value,
+                accountId
+            );
+            return AccountError.DatabaseError;
+        }
     }
 
-    public Task<Option<AccountError>> RemoveFieldOnAccount<T>(string accountId, string fieldName, T value)
+    public async Task<Option<AccountError>> RemoveFieldOnAccount(string accountId, string fieldName)
     {
-        throw new NotImplementedException();
+        using var session = await _client.StartSessionAsync();
+        try
+        {
+            BsonElement newValuePair = new BsonElement(fieldName, BsonValue.Create(null));
+
+            var account = (await _accounts.FindAsync(acc => acc.Id == accountId)).FirstOrDefault().ToBsonDocument();
+            if (account is null)
+            {
+                return AccountError.AccountNotFound;
+            }
+            if (account[fieldName] is null)
+            {
+                return AccountError.FieldDoesNotExist;
+            }
+            account.Remove(fieldName);
+            var accObj = BsonSerializer.Deserialize<Account>(account);
+            var result = await _accounts.ReplaceOneAsync(acc => acc.Id == accountId, accObj);
+            if (result.ModifiedCount is 0)
+            {
+                return AccountError.DatabaseError;
+            }
+
+            return new Option<AccountError>();
+        }
+        catch (MongoException ex)
+        {
+            return AccountError.DatabaseError;
+        }
+        catch (KeyNotFoundException ex)
+        {
+            logger.LogWarning(ex, "Attempting to remove a nonexistent field {fieldName} on account {accountId}",
+                fieldName,
+                accountId);
+            return AccountError.FieldDoesNotExist;
+        }
     }
 
     public async Task<List<Account>> GetAccountsByFilter(Expression<Func<Account, bool>> filter, int page = 1,

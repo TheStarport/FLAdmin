@@ -30,5 +30,9 @@ public enum AccountError
     [Description("An account with this id already exists")]
     AccountIdAlreadyExists,
     [Description("Editing this account or its fields is disallowed.")]
-    AccountIsProtected
+    AccountIsProtected,
+    [Description("Editing this field is disallowed.")]
+    FieldIsProtected,
+    [Description("A field with this name already exists.")]
+    FieldAlreadyExists
 }
