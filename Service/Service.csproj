@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>FlAdmin.Service</RootNamespace>
         <AssemblyName>FlAdmin.Service</AssemblyName>
+        <Features>strict</Features>
     </PropertyGroup>
 
     <ItemGroup>

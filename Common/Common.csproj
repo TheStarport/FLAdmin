@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>FlAdmin.Common</RootNamespace>
         <AssemblyName>FlAdmin.Common</AssemblyName>
+        <Features>strict</Features>
     </PropertyGroup>
 
     <ItemGroup>
