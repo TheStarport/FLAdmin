@@ -1,69 +1,134 @@
+using System.Linq.Expressions;
 using System.Security.Cryptography;
+using System.Text;
 using Bogus;
-using EphemeralMongo;
-using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
-using FlAdmin.Logic.DataAccess;
+using FlAdmin.Common.Models.Error;
 using FlAdmin.Service.Extensions;
-using Microsoft.Extensions.Logging.Abstractions;
-using MongoDB.Driver;
-using Encoding = System.Text.Encoding;
+using MongoDB.Bson;
+using System.Collections.Generic;
+using LanguageExt;
 
 
-namespace FlAdmin.Tests;
+namespace FlAdmin.Tests.DataAccessMocks;
 
-public class EphemeralTestDatabase : IDisposable
+public class AccountDataAccessMock : IAccountDataAccess, IDisposable
 {
-    private const int Port = 12345;
+    List<Account> _accounts;
 
-    public readonly FlAdminConfig Config;
-    public readonly IDatabaseAccess DatabaseAccess;
-    private readonly IMongoRunner _mongoRunner;
-
-    public EphemeralTestDatabase()
+    public AccountDataAccessMock()
     {
-        var options = new MongoRunnerOptions
-        {
-            DataDirectory = "./TestData",
-            StandardErrorLogger = Console.WriteLine,
-            AdditionalArguments = "--quiet",
-            KillMongoProcessesWhenCurrentProcessExits = true,
-            MongoPort = Port
-        };
+        _accounts = GenerateRandomAccounts();
+    }
 
-        _mongoRunner = MongoRunner.Run(options);
 
-        Config = new FlAdminConfig
+    public Task<Option<AccountError>> CreateAccounts(params Account[] accounts)
+    {
+        return Task.FromResult<Option<AccountError>>(accounts.Any(a => _accounts.Any(x => x.Id == a.Id))
+            ? AccountError.AccountIdAlreadyExists
+            : new AccountError());
+    }
+
+    public Task<Option<AccountError>> UpdateAccount(BsonDocument account)
+    {
+        var accountId = account.GetValue("_id").AsString;
+        if (accountId is null || accountId.Length is 0)
+            return Task.FromResult<Option<AccountError>>(AccountError.AccountIdIsNull);
+
+        if (_accounts.All(x => x.Id != accountId))
         {
-            Mongo = new MongoConfig
+            return Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound);
+        }
+
+        return Task.FromResult(new Option<AccountError>());
+    }
+
+    public Task<Option<AccountError>> DeleteAccounts(params string[] ids)
+    {
+        if (ids.ToList().Any(_ => ids.Contains("SuperAdmin")))
+        {
+            return Task.FromResult<Option<AccountError>>(AccountError.AccountIsProtected);
+        }
+
+        return ids.Any(id => _accounts.Any(x => x.Id == id))
+            ? Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound)
+            : Task.FromResult(new Option<AccountError>());
+    }
+
+    public Task<Either<AccountError, Account>> GetAccount(string accountId)
+    {
+        var account = _accounts.FirstOrDefault(x => x.Id == accountId);
+        return account is null
+            ? Task.FromResult<Either<AccountError, Account>>(AccountError.AccountNotFound)
+            : Task.FromResult<Either<AccountError, Account>>(account);
+    }
+
+    public Task<Option<AccountError>> UpdateFieldOnAccount<T>(string accountId, string fieldName, T value)
+    {
+        switch (fieldName)
+        {
+            case "_id":
+                return Task.FromResult<Option<AccountError>>(AccountError.FieldIsProtected);
+            //TODO: May not work correctly
+            case "username" when value is "SuperAdmin":
+                return Task.FromResult<Option<AccountError>>(AccountError.AccountIsProtected);
+        }
+
+        var account = _accounts.FirstOrDefault(x => x.Id == accountId);
+        if (account is null)
+        {
+            return Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound);
+        }
+
+        var doc = account.ToBsonDocument();
+        try
+        {
+            var element = doc[fieldName];
+            if (element.GetType() != value!.GetType())
             {
-                ConnectionString = "mongodb://localhost:" + Port
+                return Task.FromResult<Option<AccountError>>(AccountError.ElementTypeMismatch);
             }
-        };
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return Task.FromResult<Option<AccountError>>(AccountError.FieldDoesNotExist);
+        }
 
-        var client = new MongoClient(Config.Mongo.ConnectionString);
-        client.DropDatabase(Config.Mongo.DatabaseName);
-        var database = client.GetDatabase(Config.Mongo.DatabaseName);
-        var accountCollection = database.GetCollection<Account>(Config.Mongo.AccountCollectionName);
-        var testAccounts = GenerateRandomAccounts();
-        accountCollection.InsertMany(testAccounts);
-
-        /*
-        var jsonOptions = new JsonSerializerOptions {WriteIndented = true};
-        string jsonString = JsonSerializer.Serialize(testAccounts, jsonOptions);
-        */
-
-        DatabaseAccess = new MongoDatabaseAccess(Config, new NullLogger<MongoDatabaseAccess>());
+        return Task.FromResult(new Option<AccountError>());
     }
 
-    public void Dispose()
+    public Task<Option<AccountError>> CreateNewFieldOnAccount<T>(string accountId, string fieldName, T value)
     {
-        GC.SuppressFinalize(this);
-        _mongoRunner.Dispose();
-        Directory.Delete("./TestData", true);
+        switch (fieldName)
+        {
+            case "_id":
+                return Task.FromResult<Option<AccountError>>(AccountError.FieldIsProtected);
+            //TODO: May not work correctly
+            case "username" when value is "SuperAdmin":
+                return Task.FromResult<Option<AccountError>>(AccountError.AccountIsProtected);
+        }
+        throw new NotImplementedException();
     }
+
+    public Task<Option<AccountError>> RemoveFieldOnAccount(string accountId, string fieldName)
+    {
+        throw new NotImplementedException();
+    }
+    
+
+    public Task<List<Account>> GetAccountsByFilter(Expression<Func<Account, bool>> filter, int page = 1,
+        int pageSize = 100)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Option<AccountError>> ReplaceAccount(Account account)
+    {
+        throw new NotImplementedException();
+    }
+
 
     private List<Account> GenerateRandomAccounts()
     {
@@ -128,12 +193,11 @@ public class EphemeralTestDatabase : IDisposable
         return testAccounts;
     }
 
-//Helper method to randomly generate roles without superAdmin.
-    private static HashSet<string> GenerateRandomWebRoles(string? username)
+    private static System.Collections.Generic.HashSet<string> GenerateRandomWebRoles(string? username)
     {
         if (username is null)
         {
-            return new HashSet<string>();
+            return new System.Collections.Generic.HashSet<string>();
         }
 
         Role[] roles = {Role.Web, Role.ManageAccounts, Role.ManageAdmins, Role.ManageRoles, Role.ManageAutomation};
@@ -172,5 +236,10 @@ public class EphemeralTestDatabase : IDisposable
         byte[] b = new byte[32];
         rnd.NextBytes(b);
         return b;
+    }
+
+    public void Dispose()
+    {
+        _accounts.Clear();
     }
 }
