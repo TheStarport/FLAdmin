@@ -27,12 +27,16 @@ public enum AccountError
 
     [Description("The specified field does not exist on this document.")]
     FieldDoesNotExist,
+
     [Description("An account with this id already exists")]
     AccountIdAlreadyExists,
+
     [Description("Editing this account or its fields is disallowed.")]
     AccountIsProtected,
+
     [Description("Editing this field is disallowed.")]
     FieldIsProtected,
+
     [Description("A field with this name already exists.")]
     FieldAlreadyExists
 }

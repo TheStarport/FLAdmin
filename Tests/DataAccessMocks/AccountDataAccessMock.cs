@@ -109,24 +109,56 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
             case "username" when value is "SuperAdmin":
                 return Task.FromResult<Option<AccountError>>(AccountError.AccountIsProtected);
         }
-        throw new NotImplementedException();
+
+        var account = _accounts.FirstOrDefault(a => a.Id == accountId);
+        if (account is null)
+        {
+            return Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound);
+        }
+
+        var doc = account.ToBsonDocument();
+        doc.TryGetValue(fieldName, out var element);
+        return element is not null
+            ? Task.FromResult<Option<AccountError>>(AccountError.FieldAlreadyExists)
+            : Task.FromResult(new Option<AccountError>());
     }
 
     public Task<Option<AccountError>> RemoveFieldOnAccount(string accountId, string fieldName)
     {
-        throw new NotImplementedException();
+        switch (fieldName)
+        {
+            case "_id":
+                return Task.FromResult<Option<AccountError>>(AccountError.FieldIsProtected);
+        }
+
+        var account = _accounts.FirstOrDefault(a => a.Id == accountId);
+        if (account is null)
+        {
+            return Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound);
+        }
+
+        var doc = account.ToBsonDocument();
+        doc.TryGetValue(fieldName, out var element);
+        return element is null
+            ? Task.FromResult<Option<AccountError>>(AccountError.FieldDoesNotExist)
+            : Task.FromResult(new Option<AccountError>());
     }
-    
+
 
     public Task<List<Account>> GetAccountsByFilter(Expression<Func<Account, bool>> filter, int page = 1,
         int pageSize = 100)
     {
-        throw new NotImplementedException();
+        var func = filter.Compile();
+        var accounts = _accounts.Filter(func).Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+        return Task.FromResult(accounts);
     }
 
     public Task<Option<AccountError>> ReplaceAccount(Account account)
     {
-        throw new NotImplementedException();
+        return _accounts.All(x => x.Id != account.Id)
+            ? Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound)
+            : Task.FromResult(new Option<AccountError>());
     }
 
 
