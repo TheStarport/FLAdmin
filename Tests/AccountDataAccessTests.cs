@@ -172,6 +172,55 @@ public class AccountDataAccessTests : IDisposable
         result.Match(err => err == AccountError.FieldDoesNotExist, false).Should().BeTrue();
     }
 
+    [Fact]
+    public async Task When_Attempting_To_Delete_Field_Should_Delete_Successfully()
+    {
+        var result = await _accountDataAccess.RemoveFieldOnAccount("123abc456", "cash");
+        
+        result.IsNone.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Attempting_To_Delete_Field_From_Non_Existing_Account_Should_Return_Account_Not_Found()
+    {
+        var result = await _accountDataAccess.RemoveFieldOnAccount("123", "cash");
+        
+        result.Match(err => err == AccountError.AccountNotFound, false).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Attempting_To_Delete_Non_Existing_Field_Should_Return_Field_Does_Not_Exist()
+    {
+        var result = await _accountDataAccess.RemoveFieldOnAccount("123abc456", "gagds");
+        
+        result.Match(err => err == AccountError.FieldDoesNotExist, false).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Attempting_To_Create_Valid_Field_On_Valid_Account_Should_Be_Successful()
+    {
+        var result = await _accountDataAccess.CreateNewFieldOnAccount("123abc456", "someNewField", 456);
+        
+        result.IsNone.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Attempting_To_Create_Field_On_Non_Existing_Account_Should_Account_Not_Found()
+    {
+        var result = await _accountDataAccess.CreateNewFieldOnAccount("123", "someNewField", 456);
+
+        result.Match(err => err == AccountError.AccountNotFound, false).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Attempting_To_Create_Field_That_Already_Exists_Should_Return_Field_Already_Exists()
+    {
+        var result = await _accountDataAccess.CreateNewFieldOnAccount("123abc456", "cash", 456);
+
+        result.Match(err => err == AccountError.FieldAlreadyExists, false).Should().BeTrue();
+    }
+    
+
     public void Dispose()
     {
         _fixture.Dispose();

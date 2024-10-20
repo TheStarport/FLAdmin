@@ -126,6 +126,16 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
 
     public async Task<Option<AccountError>> UpdateFieldOnAccount<T>(string accountId, string fieldName, T value)
     {
+        switch (fieldName)
+        {
+            case "_id":
+                return AccountError.FieldIsProtected;
+            //TODO: May not work correctly
+            case "username" when value is "SuperAdmin":
+                return AccountError.AccountIsProtected;
+        }
+
+
         using var session = await _client.StartSessionAsync();
         try
         {
@@ -248,20 +258,27 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
 
     public async Task<Option<AccountError>> RemoveFieldOnAccount(string accountId, string fieldName)
     {
+        switch (fieldName)
+        {
+            case "_id":
+                return AccountError.FieldIsProtected;
+        }
+
+
         using var session = await _client.StartSessionAsync();
         try
         {
-            BsonElement newValuePair = new BsonElement(fieldName, BsonValue.Create(null));
-
             var account = (await _accounts.FindAsync(acc => acc.Id == accountId)).FirstOrDefault().ToBsonDocument();
             if (account is null)
             {
                 return AccountError.AccountNotFound;
             }
+
             if (account[fieldName] is null)
             {
                 return AccountError.FieldDoesNotExist;
             }
+
             account.Remove(fieldName);
             var accObj = BsonSerializer.Deserialize<Account>(account);
             var result = await _accounts.ReplaceOneAsync(acc => acc.Id == accountId, accObj);
@@ -274,6 +291,9 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         }
         catch (MongoException ex)
         {
+            logger.LogError(ex,
+                "Encountered a mongo database when attempting to remove field {fieldName} from account {accountId}",
+                fieldName, accountId);
             return AccountError.DatabaseError;
         }
         catch (KeyNotFoundException ex)
