@@ -58,6 +58,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         throw new NotImplementedException();
     }
 
+    //TODO: Configurable SuperAdmin Id.
     public async Task<Option<AccountError>> CreateWebMaster(LoginModel loginModel)
     {
         var name = loginModel.Username.Trim();
@@ -68,13 +69,15 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         var password = loginModel.Password.Trim();
         byte[]? salt = null;
         var hashedPass = PasswordHasher.GenerateSaltedHash(password, ref salt);
+
+   
         var account = new Account
         {
             Id = "SuperAdmin",
             PasswordHash = hashedPass,
             Salt = salt,
             Username = name,
-            WebRoles = []
+            WebRoles = ["SuperAdmin"]
         };
         await accountDataAccess.CreateAccounts(account);
         return new Option<AccountError>();

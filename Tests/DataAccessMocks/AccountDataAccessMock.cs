@@ -26,9 +26,14 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
 
     public Task<Option<AccountError>> CreateAccounts(params Account[] accounts)
     {
-        return Task.FromResult<Option<AccountError>>(accounts.Any(a => _accounts.Any(x => x.Id == a.Id))
-            ? AccountError.AccountIdAlreadyExists
-            : new AccountError());
+        foreach (var account in accounts){
+            if (_accounts.Any(acc => acc.Id == account.Id))
+            {
+                return Task.FromResult<Option<AccountError>>(AccountError.AccountIdAlreadyExists);
+            }
+        }
+        
+        return Task.FromResult(new Option<AccountError>());
     }
 
     public Task<Option<AccountError>> UpdateAccount(BsonDocument account)
