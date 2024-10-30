@@ -40,11 +40,12 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
 
                     if (writeError.Code is 11000)
                     {
+                        logger.LogWarning(ex,"Attempt to add accounts with ids that already exist on the database.");
                         return AccountError.AccountIdAlreadyExists;
                     }
                 }
             }
-
+            logger.LogError(ex, "Encountered a mongo database issue when adding accounts.");
             return AccountError.DatabaseError;
         }
     }
