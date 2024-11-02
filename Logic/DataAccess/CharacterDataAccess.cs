@@ -90,24 +90,24 @@ public class CharacterDataAccess(
         }
     }
 
-    public async Task<Either<CharacterError, Character>> GetCharacterByName(string characterName)
+    public Task<Either<CharacterError, Character>> GetCharacter(Either<ObjectId, string> characterName)
     {
         try
         {
-            var character = (await _characters.FindAsync(ch => ch.CharacterName == characterName)).FirstOrDefault();
-            if (character is null)
+            var charDoc = GetCharacterBsonDocument(characterName);
+            if (charDoc is null)
             {
                 logger.LogWarning("Character {characterName} not found", characterName);
-                return CharacterError.CharacterNotFound;
+                return Task.FromResult<Either<CharacterError, Character>>(CharacterError.CharacterNotFound);
             }
 
-            return character;
+            return Task.FromResult<Either<CharacterError, Character>>(BsonSerializer.Deserialize<Character>(charDoc));
         }
         catch (MongoException ex)
         {
             logger.LogError(ex, "Mongo exception thrown when attempting to get character of name {characterName}",
                 characterName);
-            return CharacterError.DatabaseError;
+            return Task.FromResult<Either<CharacterError, Character>>(CharacterError.DatabaseError);
         }
     }
 
@@ -311,7 +311,7 @@ public class CharacterDataAccess(
                 var doc = _characters.Find(ch => ch.Id == x).FirstOrDefault();
                 return doc?.ToBsonDocument()!;
             },
-            Right: x =>
+            Right: x => 
             {
                 var doc = _characters.Find(ch => ch.CharacterName == x).FirstOrDefault();
                 return doc?.ToBsonDocument()!;

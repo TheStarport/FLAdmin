@@ -14,7 +14,7 @@ public interface ICharacterDataAccess
     
     Task<Option<CharacterError>> DeleteCharacters(params string[] characters);
     
-    Task<Either<CharacterError, Character>> GetCharacterByName(string characterName);
+    Task<Either<CharacterError, Character>> GetCharacter(Either<ObjectId, string> characterName);
     
     Task<Option<CharacterError>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName,
         T value);

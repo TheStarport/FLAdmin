@@ -20,4 +20,10 @@ public enum CharacterError
     FieldDoesNotExist,
     [Description("Type provided does not match the type of the field on the database.")]
     ElementTypeMismatch,
+    [Description("The character provided has invalid fields.")]
+    InvalidCharacter,
+    [Description("An error occured when attempting to modify the account associated with this character.")]
+    AccountError,
+    [Description("That character is currently logged into the game therefor operation cannot be performed.")]
+    CharacterIsLoggedIn,
 }

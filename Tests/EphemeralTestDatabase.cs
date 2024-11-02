@@ -49,6 +49,10 @@ public class EphemeralTestDatabase : IDisposable
         var accountCollection = database.GetCollection<Account>(Config.Mongo.AccountCollectionName);
         var testAccounts = GenerateRandomAccounts();
         accountCollection.InsertMany(testAccounts);
+        
+        
+        
+        
 
         /*
         var jsonOptions = new JsonSerializerOptions {WriteIndented = true};
@@ -65,6 +69,22 @@ public class EphemeralTestDatabase : IDisposable
         Directory.Delete("./TestData", true);
     }
 
+
+    private List<Character> GenerateRandomCharacters()
+    {
+        var characters = new List<Character>();
+
+        //FLServer can sometimes generate invalid characters so we need to have tests account for both
+        //Valid and invalid character states on the database. 
+        var validCharacterGenerator = new Faker<Character>();
+        
+        
+        
+        return characters;
+    }
+    
+    
+    
     private List<Account> GenerateRandomAccounts()
     {
         var userAccountGenerator = new Faker<Account>()

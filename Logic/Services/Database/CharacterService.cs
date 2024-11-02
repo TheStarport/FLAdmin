@@ -1,159 +1,216 @@
 ﻿using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models.Database;
+using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
+using LanguageExt;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace FlAdmin.Logic.Services.Database;
 
-public class CharacterService(IDatabaseAccess databaseAccess, FlAdminConfig config, ILogger<CharacterService> logger)
-    : ICharacterService
+public class CharacterService : ICharacterService
 {
-    private readonly IMongoCollection<Account>
-        _accounts = databaseAccess.GetCollection<Account>(config.Mongo.AccountCollectionName);
+    private readonly ICharacterDataAccess _characterDataAccess;
+    private readonly IAccountDataAccess _accountDataAccess;
+    private readonly ILogger<CharacterService> _logger;
+    private readonly IValidationService _validation;
 
-    private readonly IMongoCollection<Character> _characters =
-        databaseAccess.GetCollection<Character>(config.Mongo.CharacterCollectionName);
 
-    private readonly MongoClient _client = databaseAccess.GetClient();
-    private readonly ILogger<CharacterService> _logger = logger;
-
-    public async Task<List<Character>> GetCharactersOfAccount(string accountId)
+    public CharacterService(ICharacterDataAccess characterDataAccess, IAccountDataAccess accountDataAccess,
+        IValidationService validator,
+        FlAdminConfig config, ILogger<CharacterService> logger)
     {
-        var account = (await _accounts.FindAsync(account => account.Id == accountId)).FirstOrDefault();
-        List<Character> characterList = [];
-        var filter = Builders<Character>.Filter.In(c => c.Id, account.Characters);
-        var foundDoc = await _characters.FindAsync(filter);
-        characterList.AddRange(foundDoc.ToEnumerable());
-        return characterList;
+        _characterDataAccess = characterDataAccess;
+        _accountDataAccess = accountDataAccess;
+        _logger = logger;
+        _validation = validator;
     }
 
-    public async Task<Character?> GetCharacterByName(string name)
+    public async Task<Either<CharacterError, List<Character>>> GetCharactersOfAccount(string accountId)
     {
-        var foundDoc = await _characters.FindAsync(character => character.CharacterName == name);
-        return foundDoc.FirstOrDefault();
+        var characters = await _characterDataAccess.GetCharactersByFilter(x => x.AccountId == accountId);
+
+        if (characters.Count is 0)
+        {
+            return CharacterError.CharacterNotFound;
+        }
+
+        return characters;
     }
 
-    public async Task<List<Character>> QueryCharacters(IQueryable<Character> query)
+    public async Task<Either<CharacterError, Character>> GetCharacterByName(string name)
+    {
+        return await _characterDataAccess.GetCharacter(name);
+    }
+
+    public Task<List<Character>> QueryCharacters(IQueryable<Character> query)
     {
         throw new NotImplementedException();
     }
 
-    public async Task AddCharacter(Character character)
+    public async Task<Option<CharacterError>> AddCharacter(Character character)
     {
-        if ((await _characters.FindAsync(doc => doc.CharacterName == character.CharacterName)).Any())
+        if (_validation.ValidateCharacter(character) is false)
         {
-            return;
+            return CharacterError.InvalidCharacter;
         }
 
-        await _characters.InsertOneAsync(character);
+        return await _characterDataAccess.CreateCharacters(character);
     }
 
-    public async Task DeleteAllCharactersOnAccount(string accountId)
+    public async Task<Option<CharacterError>> DeleteAllCharactersOnAccount(string accountId)
     {
-        using var session = await _client.StartSessionAsync();
+        var characters = await _characterDataAccess.GetCharactersByFilter(x => x.AccountId == accountId);
 
-        try
+        if (characters.Count is 0)
         {
-            var foundDoc = await _accounts.FindAsync(account => account.Id == accountId);
-            var account = foundDoc.FirstOrDefault();
-            if (account is null) return;
-            await _characters.DeleteManyAsync(character => character.AccountId == accountId);
-            var update = Builders<Account>.Update.Set(a => a.Characters, []);
-            var filter = Builders<Account>.Filter.Eq(a => a.Id, accountId);
-            await _accounts.UpdateOneAsync(filter, update);
-            await session.CommitTransactionAsync();
+            return CharacterError.CharacterNotFound;
         }
-        catch (MongoException e)
+
+        var charNames = characters.Select(character => character.CharacterName).ToList();
+
+        var result = await _characterDataAccess.DeleteCharacters(charNames.ToArray());
+        if (result.IsSome)
         {
-            //TODO: Log and handle return codes appropriately. 
+            return result;
         }
+
+
+        List<ObjectId> cleanedCharacterList = new();
+        var result2 = await _accountDataAccess.UpdateFieldOnAccount(accountId, "characters", cleanedCharacterList);
+
+        return result2.IsSome ? CharacterError.AccountError : new Option<CharacterError>();
     }
 
-    public async Task DeleteCharacter(string name)
+    public async Task<Option<CharacterError>> DeleteCharacter(Either<ObjectId, string> character)
     {
-        await _characters.DeleteOneAsync(character => character.CharacterName == name);
-    }
-
-    public async Task DeleteCharacter(ObjectId id)
-    {
-        await _characters.DeleteOneAsync(character => character.Id == id);
-    }
-
-    public async Task MoveCharacter(ObjectId id, string newAccountId)
-    {
-        using var session = await _client.StartSessionAsync();
-        try
+        var charRes = await _characterDataAccess.GetCharacter(character);
+        if (charRes.IsLeft)
         {
-            session.StartTransaction();
-
-            var foundCharDoc = await _characters.FindAsync(character => character.Id == id);
-            var character = foundCharDoc.FirstOrDefault();
-            if (character is null) return;
-
-            var foundOldAccountDoc = await _accounts.FindAsync(account => account.Id == character.AccountId);
-            var oldAccount = foundOldAccountDoc.FirstOrDefault();
-            if (oldAccount is null) return;
-
-
-            var newAccountFoundDoc = await _accounts.FindAsync(account => account.Id == newAccountId);
-            var newAccount = newAccountFoundDoc.FirstOrDefault();
-
-            if (newAccount is null) return;
-
-
-            oldAccount.Characters.Remove(id);
-            newAccount.Characters.Add(id);
-
-            var charFilter = Builders<Character>.Filter.Eq(c => c.Id, character.Id);
-            var oldAccountFilter = Builders<Account>.Filter.Eq(a => a.Id, oldAccount.Id);
-            var newAccountFilter = Builders<Account>.Filter.Eq(c => c.Id, newAccount.Id);
-
-
-            var charUpdate = Builders<Character>.Update.Set(c => c.AccountId, newAccount.Id);
-            var oldAccountUpdate = Builders<Account>.Update.Set(a => a.Characters, oldAccount.Characters);
-            var newAccountUpdate = Builders<Account>.Update.Set(a => a.Characters, newAccount.Characters);
-
-            await _characters.UpdateOneAsync(charFilter, charUpdate);
-            await _accounts.UpdateOneAsync(oldAccountFilter, oldAccountUpdate);
-            await _accounts.UpdateOneAsync(newAccountFilter, newAccountUpdate);
-
-            await session.CommitTransactionAsync();
+            {
+                return charRes.Match(
+                    Left: err => err,
+                    //Right should never really be reached as we're checking it.
+                    Right: _ => CharacterError.InvalidCharacter);
+            }
         }
-        catch (MongoException ex)
+
+        var ch = charRes.Match<Character>(
+            Left: _ => null!,
+            Right: ch => ch);
+
+
+        var accountRes = await _accountDataAccess.GetAccount(ch.AccountId);
+        if (accountRes.IsLeft)
         {
-            //TODO: Log and catch
+            return accountRes.Match(
+                Left: err => CharacterError.AccountError,
+                Right: err => CharacterError.AccountError);
         }
+
+        var account = accountRes.Match<Account>(
+            Left: _ => null!,
+            Right: x => x);
+        account.Characters.Remove(ch.Id);
+
+        var res = await _characterDataAccess.DeleteCharacters(ch.CharacterName);
+        if (res.IsSome)
+        {
+            return res;
+        }
+
+        var res2 = await _accountDataAccess.UpdateAccount(account.ToBsonDocument());
+        return res2.IsSome ? CharacterError.AccountError : new Option<CharacterError>();
     }
 
-    public async Task MoveCharacter(string name, string newAccountId)
+
+    public async Task<Option<CharacterError>> MoveCharacter(Either<ObjectId, string> character, string newAccountId)
     {
-        var foundCharDoc = await _characters.FindAsync(character => character.CharacterName == name);
-        var character = foundCharDoc.FirstOrDefault();
-        if (character is null) return;
-        await MoveCharacter(character.Id, newAccountId);
+        var charRes = await _characterDataAccess.GetCharacter(character);
+        if (charRes.IsLeft)
+        {
+            {
+                return charRes.Match(
+                    Left: err => err,
+                    //Right should never really be reached as we're checking it.
+                    Right: _ => CharacterError.InvalidCharacter);
+            }
+        }
+
+        var ch = charRes.Match<Character>(
+            Left: _ => null!,
+            Right: ch => ch);
+        var oldAccountRes = await _accountDataAccess.GetAccount(ch.AccountId);
+        if (oldAccountRes.IsLeft)
+        {
+            return oldAccountRes.Match(
+                Left: _ => CharacterError.AccountError,
+                Right: _ => CharacterError.AccountError);
+        }
+
+        var oldAccount = oldAccountRes.Match<Account>(
+            Left: _ => null!,
+            Right: x => x);
+
+        var newAccountRes = await _accountDataAccess.GetAccount(newAccountId);
+        if (newAccountRes.IsLeft)
+        {
+            return newAccountRes.Match(
+                Left: _ => CharacterError.AccountError,
+                Right: _ => CharacterError.AccountError);
+        }
+
+        var newAccount = newAccountRes.Match<Account>(
+            Left: _ => null!,
+            Right: x => x);
+
+
+        oldAccount.Characters.Remove(ch.Id);
+        newAccount.Characters.Add(ch.Id);
+
+        var result1 = await _characterDataAccess.UpdateFieldOnCharacter(character, "accountId", newAccountId);
+        if (result1.IsSome)
+        {
+            return result1;
+        }
+
+        var result2 = await _accountDataAccess.UpdateFieldOnAccount(oldAccount.Id, "characters", oldAccount.Characters);
+        if (result2.IsSome)
+        {
+            return CharacterError.AccountError;
+        }
+
+        var result3 = await _accountDataAccess.UpdateFieldOnAccount(newAccount.Id, "accounts", newAccount.Characters);
+        if (result3.IsSome)
+        {
+            return CharacterError.AccountError;
+        }
+
+        return new Option<CharacterError>();
     }
 
-    public async Task UpdateCharacter(Character character)
+    public Task<Option<CharacterError>> UpdateCharacter(Character character)
     {
-        var filter = Builders<Character>.Filter.Eq(c => c.Id, character.Id);
-        await _characters.ReplaceOneAsync(filter, character);
+        throw new NotImplementedException();
     }
 
-    public async Task UpdateFieldOnCharacter(string name, BsonElement bsonElement)
+    public Task<Option<CharacterError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
+        string fieldName,
+        T value)
     {
-        var foundCharDoc = await _characters.FindAsync(character => character.CharacterName == name);
-        var character = foundCharDoc.FirstOrDefault().ToBsonDocument();
+        throw new NotImplementedException();
+    }
 
-        if (character is null) return;
+    public Task<Option<CharacterError>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName)
+    {
+        throw new NotImplementedException();
+    }
 
-        var pair = character.Elements.FirstOrDefault(field => field.Name == bsonElement.Name);
-        if (pair.Value.GetType != bsonElement.Value.GetType) return;
-        character.SetElement(bsonElement);
-        var filter = Builders<Character>.Filter.Eq(a => a.CharacterName, name);
-
-        await _characters.UpdateOneAsync(filter, character);
+    public Task<Option<CharacterError>> AddFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName,
+        T value)
+    {
+        throw new NotImplementedException();
     }
 }
