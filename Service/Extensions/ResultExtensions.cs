@@ -29,8 +29,8 @@ public static class ResultExtensions
             AccountError.AccountAlreadyHasUsername => controller.Conflict(accountError.GetEnumDescription()),
             AccountError.FieldDoesNotExist => controller.NotFound(accountError.GetEnumDescription()),
             AccountError.AccountIdAlreadyExists => controller.Conflict(accountError.GetEnumDescription()),
-            AccountError.AccountIsProtected => controller.Unauthorized(accountError.GetEnumDescription()),
-            AccountError.FieldIsProtected => controller.Unauthorized(accountError.GetEnumDescription()),
+            AccountError.AccountIsProtected => controller.Forbid(accountError.GetEnumDescription()),
+            AccountError.FieldIsProtected => controller.Forbid(accountError.GetEnumDescription()),
             AccountError.FieldAlreadyExists => controller.Conflict(accountError.GetEnumDescription()),
             _ => throw new ArgumentOutOfRangeException(nameof(accountError), accountError, null)
         };
@@ -45,7 +45,7 @@ public static class ResultExtensions
             CharacterError.CharacterIdIsNull => controller.BadRequest(characterError.GetEnumDescription()),
             CharacterError.CharacterNotFound => controller.NotFound(characterError.GetEnumDescription()),
             CharacterError.FieldAlreadyExists => controller.Conflict(characterError.GetEnumDescription()),
-            CharacterError.FieldIsProtected => controller.Unauthorized(characterError.GetEnumDescription()),
+            CharacterError.FieldIsProtected => controller.Forbid(characterError.GetEnumDescription()),
             CharacterError.FieldDoesNotExist => controller.NotFound(characterError.GetEnumDescription()),
             CharacterError.ElementTypeMismatch => controller.BadRequest(characterError.GetEnumDescription()),
             CharacterError.InvalidCharacter => controller.BadRequest(characterError.GetEnumDescription()),
