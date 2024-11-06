@@ -76,9 +76,9 @@ public class EphemeralTestDatabase : IDisposable
 
         //FLServer can sometimes generate invalid characters so we need to have tests account for both
         //Valid and invalid character states on the database. 
-        var validCharacterGenerator = new Faker<Character>();
-        
-        
+        var validCharacterGenerator = new Faker<Character>()
+            .RuleFor(x => x.CharacterName, f => f.Name.FirstName())
+            .RuleFor(x => x.AccountId, f => Guid.NewGuid().ToString());
         
         return characters;
     }
@@ -193,4 +193,5 @@ public class EphemeralTestDatabase : IDisposable
         rnd.NextBytes(b);
         return b;
     }
+    
 }

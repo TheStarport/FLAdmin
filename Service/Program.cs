@@ -3,6 +3,7 @@ using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Services;
 using FlAdmin.Logic.DataAccess;
+using FlAdmin.Logic.Services;
 using FlAdmin.Logic.Services.Auth;
 using FlAdmin.Logic.Services.Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -43,12 +44,15 @@ builder.Services.AddSingleton<FlAdminConfig>();
 //Data Access
 builder.Services.AddSingleton<IDatabaseAccess, MongoDatabaseAccess>();
 builder.Services.AddSingleton<IAccountDataAccess, AccountDataAccess>();
+builder.Services.AddSingleton<ICharacterDataAccess, CharacterDataAccess>();
+builder.Services.AddSingleton<IFreelancerDataProvider,FreelancerDataProvider>();
 
 //Authentication
 builder.Services.AddSingleton<IKeyProvider, KeyProvider>(_ => keyProvider);
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
 
 //Services
+builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<IAccountService, AccountService>();
 builder.Services.AddSingleton<ICharacterService, CharacterService>();
 builder.Services.AddSingleton<IAuthService, AuthService>();
