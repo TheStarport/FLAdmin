@@ -28,16 +28,16 @@ public class CharacterService : ICharacterService
         _validation = validator;
     }
 
-    public async Task<Either<CharacterError, List<Character>>> GetCharactersOfAccount(string accountId)
+    public async Task<Either<FLAdminError, List<Character>>> GetCharactersOfAccount(string accountId)
     {
         var characters = await _characterDataAccess.GetCharactersByFilter(x => x.AccountId == accountId);
 
-        if (characters.Count is 0) return CharacterError.CharacterNotFound;
+        if (characters.Count is 0) return FLAdminError.CharacterNotFound;
 
         return characters;
     }
 
-    public async Task<Either<CharacterError, Character>> GetCharacterByName(string name)
+    public async Task<Either<FLAdminError, Character>> GetCharacterByName(string name)
     {
         return await _characterDataAccess.GetCharacter(name);
     }
@@ -47,18 +47,18 @@ public class CharacterService : ICharacterService
         throw new NotImplementedException();
     }
 
-    public async Task<Option<CharacterError>> AddCharacter(Character character)
+    public async Task<Option<FLAdminError>> AddCharacter(Character character)
     {
-        if (_validation.ValidateCharacter(character) is false) return CharacterError.InvalidCharacter;
+        if (_validation.ValidateCharacter(character) is false) return FLAdminError.InvalidCharacter;
 
         return await _characterDataAccess.CreateCharacters(character);
     }
 
-    public async Task<Option<CharacterError>> DeleteAllCharactersOnAccount(string accountId)
+    public async Task<Option<FLAdminError>> DeleteAllCharactersOnAccount(string accountId)
     {
         var characters = await _characterDataAccess.GetCharactersByFilter(x => x.AccountId == accountId);
 
-        if (characters.Count is 0) return CharacterError.CharacterNotFound;
+        if (characters.Count is 0) return FLAdminError.CharacterNotFound;
 
         var charNames = characters.Select(character => character.CharacterName).ToList();
 
@@ -69,17 +69,17 @@ public class CharacterService : ICharacterService
         List<ObjectId> cleanedCharacterList = new();
         var result2 = await _accountDataAccess.UpdateFieldOnAccount(accountId, "characters", cleanedCharacterList);
 
-        return result2.IsSome ? CharacterError.AccountError : new Option<CharacterError>();
+        return result2;
     }
 
-    public async Task<Option<CharacterError>> DeleteCharacter(Either<ObjectId, string> character)
+    public async Task<Option<FLAdminError>> DeleteCharacter(Either<ObjectId, string> character)
     {
         var charRes = await _characterDataAccess.GetCharacter(character);
         if (charRes.IsLeft)
             return charRes.Match(
                 Left: err => err, Right
                 //Right should never really be reached as we're checking it.
-                : _ => CharacterError.InvalidCharacter);
+                : _ => FLAdminError.InvalidCharacter);
 
         var ch = charRes.Match<Character>(
             Left: _ => null!,
@@ -89,8 +89,8 @@ public class CharacterService : ICharacterService
         var accountRes = await _accountDataAccess.GetAccount(ch.AccountId);
         if (accountRes.IsLeft)
             return accountRes.Match(
-                Left: err => CharacterError.AccountError,
-                Right: err => CharacterError.AccountError);
+                Left: err => err,
+                Right: err => FLAdminError.Unknown);
 
         var account = accountRes.Match<Account>(
             Left: _ => null!,
@@ -101,17 +101,17 @@ public class CharacterService : ICharacterService
         if (res.IsSome) return res;
 
         var res2 = await _accountDataAccess.UpdateAccount(account.ToBsonDocument());
-        return res2.IsSome ? CharacterError.AccountError : new Option<CharacterError>();
+        return res2;
     }
 
-    public async Task<Option<CharacterError>> MoveCharacter(Either<ObjectId, string> character, string newAccountId)
+    public async Task<Option<FLAdminError>> MoveCharacter(Either<ObjectId, string> character, string newAccountId)
     {
         var charRes = await _characterDataAccess.GetCharacter(character);
         if (charRes.IsLeft)
             return charRes.Match(
                 Left: err => err, Right
                 //Right should never really be reached as we're checking it.
-                : _ => CharacterError.InvalidCharacter);
+                : _ => FLAdminError.InvalidCharacter);
 
         var ch = charRes.Match<Character>(
             Left: _ => null!,
@@ -119,8 +119,8 @@ public class CharacterService : ICharacterService
         var oldAccountRes = await _accountDataAccess.GetAccount(ch.AccountId);
         if (oldAccountRes.IsLeft)
             return oldAccountRes.Match(
-                Left: _ => CharacterError.AccountError,
-                Right: _ => CharacterError.AccountError);
+                Left: err => err,
+                Right: _ => FLAdminError.Unknown);
 
         var oldAccount = oldAccountRes.Match<Account>(
             Left: _ => null!,
@@ -129,8 +129,8 @@ public class CharacterService : ICharacterService
         var newAccountRes = await _accountDataAccess.GetAccount(newAccountId);
         if (newAccountRes.IsLeft)
             return newAccountRes.Match(
-                Left: _ => CharacterError.AccountError,
-                Right: _ => CharacterError.AccountError);
+                Left: err => err,
+                Right: _ => FLAdminError.Unknown);
 
         var newAccount = newAccountRes.Match<Account>(
             Left: _ => null!,
@@ -144,35 +144,35 @@ public class CharacterService : ICharacterService
         if (result1.IsSome) return result1;
 
         var result2 = await _accountDataAccess.UpdateFieldOnAccount(oldAccount.Id, "characters", oldAccount.Characters);
-        if (result2.IsSome) return CharacterError.AccountError;
+        if (result2.IsSome) return result2;
 
         var result3 = await _accountDataAccess.UpdateFieldOnAccount(newAccount.Id, "accounts", newAccount.Characters);
-        if (result3.IsSome) return CharacterError.AccountError;
+        if (result3.IsSome) return result3;
 
-        return new Option<CharacterError>();
+        return new Option<FLAdminError>();
     }
 
-    public async Task<Option<CharacterError>> UpdateCharacter(Character character)
+    public async Task<Option<FLAdminError>> UpdateCharacter(Character character)
     {
-        if (_validation.ValidateCharacter(character) is false) return CharacterError.InvalidCharacter;
+        if (_validation.ValidateCharacter(character) is false) return FLAdminError.InvalidCharacter;
 
         return await _characterDataAccess.UpdateCharacter(character.ToBsonDocument());
     }
 
-    public async Task<Option<CharacterError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
+    public async Task<Option<FLAdminError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
         T value)
     {
         return await _characterDataAccess.UpdateFieldOnCharacter(character, fieldName, value);
     }
 
-    public async Task<Option<CharacterError>> RemoveFieldOnCharacter(Either<ObjectId, string> character,
+    public async Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character,
         string fieldName)
     {
         return await _characterDataAccess.RemoveFieldOnCharacter(character, fieldName);
     }
 
-    public async Task<Option<CharacterError>> AddFieldOnCharacter<T>(Either<ObjectId, string> character,
+    public async Task<Option<FLAdminError>> AddFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
         T value)
     {

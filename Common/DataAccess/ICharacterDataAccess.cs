@@ -8,21 +8,21 @@ namespace FlAdmin.Common.DataAccess;
 
 public interface ICharacterDataAccess
 {
-    Task<Option<CharacterError>> CreateCharacters(params Character[] characters);
+    Task<Option<FLAdminError>> CreateCharacters(params Character[] characters);
     
-    Task<Option<CharacterError>> UpdateCharacter(BsonDocument character);
+    Task<Option<FLAdminError>> UpdateCharacter(BsonDocument character);
     
-    Task<Option<CharacterError>> DeleteCharacters(params string[] characters);
+    Task<Option<FLAdminError>> DeleteCharacters(params string[] characters);
     
-    Task<Either<CharacterError, Character>> GetCharacter(Either<ObjectId, string> characterName);
+    Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName);
     
-    Task<Option<CharacterError>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName,
+    Task<Option<FLAdminError>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName,
         T value);
     
-    Task<Option<CharacterError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName,
+    Task<Option<FLAdminError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName,
         T value);
     
-    Task<Option<CharacterError>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName);
+    Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName);
     
     Task<List<Character>> GetCharactersByFilter(Expression<Func<Character, bool>> filter, int page = 1, int pageSize = 100);
 }

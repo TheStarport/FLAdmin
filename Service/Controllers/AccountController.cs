@@ -32,7 +32,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
         var res = await accountService.AddRolesToAccount(accountId.Trim(), roles);
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok($"Role(s) added to {accountId} successfully.")
         );
     }
@@ -55,7 +55,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
 
         var res = await accountService.RemoveRolesFromAccount(accountId.Trim(), roles);
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok($"Role(s) removed from account {accountId} successfully.")
         );
     }
@@ -76,12 +76,12 @@ public class AccountController(IAccountService accountService) : ControllerBase
     {
         var account = await accountService.GetAccountById(id);
 
-        var accountModel = account.Match<Either<AccountError, AccountModel>>(
+        var accountModel = account.Match<Either<FLAdminError, AccountModel>>(
             Left: err => err,
             Right: val => val.ToModel());
 
         return accountModel.Match<IActionResult>(
-            Left: err => err.ParseAccountError(this),
+            Left: err => err.ParseError(this),
             Right: val => Ok(val)
         );
     }
@@ -92,12 +92,12 @@ public class AccountController(IAccountService accountService) : ControllerBase
     {
         var accounts = await accountService.GetAccountsActiveAfterDate(date, pageNumber, pageSize);
 
-        var accountModels = accounts.Match<Either<AccountError, List<AccountModel>>>(
+        var accountModels = accounts.Match<Either<FLAdminError, List<AccountModel>>>(
             Left: err => err,
             Right: accs => accs.Select(a => a.ToModel()).ToList());
 
         return accountModels.Match<IActionResult>(
-            Left: err => err.ParseAccountError(this),
+            Left: err => err.ParseError(this),
             Right: val => Ok(val)
         );
     }
@@ -109,7 +109,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         var res = await accountService.DeleteAccounts(id);
 
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok("Account(s) successfully deleted.")
         );
     }
@@ -151,7 +151,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         var res = await accountService.SetUpAdminAccount(accountId, login);
 
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok("Username and password set successfully.")
         );
     }
@@ -163,7 +163,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         var res = await accountService.ChangePassword(login, newPassword);
 
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok("Password changed successfully.")
         );
     }
@@ -176,7 +176,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
             : $"Account {accountId} has been banned.";
         var res = await accountService.BanAccount(accountId, duration);
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok(okMessage)
         );
     }
@@ -186,7 +186,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
     {
         var res = await accountService.UnBanAccount(accountId);
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok($"Account {accountId} has been unbanned.")
         );
     }

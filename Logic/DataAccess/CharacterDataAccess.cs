@@ -22,13 +22,13 @@ public class CharacterDataAccess(
     private readonly IMongoCollection<Character> _characters =
         databaseAccess.GetCollection<Character>(config.Mongo.CharacterCollectionName);
 
-    public async Task<Option<CharacterError>> CreateCharacters(params Character[] characters)
+    public async Task<Option<FLAdminError>> CreateCharacters(params Character[] characters)
     {
         using var session = await _client.StartSessionAsync();
         try
         {
             await _characters.InsertManyAsync(characters);
-            return new Option<CharacterError>();
+            return new Option<FLAdminError>();
         }
         catch (MongoException ex)
         {
@@ -42,18 +42,18 @@ public class CharacterDataAccess(
                     {
                         logger.LogWarning(ex,
                             "Attempt to add characters with ids/names that already exist on the database.");
-                        return CharacterError.CharacterAlreadyExists;
+                        return FLAdminError.CharacterAlreadyExists;
                     }
                 }
             }
 
             logger.LogError(ex,
                 "Encountered unexpected mongo database error when attempting to add a character to the database.");
-            return CharacterError.DatabaseError;
+            return FLAdminError.DatabaseError;
         }
     }
 
-    public async Task<Option<CharacterError>> UpdateCharacter(BsonDocument character)
+    public async Task<Option<FLAdminError>> UpdateCharacter(BsonDocument character)
     {
         var characterId = character.GetValue("_id").AsObjectId;
         using var session = await _client.StartSessionAsync();
@@ -65,32 +65,32 @@ public class CharacterDataAccess(
 
             var result = await _characters.UpdateOneAsync(filter, updateDoc);
 
-            return result.ModifiedCount is 0 ? CharacterError.CharacterNotFound : new Option<CharacterError>();
+            return result.ModifiedCount is 0 ? FLAdminError.CharacterNotFound : new Option<FLAdminError>();
         }
         catch (MongoException ex)
         {
             logger.LogError(ex, "Encountered a mongo database issue when updating character {}", characterId);
-            return CharacterError.DatabaseError;
+            return FLAdminError.DatabaseError;
         }
     }
 
-    public async Task<Option<CharacterError>> DeleteCharacters(params string[] characters)
+    public async Task<Option<FLAdminError>> DeleteCharacters(params string[] characters)
     {
         using var session = await _client.StartSessionAsync();
         try
         {
             var result = await _characters.DeleteManyAsync(character => characters.Contains(character.CharacterName));
 
-            return result.DeletedCount is 0 ? CharacterError.CharacterNotFound : new Option<CharacterError>();
+            return result.DeletedCount is 0 ? FLAdminError.CharacterNotFound : new Option<FLAdminError>();
         }
         catch (MongoException ex)
         {
             logger.LogError(ex, "Encountered a mongo database issue when attempting to delete characters");
-            return CharacterError.DatabaseError;
+            return FLAdminError.DatabaseError;
         }
     }
 
-    public Task<Either<CharacterError, Character>> GetCharacter(Either<ObjectId, string> characterName)
+    public Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName)
     {
         try
         {
@@ -98,20 +98,20 @@ public class CharacterDataAccess(
             if (charDoc is null)
             {
                 logger.LogWarning("Character {characterName} not found", characterName);
-                return Task.FromResult<Either<CharacterError, Character>>(CharacterError.CharacterNotFound);
+                return Task.FromResult<Either<FLAdminError, Character>>(FLAdminError.CharacterNotFound);
             }
 
-            return Task.FromResult<Either<CharacterError, Character>>(BsonSerializer.Deserialize<Character>(charDoc));
+            return Task.FromResult<Either<FLAdminError, Character>>(BsonSerializer.Deserialize<Character>(charDoc));
         }
         catch (MongoException ex)
         {
             logger.LogError(ex, "Mongo exception thrown when attempting to get character of name {characterName}",
                 characterName);
-            return Task.FromResult<Either<CharacterError, Character>>(CharacterError.DatabaseError);
+            return Task.FromResult<Either<FLAdminError, Character>>(FLAdminError.DatabaseError);
         }
     }
 
-    public async Task<Option<CharacterError>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character,
+    public async Task<Option<FLAdminError>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
         T value)
     {
@@ -121,7 +121,7 @@ public class CharacterDataAccess(
             var charDoc = GetCharacterBsonDocument(character);
             if (charDoc is null)
             {
-                return CharacterError.CharacterNotFound;
+                return FLAdminError.CharacterNotFound;
             }
 
             BsonElement keyValuePair;
@@ -141,7 +141,7 @@ public class CharacterDataAccess(
             charDoc.TryGetValue(fieldName, out var existCheck);
             if (existCheck is not null)
             {
-                return CharacterError.FieldAlreadyExists;
+                return FLAdminError.CharacterFieldAlreadyExists;
             }
 
             charDoc.Add(keyValuePair);
@@ -152,27 +152,27 @@ public class CharacterDataAccess(
                 logger.LogError("{Character} failed to add new field of name {fieldName} with value of {value}",
                     character,
                     fieldName, value);
-                return CharacterError.DatabaseError;
+                return FLAdminError.DatabaseError;
             }
 
-            return new Option<CharacterError>();
+            return new Option<FLAdminError>();
         }
         catch (MongoException ex)
         {
             logger.LogError(ex,
                 "Encountered an error when attempting to add {fieldName} with value of {value} to {character}",
                 fieldName, value, character);
-            return CharacterError.DatabaseError;
+            return FLAdminError.DatabaseError;
         }
     }
 
-    public async Task<Option<CharacterError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
+    public async Task<Option<FLAdminError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
         T value)
     {
         if (fieldName == "_id")
         {
-            return CharacterError.FieldIsProtected;
+            return FLAdminError.CharacterFieldIsProtected;
         }
 
         using var session = await _client.StartSessionAsync();
@@ -181,12 +181,12 @@ public class CharacterDataAccess(
             var charDoc = GetCharacterBsonDocument(character);
             if (charDoc is null)
             {
-                return CharacterError.CharacterNotFound;
+                return FLAdminError.CharacterNotFound;
             }
 
             if (charDoc[fieldName] is null)
             {
-                return CharacterError.FieldDoesNotExist;
+                return FLAdminError.CharacterFieldDoesNotExist;
             }
 
             BsonElement newValuePair;
@@ -207,7 +207,7 @@ public class CharacterDataAccess(
 
             if (oldValuePair.Value.GetType() != newValuePair.Value.GetType())
             {
-                return CharacterError.ElementTypeMismatch;
+                return FLAdminError.CharacterElementTypeMismatch;
             }
 
             charDoc[newValuePair.Name] = newValuePair.Value;
@@ -219,33 +219,33 @@ public class CharacterDataAccess(
                 logger.LogError("{Character} failed to update field of name {fieldName} with value of {value}",
                     character,
                     fieldName, value);
-                return CharacterError.DatabaseError;
+                return FLAdminError.DatabaseError;
             }
 
-            return new Option<CharacterError>();
+            return new Option<FLAdminError>();
         }
         catch (MongoException ex)
         {
             logger.LogError(ex,
                 "Encountered an error when attempting to update {fieldName} with value of {value} to {character}",
                 fieldName, value, character);
-            return CharacterError.DatabaseError;
+            return FLAdminError.DatabaseError;
         }
         catch (KeyNotFoundException ex)
         {
             logger.LogWarning(ex, "Attempting to edit nonexistent field {fieldName} on character {character}",
                 fieldName,
                 character);
-            return CharacterError.FieldDoesNotExist;
+            return FLAdminError.CharacterFieldDoesNotExist;
         }
     }
 
-    public async Task<Option<CharacterError>> RemoveFieldOnCharacter(Either<ObjectId, string> character,
+    public async Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character,
         string fieldName)
     {
         if (fieldName is "_id" or "characterName")
         {
-            return CharacterError.FieldIsProtected;
+            return FLAdminError.CharacterFieldIsProtected;
         }
 
         using var session = await _client.StartSessionAsync();
@@ -254,14 +254,14 @@ public class CharacterDataAccess(
             var charDoc = GetCharacterBsonDocument(character);
             if (charDoc is null)
             {
-                return CharacterError.CharacterNotFound;
+                return FLAdminError.CharacterNotFound;
             }
 
             if (charDoc[fieldName] is null)
             {
                 logger.LogWarning("Attempted to remove nonexistent field {fieldName} from {character}", fieldName,
                     character);
-                return CharacterError.FieldDoesNotExist;
+                return FLAdminError.CharacterFieldDoesNotExist;
             }
 
             charDoc.Remove(fieldName);
@@ -273,17 +273,17 @@ public class CharacterDataAccess(
                     "Encountered an unexpected mongo error when attempting to remove field {fieldName} from character {character}",
                     character,
                     fieldName);
-                return CharacterError.DatabaseError;
+                return FLAdminError.DatabaseError;
             }
 
-            return new Option<CharacterError>();
+            return new Option<FLAdminError>();
         }
         catch (MongoException ex)
         {
             logger.LogWarning(ex,
                 "Encountered an unexpected mongo error when attempting to remove field {fieldName} from character {character}",
                 fieldName, character);
-            return CharacterError.DatabaseError;
+            return FLAdminError.DatabaseError;
         }
     }
 

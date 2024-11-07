@@ -11,30 +11,30 @@ public interface IAccountService
 
     List<Account> QueryAccounts(IQueryable<Account> query);
 
-    Task<Either<AccountError, Account>> GetAccountById(string id);
+    Task<Either<FLAdminError, Account>> GetAccountById(string id);
 
-    Task<Option<AccountError>> CreateAccounts(params Account[] accounts);
-    Task<Option<AccountError>> UpdateAccount(Account account);
-    Task<Option<AccountError>> DeleteAccounts(params string[] ids);
+    Task<Option<FLAdminError>> CreateAccounts(params Account[] accounts);
+    Task<Option<FLAdminError>> UpdateAccount(Account account);
+    Task<Option<FLAdminError>> DeleteAccounts(params string[] ids);
 
-    Task<Option<AccountError>> UpdateFieldOnAccount<T>(string accountId, string name, T value);
+    Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(string accountId, string name, T value);
 
     List<Account> GetOnlineAccounts();
-    Task<Option<AccountError>> CreateWebMaster(LoginModel loginModel);
+    Task<Option<FLAdminError>> CreateWebMaster(LoginModel loginModel);
 
-    Task<Either<AccountError, Account>> GetAccountByUserName(string userName);
+    Task<Either<FLAdminError, Account>> GetAccountByUserName(string userName);
 
-    Task<Either<AccountError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date, int page = 1,
+    Task<Either<FLAdminError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date, int page = 1,
         int pageSize = 100);
 
-    Task<Option<AccountError>> AddRolesToAccount(string id, List<Role> roles);
-    Task<Option<AccountError>> SetUpAdminAccount(string accountId, LoginModel login);
+    Task<Option<FLAdminError>> AddRolesToAccount(string id, List<Role> roles);
+    Task<Option<FLAdminError>> SetUpAdminAccount(string accountId, LoginModel login);
 
-    Task<Option<AccountError>> ChangePassword(LoginModel login, string newPassword);
+    Task<Option<FLAdminError>> ChangePassword(LoginModel login, string newPassword);
 
-    Task<Option<AccountError>> BanAccount(string id, TimeSpan? duration);
+    Task<Option<FLAdminError>> BanAccount(string id, TimeSpan? duration);
 
-    Task<Option<AccountError>> UnBanAccount(string id);
+    Task<Option<FLAdminError>> UnBanAccount(string id);
 
-    Task<Option<AccountError>> RemoveRolesFromAccount(string id, List<Role> roles);
+    Task<Option<FLAdminError>> RemoveRolesFromAccount(string id, List<Role> roles);
 }

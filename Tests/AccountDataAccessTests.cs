@@ -85,7 +85,7 @@ public class AccountDataAccessTests : IDisposable
 
         var result = await _accountDataAccess.CreateAccounts(account);
 
-        result.Match(err => err == AccountError.AccountIdAlreadyExists, false).Should().BeTrue();
+        result.Match(err => err == FLAdminError.AccountIdAlreadyExists, false).Should().BeTrue();
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class AccountDataAccessTests : IDisposable
 
         var result = await _accountDataAccess.UpdateAccount(account.ToBsonDocument());
 
-        result.Match(err => err == AccountError.AccountNotFound, false).Should().BeTrue();
+        result.Match(err => err == FLAdminError.AccountNotFound, false).Should().BeTrue();
     }
     
     [Fact]
@@ -129,7 +129,7 @@ public class AccountDataAccessTests : IDisposable
     {
         var result = await _accountDataAccess.DeleteAccounts("123");
 
-        result.Match(err => err == AccountError.AccountNotFound, false).Should().BeTrue();
+        result.Match(err => err == FLAdminError.AccountNotFound, false).Should().BeTrue();
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class AccountDataAccessTests : IDisposable
     {
         var result = await _accountDataAccess.DeleteAccounts("SuperAdmin");
 
-        result.Match(err => err == AccountError.AccountIsProtected, false).Should().BeTrue();
+        result.Match(err => err == FLAdminError.AccountIsProtected, false).Should().BeTrue();
     }
 
     [Fact]
@@ -153,7 +153,7 @@ public class AccountDataAccessTests : IDisposable
     {
         var result = await _accountDataAccess.UpdateFieldOnAccount("123abc456", "cash", "bob");
         
-        result.Match(err => err == AccountError.ElementTypeMismatch, false).Should().BeTrue();
+        result.Match(err => err == FLAdminError.AccountElementTypeMismatch, false).Should().BeTrue();
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public class AccountDataAccessTests : IDisposable
     {
         var result = await _accountDataAccess.UpdateFieldOnAccount("123", "cash", 123);
         
-        result.Match(err => err == AccountError.AccountNotFound, false).Should().BeTrue();
+        result.Match(err => err == FLAdminError.AccountNotFound, false).Should().BeTrue();
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public class AccountDataAccessTests : IDisposable
     {
         var result = await _accountDataAccess.UpdateFieldOnAccount("123abc456", "gabsdf", "bob");
         
-        result.Match(err => err == AccountError.FieldDoesNotExist, false).Should().BeTrue();
+        result.Match(err => err == FLAdminError.AccountFieldDoesNotExist, false).Should().BeTrue();
     }
 
     [Fact]
@@ -185,7 +185,7 @@ public class AccountDataAccessTests : IDisposable
     {
         var result = await _accountDataAccess.RemoveFieldOnAccount("123", "cash");
         
-        result.Match(err => err == AccountError.AccountNotFound, false).Should().BeTrue();
+        result.Match(err => err == FLAdminError.AccountNotFound, false).Should().BeTrue();
     }
 
     [Fact]
@@ -193,7 +193,7 @@ public class AccountDataAccessTests : IDisposable
     {
         var result = await _accountDataAccess.RemoveFieldOnAccount("123abc456", "gagds");
         
-        result.Match(err => err == AccountError.FieldDoesNotExist, false).Should().BeTrue();
+        result.Match(err => err == FLAdminError.AccountFieldDoesNotExist, false).Should().BeTrue();
     }
 
     [Fact]
@@ -209,7 +209,7 @@ public class AccountDataAccessTests : IDisposable
     {
         var result = await _accountDataAccess.CreateNewFieldOnAccount("123", "someNewField", 456);
 
-        result.Match(err => err == AccountError.AccountNotFound, false).Should().BeTrue();
+        result.Match(err => err == FLAdminError.AccountNotFound, false).Should().BeTrue();
     }
 
     [Fact]
@@ -217,7 +217,7 @@ public class AccountDataAccessTests : IDisposable
     {
         var result = await _accountDataAccess.CreateNewFieldOnAccount("123abc456", "cash", 456);
 
-        result.Match(err => err == AccountError.FieldAlreadyExists, false).Should().BeTrue();
+        result.Match(err => err == FLAdminError.AccountFieldAlreadyExists, false).Should().BeTrue();
     }
     
 

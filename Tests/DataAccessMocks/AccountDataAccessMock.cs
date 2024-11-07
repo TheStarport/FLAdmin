@@ -24,67 +24,67 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
     }
 
 
-    public Task<Option<AccountError>> CreateAccounts(params Account[] accounts)
+    public Task<Option<FLAdminError>> CreateAccounts(params Account[] accounts)
     {
         foreach (var account in accounts){
             if (_accounts.Any(acc => acc.Id == account.Id))
             {
-                return Task.FromResult<Option<AccountError>>(AccountError.AccountIdAlreadyExists);
+                return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountIdAlreadyExists);
             }
         }
         
-        return Task.FromResult(new Option<AccountError>());
+        return Task.FromResult(new Option<FLAdminError>());
     }
 
-    public Task<Option<AccountError>> UpdateAccount(BsonDocument account)
+    public Task<Option<FLAdminError>> UpdateAccount(BsonDocument account)
     {
         var accountId = account.GetValue("_id").AsString;
         if (accountId is null || accountId.Length is 0)
-            return Task.FromResult<Option<AccountError>>(AccountError.AccountIdIsNull);
+            return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountIdIsNull);
 
         if (_accounts.All(x => x.Id != accountId))
         {
-            return Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound);
+            return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
         }
 
-        return Task.FromResult(new Option<AccountError>());
+        return Task.FromResult(new Option<FLAdminError>());
     }
 
-    public Task<Option<AccountError>> DeleteAccounts(params string[] ids)
+    public Task<Option<FLAdminError>> DeleteAccounts(params string[] ids)
     {
         if (ids.ToList().Any(_ => ids.Contains("SuperAdmin")))
         {
-            return Task.FromResult<Option<AccountError>>(AccountError.AccountIsProtected);
+            return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountIsProtected);
         }
 
         return ids.Any(id => _accounts.Any(x => x.Id == id))
-            ? Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound)
-            : Task.FromResult(new Option<AccountError>());
+            ? Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound)
+            : Task.FromResult(new Option<FLAdminError>());
     }
 
-    public Task<Either<AccountError, Account>> GetAccount(string accountId)
+    public Task<Either<FLAdminError, Account>> GetAccount(string accountId)
     {
         var account = _accounts.FirstOrDefault(x => x.Id == accountId);
         return account is null
-            ? Task.FromResult<Either<AccountError, Account>>(AccountError.AccountNotFound)
-            : Task.FromResult<Either<AccountError, Account>>(account);
+            ? Task.FromResult<Either<FLAdminError, Account>>(FLAdminError.AccountNotFound)
+            : Task.FromResult<Either<FLAdminError, Account>>(account);
     }
 
-    public Task<Option<AccountError>> UpdateFieldOnAccount<T>(string accountId, string fieldName, T value)
+    public Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(string accountId, string fieldName, T value)
     {
         switch (fieldName)
         {
             case "_id":
-                return Task.FromResult<Option<AccountError>>(AccountError.FieldIsProtected);
+                return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountFieldIsProtected);
             //TODO: May not work correctly
             case "username" when value is "SuperAdmin":
-                return Task.FromResult<Option<AccountError>>(AccountError.AccountIsProtected);
+                return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountIsProtected);
         }
 
         var account = _accounts.FirstOrDefault(x => x.Id == accountId);
         if (account is null)
         {
-            return Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound);
+            return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
         }
 
         var doc = account.ToBsonDocument();
@@ -93,60 +93,60 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
             var element = doc[fieldName];
             if (element.GetType() != value!.GetType())
             {
-                return Task.FromResult<Option<AccountError>>(AccountError.ElementTypeMismatch);
+                return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountElementTypeMismatch);
             }
         }
         catch (KeyNotFoundException ex)
         {
-            return Task.FromResult<Option<AccountError>>(AccountError.FieldDoesNotExist);
+            return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountFieldDoesNotExist);
         }
 
-        return Task.FromResult(new Option<AccountError>());
+        return Task.FromResult(new Option<FLAdminError>());
     }
 
-    public Task<Option<AccountError>> CreateNewFieldOnAccount<T>(string accountId, string fieldName, T value)
+    public Task<Option<FLAdminError>> CreateNewFieldOnAccount<T>(string accountId, string fieldName, T value)
     {
         switch (fieldName)
         {
             case "_id":
-                return Task.FromResult<Option<AccountError>>(AccountError.FieldIsProtected);
+                return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountFieldIsProtected);
             //TODO: May not work correctly
             case "username" when value is "SuperAdmin":
-                return Task.FromResult<Option<AccountError>>(AccountError.AccountIsProtected);
+                return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountIsProtected);
         }
 
         var account = _accounts.FirstOrDefault(a => a.Id == accountId);
         if (account is null)
         {
-            return Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound);
+            return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
         }
 
         var doc = account.ToBsonDocument();
         doc.TryGetValue(fieldName, out var element);
         return element is not null
-            ? Task.FromResult<Option<AccountError>>(AccountError.FieldAlreadyExists)
-            : Task.FromResult(new Option<AccountError>());
+            ? Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountFieldAlreadyExists)
+            : Task.FromResult(new Option<FLAdminError>());
     }
 
-    public Task<Option<AccountError>> RemoveFieldOnAccount(string accountId, string fieldName)
+    public Task<Option<FLAdminError>> RemoveFieldOnAccount(string accountId, string fieldName)
     {
         switch (fieldName)
         {
             case "_id":
-                return Task.FromResult<Option<AccountError>>(AccountError.FieldIsProtected);
+                return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountFieldIsProtected);
         }
 
         var account = _accounts.FirstOrDefault(a => a.Id == accountId);
         if (account is null)
         {
-            return Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound);
+            return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
         }
 
         var doc = account.ToBsonDocument();
         doc.TryGetValue(fieldName, out var element);
         return element is null
-            ? Task.FromResult<Option<AccountError>>(AccountError.FieldDoesNotExist)
-            : Task.FromResult(new Option<AccountError>());
+            ? Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountFieldDoesNotExist)
+            : Task.FromResult(new Option<FLAdminError>());
     }
 
 
@@ -159,11 +159,11 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
         return Task.FromResult(accounts);
     }
 
-    public Task<Option<AccountError>> ReplaceAccount(Account account)
+    public Task<Option<FLAdminError>> ReplaceAccount(Account account)
     {
         return _accounts.All(x => x.Id != account.Id)
-            ? Task.FromResult<Option<AccountError>>(AccountError.AccountNotFound)
-            : Task.FromResult(new Option<AccountError>());
+            ? Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound)
+            : Task.FromResult(new Option<FLAdminError>());
     }
 
 

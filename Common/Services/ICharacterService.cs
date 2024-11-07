@@ -7,18 +7,18 @@ namespace FlAdmin.Common.Services;
 
 public interface ICharacterService
 {
-    Task<Either<CharacterError, List<Character>>> GetCharactersOfAccount(string accountId);
-    Task<Either<CharacterError, Character>> GetCharacterByName(string name);
+    Task<Either<FLAdminError, List<Character>>> GetCharactersOfAccount(string accountId);
+    Task<Either<FLAdminError, Character>> GetCharacterByName(string name);
     Task<List<Character>> QueryCharacters(IQueryable<Character> query);
-    Task<Option<CharacterError>> AddCharacter(Character character);
+    Task<Option<FLAdminError>> AddCharacter(Character character);
 
-    Task<Option<CharacterError>> DeleteAllCharactersOnAccount(string accountId);
-    Task<Option<CharacterError>> DeleteCharacter(Either<ObjectId, string> character);
-    Task<Option<CharacterError>> MoveCharacter(Either<ObjectId, string> character, string newAccountId);
+    Task<Option<FLAdminError>> DeleteAllCharactersOnAccount(string accountId);
+    Task<Option<FLAdminError>> DeleteCharacter(Either<ObjectId, string> character);
+    Task<Option<FLAdminError>> MoveCharacter(Either<ObjectId, string> character, string newAccountId);
 
-    Task<Option<CharacterError>> UpdateCharacter(Character character);
-    Task<Option<CharacterError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,string fieldName, T value);
+    Task<Option<FLAdminError>> UpdateCharacter(Character character);
+    Task<Option<FLAdminError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,string fieldName, T value);
 
-    Task<Option<CharacterError>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName);
-    Task<Option<CharacterError>> AddFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName, T value);
+    Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName);
+    Task<Option<FLAdminError>> AddFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName, T value);
 }

@@ -40,7 +40,7 @@ public class AuthenticationController(
         
         var res = await accountService.CreateWebMaster(login);
         return res.Match<IActionResult>(
-            Some: err => err.ParseAccountError(this),
+            Some: err => err.ParseError(this),
             None: Ok("SuperAdmin successfully created.")
         );
     }

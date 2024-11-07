@@ -19,7 +19,7 @@ public class CharacterController(ICharacterService characterService) : Controlle
         var character = await characterService.GetCharacterByName(name);
 
         return character.Match<IActionResult>(
-            Left: err => err.ParseAccountError(this),
+            Left: err => err.ParseError(this),
             Right: val => Ok(val));
     }
 
@@ -29,7 +29,7 @@ public class CharacterController(ICharacterService characterService) : Controlle
         var characters = await characterService.GetCharactersOfAccount(accountId);
 
         return characters.Match<IActionResult>(
-            Left: err => err.ParseAccountError(this),
+            Left: err => err.ParseError(this),
             Right: val => Ok(val));
     }
 
@@ -39,7 +39,7 @@ public class CharacterController(ICharacterService characterService) : Controlle
         var res = await characterService.UpdateCharacter(character);
 
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok("Character successfully edited.")
         );
     }
@@ -49,7 +49,7 @@ public class CharacterController(ICharacterService characterService) : Controlle
     {
         var res = await characterService.DeleteCharacter(name);
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok("Character successfully deleted.")
         );
     }
@@ -60,7 +60,7 @@ public class CharacterController(ICharacterService characterService) : Controlle
         var res = await characterService.MoveCharacter(characterName, newAccountId);
 
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok($"{characterName} successfully moved to {newAccountId}.")
         );
     }
@@ -70,7 +70,7 @@ public class CharacterController(ICharacterService characterService) : Controlle
     {
         var res = await characterService.DeleteAllCharactersOnAccount(accountId);
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok($"Characters on account {accountId} deleted.")
         );
     }
@@ -81,7 +81,7 @@ public class CharacterController(ICharacterService characterService) : Controlle
         var res = await characterService.AddCharacter(character);
 
         return res.Match<IActionResult>(
-            err => err.ParseAccountError(this),
+            err => err.ParseError(this),
             Ok($"Character {character.CharacterName} added.")
         );
     }
