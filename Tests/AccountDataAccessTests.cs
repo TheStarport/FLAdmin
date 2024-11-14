@@ -50,7 +50,7 @@ public class AccountDataAccessTests : IDisposable
         var result = await _accountDataAccess.GetAccount("123abc456");
 
         result.Match(
-            Left: err => false,
+            Left: _ => false,
             Right: acc => acc.Id == fixedTestAccount.Id).Should().BeTrue();
     }
 

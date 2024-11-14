@@ -41,6 +41,7 @@ public class FreelancerDataProvider : IFreelancerDataProvider
             Vfs = FileSystem.FromPath(_config.Server.FreelancerPath);
             Ini = new FreelancerIni(Vfs);
             Data = new FreelancerData(Ini, Vfs);
+            Data.LoadData();
         }
         catch (Exception ex)
         {

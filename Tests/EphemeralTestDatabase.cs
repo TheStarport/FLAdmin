@@ -8,8 +8,10 @@ using FlAdmin.Common.Models.Database;
 using FlAdmin.Logic.DataAccess;
 using FlAdmin.Service.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using Encoding = System.Text.Encoding;
+
 
 
 namespace FlAdmin.Tests;
@@ -21,6 +23,7 @@ public class EphemeralTestDatabase : IDisposable
     public readonly FlAdminConfig Config;
     public readonly IDatabaseAccess DatabaseAccess;
     private readonly IMongoRunner _mongoRunner;
+    private readonly IFreelancerDataProvider _freelancerDataProvider;
 
     public EphemeralTestDatabase()
     {
@@ -33,6 +36,7 @@ public class EphemeralTestDatabase : IDisposable
             MongoPort = Port
         };
 
+    
         _mongoRunner = MongoRunner.Run(options);
 
         Config = new FlAdminConfig
@@ -41,16 +45,24 @@ public class EphemeralTestDatabase : IDisposable
             {
                 ConnectionString = "mongodb://localhost:" + Port
             }
+            
         };
 
+        _freelancerDataProvider = new FreelancerDataProvider(new NullLogger<FreelancerDataProvider>(),Config);
+
+        
+        
         var client = new MongoClient(Config.Mongo.ConnectionString);
         client.DropDatabase(Config.Mongo.DatabaseName);
         var database = client.GetDatabase(Config.Mongo.DatabaseName);
         var accountCollection = database.GetCollection<Account>(Config.Mongo.AccountCollectionName);
-        var testAccounts = GenerateRandomAccounts();
+        var characterCollection = database.GetCollection<Character>(Config.Mongo.CharacterCollectionName);
+        
+        var testCharacters = GenerateRandomCharacters();
+        var testAccounts = GenerateRandomAccounts(testCharacters);
+      
         accountCollection.InsertMany(testAccounts);
-        
-        
+        characterCollection.InsertMany(testCharacters);
         
         
 
@@ -60,6 +72,7 @@ public class EphemeralTestDatabase : IDisposable
         */
 
         DatabaseAccess = new MongoDatabaseAccess(Config, new NullLogger<MongoDatabaseAccess>());
+        
     }
 
     public void Dispose()
@@ -78,48 +91,51 @@ public class EphemeralTestDatabase : IDisposable
         //Valid and invalid character states on the database. 
         var validCharacterGenerator = new Faker<Character>()
             .RuleFor(x => x.CharacterName, f => f.Name.FirstName())
-            .RuleFor(x => x.AccountId, f => Guid.NewGuid().ToString());
+            .RuleFor(x => x.Id, _ => ObjectId.GenerateNewId());
+        
+        
+        validCharacterGenerator.Generate(500).ToList().ForEach(x => characters.Add(x));
         
         return characters;
     }
     
     
     
-    private List<Account> GenerateRandomAccounts()
+    private List<Account> GenerateRandomAccounts(List<Character> characters)
     {
         var userAccountGenerator = new Faker<Account>()
-            .RuleFor(a => a.Id, f => Guid.NewGuid().ToString())
-            .RuleFor(a => a.Username, f => null)
+            .RuleFor(a => a.Id, _ => Guid.NewGuid().ToString())
+            .RuleFor(a => a.Username, _ => null)
             .RuleFor(a => a.Cash, f => f.Random.Int(0, int.MaxValue - 1))
             .RuleFor(a => a.LastOnline, f => f.Date.Past(5))
-            .RuleFor(a => a.WebRoles, (f, a) => GenerateRandomWebRoles(a.Username))
+            .RuleFor(a => a.WebRoles, (_, a) => GenerateRandomWebRoles(a.Username))
             .RuleFor(a => a.PasswordHash,
                 (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
-            .RuleFor(a => a.Salt, (f, a) => TestSalter(a.PasswordHash))
-            .RuleFor(a => a.ScheduledUnbanDate, f => null);
-
+            .RuleFor(a => a.Salt, (_, a) => TestSalter(a.PasswordHash))
+            .RuleFor(a => a.ScheduledUnbanDate, _ => null);
+        
         var bannedAccountGenerator = new Faker<Account>()
-            .RuleFor(a => a.Id, f => Guid.NewGuid().ToString())
-            .RuleFor(a => a.Username, f => null)
+            .RuleFor(a => a.Id, _ => Guid.NewGuid().ToString())
+            .RuleFor(a => a.Username, _ => null)
             .RuleFor(a => a.Cash, f => f.Random.Int(0, int.MaxValue - 1))
             .RuleFor(a => a.LastOnline, f => f.Date.Past(5))
-            .RuleFor(a => a.WebRoles, (f, a) => GenerateRandomWebRoles(a.Username))
+            .RuleFor(a => a.WebRoles, (_, a) => GenerateRandomWebRoles(a.Username))
             .RuleFor(a => a.PasswordHash,
                 (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
-            .RuleFor(a => a.Salt, (f, a) => TestSalter(a.PasswordHash))
+            .RuleFor(a => a.Salt, (_, a) => TestSalter(a.PasswordHash))
             .RuleFor(a => a.ScheduledUnbanDate, f => f.Date.Future(5));
 
 
         var webAccountGenerator = new Faker<Account>()
-            .RuleFor(a => a.Id, f => Guid.NewGuid().ToString())
+            .RuleFor(a => a.Id, _ => Guid.NewGuid().ToString())
             .RuleFor(a => a.Username, f => f.Person.UserName)
             .RuleFor(a => a.Cash, f => f.Random.Int(0, int.MaxValue - 1))
-            .RuleFor(a => a.LastOnline, f => null)
-            .RuleFor(a => a.WebRoles, (f, a) => GenerateRandomWebRoles(a.Username))
+            .RuleFor(a => a.LastOnline, _ => null)
+            .RuleFor(a => a.WebRoles, (_, a) => GenerateRandomWebRoles(a.Username))
             .RuleFor(a => a.PasswordHash,
                 (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
-            .RuleFor(a => a.Salt, (f, a) => TestSalter(a.PasswordHash))
-            .RuleFor(a => a.ScheduledUnbanDate, f => null);
+            .RuleFor(a => a.Salt, (_, a) => TestSalter(a.PasswordHash))
+            .RuleFor(a => a.ScheduledUnbanDate, _ => null);
 
 
         var superAdmin = new Account
@@ -140,6 +156,20 @@ public class EphemeralTestDatabase : IDisposable
 
         var testAccounts = userAccountGenerator.Generate(99);
 
+        int characterIndex = 0;
+        foreach (var acc in testAccounts)
+        {
+            int numOfCharactersForAccount = Random.Shared.Next(1, 5);
+            for (var i = characterIndex; i < numOfCharactersForAccount + characterIndex; i++)
+            {
+                characters[i].AccountId = acc.Id;
+                acc.Characters.Add(characters[i].Id);
+            }
+            characterIndex+= numOfCharactersForAccount;
+        }
+
+        characters.RemoveRange(characterIndex, characters.Count - characterIndex);
+        
         testAccounts.Add(superAdmin);
         testAccounts.Add(fixedTestAccount);
         testAccounts.AddRange(bannedAccountGenerator.Generate(40));
