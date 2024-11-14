@@ -8,4 +8,6 @@ public class FlAdminConfig
     public LoggingConfig Logging { get; set; } = new LoggingConfig();
 
     public string SuperAdminName { get; set; } = "SuperAdmin";
+    
+    public int MaxCharactersPerAccount { get; set; } = 5;
 }

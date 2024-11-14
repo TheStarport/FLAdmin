@@ -7,5 +7,4 @@ public interface IValidationService
     
     public bool ValidateCharacter(Character character);
     
-    
 }

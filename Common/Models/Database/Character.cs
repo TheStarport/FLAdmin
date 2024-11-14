@@ -12,6 +12,8 @@ public class Character
 
     [BsonElement("characterName")] public required string CharacterName { get; set; }
 
+    [BsonElement("previousNames")] public List<string> PreviousNames { get; set; }
+
     [BsonElement("money")] public int Money { get; set; }
 
     [BsonElement("rank")] public int Rank { get; set; }
@@ -33,6 +35,8 @@ public class Character
     [BsonElement("canTradeLane")] public bool CanTradeLane { get; set; }
 
     [BsonElement("lastDockedBase")] public long LastDockedBase { get; set; }
+
+    [BsonElement("currentBase")] public long CurrentBase { get; set; }
 
     [BsonElement("currentRoom")] public long CurrentRoom { get; set; }
 

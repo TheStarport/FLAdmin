@@ -42,14 +42,19 @@ public enum FLAdminError
     [Description("A field with this name already exists.")]
     AccountFieldAlreadyExists,
 
+    [Description("That operation would result in too many characters existing on that account.")]
+    AccountTooManyCharacters,
+
     [Description("Character with that name or ID already exists.")]
     CharacterAlreadyExists = 3000,
-    
-    [Description("CharacterID is Null.")] 
+
+    [Description("That name is already taken by another character.")]
+    CharacterNameIsTaken,
+
+    [Description("Character has invalid parameters.")]
     InvalidCharacter,
-    
-    [Description("CharacterID is Null.")] 
-    CharacterIdIsNull,
+
+    [Description("CharacterID is Null.")] CharacterIdIsNull,
 
     [Description("Character does not exist on the database.")]
     CharacterNotFound,
@@ -73,5 +78,5 @@ public enum FLAdminError
     CharacterAccountError,
 
     [Description("That character is currently logged into the game therefor operation cannot be performed.")]
-    CharacterIsLoggedIn,
+    CharacterIsLoggedIn
 }

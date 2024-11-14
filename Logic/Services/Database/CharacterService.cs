@@ -178,4 +178,29 @@ public class CharacterService : ICharacterService
     {
         return await _characterDataAccess.CreateFieldOnCharacter(character, fieldName, value);
     }
+
+    public async Task<Option<FLAdminError>> RenameCharacter(string oldName, string newName)
+    {
+        //First check if new name is available.
+        var newNameAvailableCheck = await _characterDataAccess.GetCharacter(newName);
+
+        if (newNameAvailableCheck.IsRight) return FLAdminError.CharacterNameIsTaken;
+
+        var characterRes = await _characterDataAccess.GetCharacter(oldName);
+        if (characterRes.IsLeft)
+            return characterRes.Match(
+                Left: err => err,
+                Right: _ => FLAdminError.Unknown
+            );
+
+        var character = characterRes.Match<Character>(
+            Left: _ => null!,
+            Right: ch => ch
+        );
+
+        character.CharacterName = newName;
+        character.PreviousNames.Add(oldName);
+
+        return await _characterDataAccess.UpdateCharacter(character.ToBsonDocument());
+    }
 }

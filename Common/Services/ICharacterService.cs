@@ -17,8 +17,10 @@ public interface ICharacterService
     Task<Option<FLAdminError>> MoveCharacter(Either<ObjectId, string> character, string newAccountId);
 
     Task<Option<FLAdminError>> UpdateCharacter(Character character);
-    Task<Option<FLAdminError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,string fieldName, T value);
+    Task<Option<FLAdminError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName, T value);
 
     Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName);
     Task<Option<FLAdminError>> AddFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName, T value);
+
+    Task<Option<FLAdminError>> RenameCharacter(string oldName, string newName);
 }
