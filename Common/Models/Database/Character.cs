@@ -66,9 +66,9 @@ public class Character
 
     [BsonElement("collisionGroups")] public Dictionary<string, float> CollisionGroups { get; set; } = new();
 
-    [BsonElement("visits")] public Dictionary<long, int> Visits { get; set; } = new();
+    [BsonElement("visits")] public List<List<int>> Visits { get; set; } = new();
 
-    [BsonElement("shipTypesKilled")] public Dictionary<long, int> ShipTypesKilled { get; set; } = new();
+    [BsonElement("shipTypesKilled")] public Dictionary<string, int> ShipTypesKilled { get; set; } = new();
 
     [BsonElement("systemsVisited")] public List<long> SystemsVisited { get; set; } = new();
 
@@ -78,7 +78,7 @@ public class Character
 
     [BsonElement("npcVisits")] public List<NpcVisit> NpcVisits { get; set; } = new();
 
-    [BsonElement("weaponGroups")] public Dictionary<int, List<string>> WeaponGroups { get; set; } = new();
+    [BsonElement("weaponGroups")] public Dictionary<string, List<string>> WeaponGroups { get; set; } = new();
 
     [BsonExtraElements] public BsonDocument? Extra { get; set; }
 }
