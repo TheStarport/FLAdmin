@@ -77,9 +77,9 @@ public class CharacterService : ICharacterService
         var charRes = await _characterDataAccess.GetCharacter(character);
         if (charRes.IsLeft)
             return charRes.Match(
-                Left: err => err, Right
+                Left: err => err, 
                 //Right should never really be reached as we're checking it.
-                : _ => FLAdminError.InvalidCharacter);
+                Right: _ => FLAdminError.InvalidCharacter);
 
         var ch = charRes.Match<Character>(
             Left: _ => null!,

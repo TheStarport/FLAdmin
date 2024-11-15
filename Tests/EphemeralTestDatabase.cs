@@ -91,9 +91,18 @@ public class EphemeralTestDatabase : IDisposable
             .RuleFor(x => x.CharacterName, f => f.Name.FirstName())
             .RuleFor(x => x.Id, _ => ObjectId.GenerateNewId())
             .RuleFor(x => x.Money, f => f.Random.Int(0, Int32.MaxValue - 1 ));
+
+        var fixedCharacter = new Character()
+        {
+            CharacterName = "Chad_Games",
+            Id = new ObjectId("65d3abc10f019879e20193d1"),
+            Money = 12345
+        };
         
         
-        validCharacterGenerator.Generate(500).ToList().ForEach(x => characters.Add(x));
+        
+        validCharacterGenerator.Generate(499).ToList().ForEach(x => characters.Add(x));
+        characters.Add(fixedCharacter);
         
         return characters;
     }
@@ -154,11 +163,16 @@ public class EphemeralTestDatabase : IDisposable
         };
 
         var testAccounts = userAccountGenerator.Generate(99);
+        testAccounts.Add(fixedTestAccount);
 
-        int characterIndex = 0;
+        var fixedCharacter = characters.Find(x => x.CharacterName == "Chad_Games");
+        
+        fixedTestAccount.Characters.Add(fixedCharacter!.Id);
+        
+        var characterIndex = 0;
         foreach (var acc in testAccounts)
         {
-            int numOfCharactersForAccount = Random.Shared.Next(1, 5);
+            int numOfCharactersForAccount = Random.Shared.Next(1, 4);
             for (var i = characterIndex; i < numOfCharactersForAccount + characterIndex; i++)
             {
                 characters[i].AccountId = acc.Id;
@@ -166,11 +180,9 @@ public class EphemeralTestDatabase : IDisposable
             }
             characterIndex+= numOfCharactersForAccount;
         }
-
-        characters.RemoveRange(characterIndex, characters.Count - characterIndex);
+        
         
         testAccounts.Add(superAdmin);
-        testAccounts.Add(fixedTestAccount);
         testAccounts.AddRange(bannedAccountGenerator.Generate(40));
         testAccounts.AddRange(webAccountGenerator.Generate(9));
 
