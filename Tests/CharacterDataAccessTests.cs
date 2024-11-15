@@ -38,9 +38,18 @@ public class CharacterDataAccessTests : IDisposable
     }
 
     [Fact]
+    public async Task When_Grabbing_Character_By_ObjectId_Should_Be_Successfully_Grabbed()
+    {
+        var character = await _characterDataAccess.GetCharacter(new ObjectId("65d3abc10f019879e20193d2"));
+
+        character.IsRight.Should().BeTrue();
+    }
+
+
+    [Fact]
     public async Task When_Grabbing_Non_Existent_Character_Should_Return_Character_Not_Found()
     {
-        var character = await _characterDataAccess.GetCharacter("Sir_Not_Appearing_In_This_Game");
+        var character = await _characterDataAccess.GetCharacter("Not_Chad_Games");
 
         character.Match(
             x => false,
@@ -54,7 +63,7 @@ public class CharacterDataAccessTests : IDisposable
         var testCharacter = new Character()
         {
             CharacterName = "Chad_Games",
-            Id = new ObjectId("65d3abc10f019879e20193d1"),
+            Id = new ObjectId("65d3abc10f019879e20193d2"),
             Money = 123456
         };
 
@@ -62,14 +71,33 @@ public class CharacterDataAccessTests : IDisposable
 
         result.IsNone.Should().BeTrue();
     }
+    
+    [Fact]
+    public async Task When_Updating_Character_Name_To_Pre_Existing_Name_Should_Return_Character_Already_Exists()
+    {
+        var testCharacter = new Character()
+        {
+            CharacterName = "Mr_Trent",
+            Id = new ObjectId("65d3abc10f019879e20193d2"),
+            Money = 12345787,
+            AccountId = "123abc456"
+        };
 
+        var result = await _characterDataAccess.UpdateCharacter(testCharacter.ToBsonDocument());
+
+        result.Match(
+            Some: x => x == FLAdminError.CharacterNameIsTaken,
+            false
+        ).Should().BeTrue();
+    }
+    
     [Fact]
     public async Task When_Updating_Non_Existent_Character_Should_Return_Character_Not_Found()
     {
         var testCharacter = new Character()
         {
             CharacterName = "Not_Chad_Games",
-            Id = new ObjectId("65d3abc10f019879e20193d2"),
+            Id = new ObjectId("65d3abc10f019879e20193d3"),
             Money = 123456
         };
 
@@ -102,7 +130,66 @@ public class CharacterDataAccessTests : IDisposable
         ).Should().BeTrue();
     }
 
+    [Fact]
+    public async Task When_Deleting_Existing_Character_Should_Not_Return_Error()
+    {
+        var result = await _characterDataAccess.DeleteCharacters("Chad_Games");
 
+        result.IsNone.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Deleting_Non_Existing_Character_Should_Return_Character_Not_Found()
+    {
+        var result = await _characterDataAccess.DeleteCharacters("Not_Chad_Games");
+
+        result.Match(
+            Some: x => x == FLAdminError.CharacterNotFound,
+            false
+        ).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Deleting_Multiple_Characters_And_One_Does_Not_Exist_Should_Return_Character_Not_Found()
+    {
+        var result = await _characterDataAccess.DeleteCharacters("Chad_Games", "Not_Chad_Games");
+
+        result.Match(
+            Some: x => x == FLAdminError.CharacterNotFound,
+            false
+        ).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Creating_Character_Should_Not_Error()
+    {
+        var testCharacter = new Character()
+        {
+            CharacterName = "Chad_Games_Jr",
+            Id = ObjectId.GenerateNewId(),
+            Money = 12345678
+        };
+
+        var result = await _characterDataAccess.CreateCharacters(testCharacter);
+
+        result.IsNone.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Creating_Character_With_Same_Name_Should_Error()
+    {
+        var testCharacter = new Character()
+        {
+            CharacterName = "Chad_Games",
+            Id = ObjectId.GenerateNewId(),
+            Money = 12345678
+        };
+
+        var result = await _characterDataAccess.CreateCharacters(testCharacter);
+
+        result.IsNone.Should().BeFalse();
+    }
+    
     public void Dispose()
     {
         _fixture.Dispose();

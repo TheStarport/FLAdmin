@@ -13,7 +13,6 @@ using MongoDB.Driver;
 using Encoding = System.Text.Encoding;
 
 
-
 namespace FlAdmin.Tests;
 
 public class EphemeralTestDatabase : IDisposable
@@ -36,7 +35,7 @@ public class EphemeralTestDatabase : IDisposable
             MongoPort = Port
         };
 
-    
+
         _mongoRunner = MongoRunner.Run(options);
 
         Config = new FlAdminConfig
@@ -45,26 +44,28 @@ public class EphemeralTestDatabase : IDisposable
             {
                 ConnectionString = "mongodb://localhost:" + Port
             }
-            
         };
 
-        _freelancerDataProvider = new FreelancerDataProvider(new NullLogger<FreelancerDataProvider>(),Config);
+        _freelancerDataProvider = new FreelancerDataProvider(new NullLogger<FreelancerDataProvider>(), Config);
 
-        
-        
+
         var client = new MongoClient(Config.Mongo.ConnectionString);
         client.DropDatabase(Config.Mongo.DatabaseName);
         var database = client.GetDatabase(Config.Mongo.DatabaseName);
         var accountCollection = database.GetCollection<Account>(Config.Mongo.AccountCollectionName);
         var characterCollection = database.GetCollection<Character>(Config.Mongo.CharacterCollectionName);
-        
+
+        var indexOptions = new CreateIndexOptions {Unique = true};
+        var indexModel =
+            new CreateIndexModel<Character>(Builders<Character>.IndexKeys.Ascending(x => x.CharacterName),
+                indexOptions);
+        characterCollection.Indexes.CreateOne(indexModel);
+
         var testCharacters = GenerateRandomCharacters();
         var testAccounts = GenerateRandomAccounts(testCharacters);
-      
+
         accountCollection.InsertMany(testAccounts);
         characterCollection.InsertMany(testCharacters);
-        
-        
 
         /*
         var jsonOptions = new JsonSerializerOptions {WriteIndented = true};
@@ -72,7 +73,6 @@ public class EphemeralTestDatabase : IDisposable
         */
 
         DatabaseAccess = new MongoDatabaseAccess(Config, new NullLogger<MongoDatabaseAccess>());
-        
     }
 
     public void Dispose()
@@ -88,27 +88,36 @@ public class EphemeralTestDatabase : IDisposable
         var characters = new List<Character>();
 
         var validCharacterGenerator = new Faker<Character>()
-            .RuleFor(x => x.CharacterName, f => f.Name.FirstName())
+            .RuleFor(x => x.CharacterName, _ => Guid.NewGuid().ToString())
             .RuleFor(x => x.Id, _ => ObjectId.GenerateNewId())
-            .RuleFor(x => x.Money, f => f.Random.Int(0, Int32.MaxValue - 1 ));
+            .RuleFor(x => x.Money, f => f.Random.Int(0, Int32.MaxValue - 1));
+
 
         var fixedCharacter = new Character()
         {
             CharacterName = "Chad_Games",
-            Id = new ObjectId("65d3abc10f019879e20193d1"),
-            Money = 12345
+            Id = new ObjectId("65d3abc10f019879e20193d2"),
+            Money = 12345,
+            AccountId = "123abc456"
         };
-        
-        
-        
-        validCharacterGenerator.Generate(499).ToList().ForEach(x => characters.Add(x));
+
+        var fixedCharacter2 = new Character()
+        {
+            CharacterName = "Mr_Trent",
+            Id = new ObjectId("65d3fde10f019879e20193d2"),
+            Money = 1234567,
+            AccountId = "123abc456"
+        };
+
+
+        validCharacterGenerator.Generate(498).ToList().ForEach(x => characters.Add(x));
         characters.Add(fixedCharacter);
-        
+        characters.Add(fixedCharacter2);
+
         return characters;
     }
-    
-    
-    
+
+
     private List<Account> GenerateRandomAccounts(List<Character> characters)
     {
         var userAccountGenerator = new Faker<Account>()
@@ -121,7 +130,7 @@ public class EphemeralTestDatabase : IDisposable
                 (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
             .RuleFor(a => a.Salt, (_, a) => TestSalter(a.PasswordHash))
             .RuleFor(a => a.ScheduledUnbanDate, _ => null);
-        
+
         var bannedAccountGenerator = new Faker<Account>()
             .RuleFor(a => a.Id, _ => Guid.NewGuid().ToString())
             .RuleFor(a => a.Username, _ => null)
@@ -163,12 +172,14 @@ public class EphemeralTestDatabase : IDisposable
         };
 
         var testAccounts = userAccountGenerator.Generate(99);
-        testAccounts.Add(fixedTestAccount);
+
 
         var fixedCharacter = characters.Find(x => x.CharacterName == "Chad_Games");
-        
+        var fixedCharacter2 = characters.Find(x => x.CharacterName == "Mr_Trent");
+
         fixedTestAccount.Characters.Add(fixedCharacter!.Id);
-        
+        fixedTestAccount.Characters.Add(fixedCharacter2!.Id);
+
         var characterIndex = 0;
         foreach (var acc in testAccounts)
         {
@@ -178,10 +189,12 @@ public class EphemeralTestDatabase : IDisposable
                 characters[i].AccountId = acc.Id;
                 acc.Characters.Add(characters[i].Id);
             }
-            characterIndex+= numOfCharactersForAccount;
+
+            characterIndex += numOfCharactersForAccount;
         }
-        
-        
+
+        testAccounts.Add(fixedTestAccount);
+
         testAccounts.Add(superAdmin);
         testAccounts.AddRange(bannedAccountGenerator.Generate(40));
         testAccounts.AddRange(webAccountGenerator.Generate(9));
@@ -234,5 +247,4 @@ public class EphemeralTestDatabase : IDisposable
         rnd.NextBytes(b);
         return b;
     }
-    
 }
