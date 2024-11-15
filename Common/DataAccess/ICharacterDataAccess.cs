@@ -12,6 +12,7 @@ public interface ICharacterDataAccess
     
     Task<Option<FLAdminError>> UpdateCharacter(BsonDocument character);
     
+    //Note this function does not account for any potential dangling references of accounts. 
     Task<Option<FLAdminError>> DeleteCharacters(params string[] characters);
     
     Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName);

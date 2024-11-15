@@ -64,8 +64,7 @@ public class CharacterService : ICharacterService
 
         var result = await _characterDataAccess.DeleteCharacters(charNames.ToArray());
         if (result.IsSome) return result;
-
-
+        
         List<ObjectId> cleanedCharacterList = new();
         var result2 = await _accountDataAccess.UpdateFieldOnAccount(accountId, "characters", cleanedCharacterList);
 

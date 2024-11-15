@@ -45,7 +45,7 @@ public class FreelancerDataProvider : IFreelancerDataProvider
         }
         catch (Exception ex)
         {
-            //TODO: Logging
+            _logger.LogCritical(ex,"Encountered an unexpected error when attempting to fetch Freelancer data.");
             Vfs = null;
             Ini = null;
             Data = null;
