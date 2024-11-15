@@ -55,10 +55,10 @@ public class CharacterDataAccess(
 
     public async Task<Option<FLAdminError>> UpdateCharacter(BsonDocument character)
     {
-        var characterId = character.GetValue("_id").AsObjectId;
         using var session = await _client.StartSessionAsync();
         try
         {
+            var characterId = character.GetValue("_id").AsObjectId;
             var newAccount = BsonSerializer.Deserialize<Character>(character);
             var filter = Builders<Character>.Filter.Eq(a => a.Id, characterId);
             var updateDoc = Builders<Character>.Update.Set(acc => acc, newAccount);
@@ -69,8 +69,14 @@ public class CharacterDataAccess(
         }
         catch (MongoException ex)
         {
-            logger.LogError(ex, "Encountered a mongo database issue when updating character {}", characterId);
+            logger.LogError(ex, "Encountered a mongo database issue when updating character {}",
+                character.GetValue("_id").AsObjectId);
             return FLAdminError.DatabaseError;
+        }
+        catch (KeyNotFoundException ex)
+        {
+            logger.LogWarning(ex, "Attempt to update character with Bson document that does not have an ObjectId");
+            return FLAdminError.CharacterIdIsNull;
         }
     }
 
@@ -94,7 +100,18 @@ public class CharacterDataAccess(
     {
         try
         {
-            var charDoc = GetCharacterBsonDocument(characterName);
+            var charDocRes = GetCharacterBsonDocument(characterName);
+
+            if (charDocRes.IsNone)
+            {
+                return Task.FromResult<Either<FLAdminError, Character>>(FLAdminError.CharacterNotFound);
+            }
+
+            var charDoc = charDocRes.Match<BsonDocument>(
+                Some: bs => bs,
+                null! as BsonDocument
+            );
+
             if (charDoc is null)
             {
                 logger.LogWarning("Character {characterName} not found", characterName);
@@ -118,11 +135,17 @@ public class CharacterDataAccess(
         using var session = await _client.StartSessionAsync();
         try
         {
-            var charDoc = GetCharacterBsonDocument(character);
-            if (charDoc is null)
+            var charDocRes = GetCharacterBsonDocument(character);
+
+            if (charDocRes.IsNone)
             {
                 return FLAdminError.CharacterNotFound;
             }
+
+            var charDoc = charDocRes.Match<BsonDocument>(
+                Some: bs => bs,
+                null! as BsonDocument
+            );
 
             BsonElement keyValuePair;
             if (typeof(T) == typeof(int))
@@ -178,11 +201,17 @@ public class CharacterDataAccess(
         using var session = await _client.StartSessionAsync();
         try
         {
-            var charDoc = GetCharacterBsonDocument(character);
-            if (charDoc is null)
+            var charDocRes = GetCharacterBsonDocument(character);
+
+            if (charDocRes.IsNone)
             {
                 return FLAdminError.CharacterNotFound;
             }
+
+            var charDoc = charDocRes.Match<BsonDocument>(
+                Some: bs => bs,
+                null! as BsonDocument
+            );
 
             if (charDoc[fieldName] is null)
             {
@@ -243,6 +272,7 @@ public class CharacterDataAccess(
     public async Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character,
         string fieldName)
     {
+        //We only protect against these two as they are both indexed, other fields should be protected at the service layer
         if (fieldName is "_id" or "characterName")
         {
             return FLAdminError.CharacterFieldIsProtected;
@@ -251,11 +281,17 @@ public class CharacterDataAccess(
         using var session = await _client.StartSessionAsync();
         try
         {
-            var charDoc = GetCharacterBsonDocument(character);
-            if (charDoc is null)
+            var charDocRes = GetCharacterBsonDocument(character);
+
+            if (charDocRes.IsNone)
             {
                 return FLAdminError.CharacterNotFound;
             }
+
+            var charDoc = charDocRes.Match<BsonDocument>(
+                Some: bs => bs,
+                null! as BsonDocument
+            );
 
             if (charDoc[fieldName] is null)
             {
@@ -303,18 +339,18 @@ public class CharacterDataAccess(
         }
     }
 
-    private BsonDocument? GetCharacterBsonDocument(Either<ObjectId, string> character)
+    private Option<BsonDocument> GetCharacterBsonDocument(Either<ObjectId, string> character)
     {
-        return character.Match<BsonDocument>(
+        return character.Match<Option<BsonDocument>>(
             Left: x =>
             {
                 var doc = _characters.Find(ch => ch.Id == x).FirstOrDefault();
-                return doc?.ToBsonDocument()!;
+                return doc is null ? new Option<BsonDocument>() : doc.ToBsonDocument();
             },
-            Right: x => 
+            Right: x =>
             {
                 var doc = _characters.Find(ch => ch.CharacterName == x).FirstOrDefault();
-                return doc?.ToBsonDocument()!;
+                return doc is null ? new Option<BsonDocument>() : doc.ToBsonDocument();
             }
         );
     }
