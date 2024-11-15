@@ -199,7 +199,6 @@ public class CharacterService : ICharacterService
         );
 
         character.CharacterName = newName;
-        character.PreviousNames.Add(oldName);
 
         return await _characterDataAccess.UpdateCharacter(character.ToBsonDocument());
     }
