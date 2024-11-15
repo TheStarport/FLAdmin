@@ -59,13 +59,27 @@ public class CharacterDataAccess(
         try
         {
             var characterId = character.GetValue("_id").AsObjectId;
-            var newAccount = BsonSerializer.Deserialize<Character>(character);
             var filter = Builders<Character>.Filter.Eq(a => a.Id, characterId);
-            var updateDoc = Builders<Character>.Update.Set(acc => acc, newAccount);
-
+            var updateDoc = new BsonDocument()
+            {
+                {"$set", character}
+            };
+            
             var result = await _characters.UpdateOneAsync(filter, updateDoc);
 
             return result.ModifiedCount is 0 ? FLAdminError.CharacterNotFound : new Option<FLAdminError>();
+        }
+        catch (MongoWriteException ex)
+        {
+            if (ex.InnerException is MongoBulkWriteException wx)
+            {
+                if (wx.WriteErrors[0].Code is (int) MongoErrorCodes.DuplicateKey)
+                {
+                    return FLAdminError.CharacterNameIsTaken;
+                }
+                return FLAdminError.DatabaseError;
+            }
+            return FLAdminError.DatabaseError;
         }
         catch (MongoException ex)
         {
@@ -75,7 +89,7 @@ public class CharacterDataAccess(
         }
         catch (KeyNotFoundException ex)
         {
-            logger.LogWarning(ex, "Attempt to update character with Bson document that does not have an ObjectId");
+            logger.LogError(ex, "Attempt to update character with Bson document that does not have an ObjectId");
             return FLAdminError.CharacterIdIsNull;
         }
     }
@@ -87,7 +101,10 @@ public class CharacterDataAccess(
         {
             var result = await _characters.DeleteManyAsync(character => characters.Contains(character.CharacterName));
 
-            return result.DeletedCount is 0 ? FLAdminError.CharacterNotFound : new Option<FLAdminError>();
+            //TODO: Find a way to get more detailed information of which characters were not deleted. 
+            return result.DeletedCount != characters.Length
+                ? FLAdminError.CharacterNotFound
+                : new Option<FLAdminError>();
         }
         catch (MongoException ex)
         {
@@ -96,15 +113,15 @@ public class CharacterDataAccess(
         }
     }
 
-    public Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName)
+    public async Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName)
     {
         try
         {
-            var charDocRes = GetCharacterBsonDocument(characterName);
+            var charDocRes = await GetCharacterBsonDocument(characterName);
 
             if (charDocRes.IsNone)
             {
-                return Task.FromResult<Either<FLAdminError, Character>>(FLAdminError.CharacterNotFound);
+                return FLAdminError.CharacterNotFound;
             }
 
             var charDoc = charDocRes.Match<BsonDocument>(
@@ -115,16 +132,16 @@ public class CharacterDataAccess(
             if (charDoc is null)
             {
                 logger.LogWarning("Character {characterName} not found", characterName);
-                return Task.FromResult<Either<FLAdminError, Character>>(FLAdminError.CharacterNotFound);
+                return FLAdminError.CharacterNotFound;
             }
 
-            return Task.FromResult<Either<FLAdminError, Character>>(BsonSerializer.Deserialize<Character>(charDoc));
+            return BsonSerializer.Deserialize<Character>(charDoc);
         }
         catch (MongoException ex)
         {
             logger.LogError(ex, "Mongo exception thrown when attempting to get character of name {characterName}",
                 characterName);
-            return Task.FromResult<Either<FLAdminError, Character>>(FLAdminError.DatabaseError);
+            return FLAdminError.DatabaseError;
         }
     }
 
@@ -135,7 +152,7 @@ public class CharacterDataAccess(
         using var session = await _client.StartSessionAsync();
         try
         {
-            var charDocRes = GetCharacterBsonDocument(character);
+            var charDocRes = await GetCharacterBsonDocument(character);
 
             if (charDocRes.IsNone)
             {
@@ -201,7 +218,7 @@ public class CharacterDataAccess(
         using var session = await _client.StartSessionAsync();
         try
         {
-            var charDocRes = GetCharacterBsonDocument(character);
+            var charDocRes = await GetCharacterBsonDocument(character);
 
             if (charDocRes.IsNone)
             {
@@ -281,7 +298,7 @@ public class CharacterDataAccess(
         using var session = await _client.StartSessionAsync();
         try
         {
-            var charDocRes = GetCharacterBsonDocument(character);
+            var charDocRes = await GetCharacterBsonDocument(character);
 
             if (charDocRes.IsNone)
             {
@@ -339,17 +356,17 @@ public class CharacterDataAccess(
         }
     }
 
-    private Option<BsonDocument> GetCharacterBsonDocument(Either<ObjectId, string> character)
+    private async Task<Option<BsonDocument>> GetCharacterBsonDocument(Either<ObjectId, string> character)
     {
-        return character.Match<Option<BsonDocument>>(
-            Left: x =>
+        return await character.MatchAsync(
+            RightAsync: async  x =>
             {
-                var doc = _characters.Find(ch => ch.Id == x).FirstOrDefault();
+                var doc = (await _characters.FindAsync(ch => ch.CharacterName == x)).FirstOrDefault();
                 return doc is null ? new Option<BsonDocument>() : doc.ToBsonDocument();
             },
-            Right: x =>
+            LeftAsync: async x =>
             {
-                var doc = _characters.Find(ch => ch.CharacterName == x).FirstOrDefault();
+                var doc = (await _characters.FindAsync(ch => ch.Id == x)).FirstOrDefault();
                 return doc is null ? new Option<BsonDocument>() : doc.ToBsonDocument();
             }
         );

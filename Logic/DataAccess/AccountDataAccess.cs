@@ -54,15 +54,18 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
 
     public async Task<Option<FLAdminError>> UpdateAccount(BsonDocument account)
     {
-        var accountId = account.GetValue("_id").AsString;
-        if (accountId is null || accountId.Length is 0) return FLAdminError.AccountIdIsNull;
-
         using var session = await _client.StartSessionAsync();
         try
         {
-            var newAccount = BsonSerializer.Deserialize<Account>(account);
+            var accountId = account.GetValue("_id").AsString;
+            if (accountId is null || accountId.Length is 0) return FLAdminError.AccountIdIsNull;
+            
             var filter = Builders<Account>.Filter.Eq(a => a.Id, accountId);
-            var updateDoc = Builders<Account>.Update.Set(acc => acc, newAccount);
+
+            var updateDoc = new BsonDocument()
+            {
+                {"$set", account}
+            };
 
             var result = await _accounts.UpdateOneAsync(filter, updateDoc);
 
@@ -75,8 +78,13 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         }
         catch (MongoException ex)
         {
-            logger.LogError(ex, "Encountered a mongo database issue when updating account {}", accountId);
+            logger.LogError(ex, "Encountered a mongo database issue when updating account {}", account.GetValue("_id").AsString);
             return FLAdminError.DatabaseError;
+        }
+        catch (KeyNotFoundException ex)
+        {
+            logger.LogError(ex, "Attempt to update character with Bson document that does not have an ObjectId");
+            return FLAdminError.AccountIdIsNull;
         }
     }
 
