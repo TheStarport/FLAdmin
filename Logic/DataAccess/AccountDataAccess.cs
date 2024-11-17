@@ -20,7 +20,6 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
 
     private readonly MongoClient _client = databaseAccess.GetClient();
 
-
     public async Task<Option<FLAdminError>> CreateAccounts(params Account[] accounts)
     {
         using var session = await _client.StartSessionAsync();
@@ -59,7 +58,7 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         {
             var accountId = account.GetValue("_id").AsString;
             if (accountId is null || accountId.Length is 0) return FLAdminError.AccountIdIsNull;
-            
+
             var filter = Builders<Account>.Filter.Eq(a => a.Id, accountId);
 
             var updateDoc = new BsonDocument()
@@ -78,7 +77,8 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         }
         catch (MongoException ex)
         {
-            logger.LogError(ex, "Encountered a mongo database issue when updating account {}", account.GetValue("_id").AsString);
+            logger.LogError(ex, "Encountered a mongo database issue when updating account {}",
+                account.GetValue("_id").AsString);
             return FLAdminError.DatabaseError;
         }
         catch (KeyNotFoundException ex)
@@ -145,7 +145,6 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
             case "username" when value is "SuperAdmin":
                 return FLAdminError.AccountIsProtected;
         }
-
 
         using var session = await _client.StartSessionAsync();
         try
@@ -274,7 +273,6 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
             case "_id":
                 return FLAdminError.AccountFieldIsProtected;
         }
-
 
         using var session = await _client.StartSessionAsync();
         try

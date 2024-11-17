@@ -64,7 +64,7 @@ public class CharacterDataAccess(
             {
                 {"$set", character}
             };
-            
+
             var result = await _characters.UpdateOneAsync(filter, updateDoc);
 
             return result.ModifiedCount is 0 ? FLAdminError.CharacterNotFound : new Option<FLAdminError>();
@@ -73,12 +73,11 @@ public class CharacterDataAccess(
         {
             if (ex.InnerException is MongoBulkWriteException wx)
             {
-                if (wx.WriteErrors[0].Code is (int) MongoErrorCodes.DuplicateKey)
-                {
-                    return FLAdminError.CharacterNameIsTaken;
-                }
-                return FLAdminError.DatabaseError;
+                return wx.WriteErrors[0].Code is (int) MongoErrorCodes.DuplicateKey
+                    ? FLAdminError.CharacterNameIsTaken
+                    : FLAdminError.DatabaseError;
             }
+
             return FLAdminError.DatabaseError;
         }
         catch (MongoException ex)
@@ -382,7 +381,7 @@ public class CharacterDataAccess(
     private async Task<Option<BsonDocument>> GetCharacterBsonDocument(Either<ObjectId, string> character)
     {
         return await character.MatchAsync(
-            RightAsync: async  x =>
+            RightAsync: async x =>
             {
                 var doc = (await _characters.FindAsync(ch => ch.CharacterName == x)).FirstOrDefault();
                 return doc is null ? new Option<BsonDocument>() : doc.ToBsonDocument();
