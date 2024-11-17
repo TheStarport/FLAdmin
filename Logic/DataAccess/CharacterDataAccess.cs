@@ -238,12 +238,17 @@ public class CharacterDataAccess(
             BsonElement newValuePair;
             if (typeof(T) == typeof(int))
             {
-                newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
+                newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt32());
             }
             else if (typeof(T) == typeof(float))
             {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToDouble());
             }
+            else if (typeof(T) == typeof(long))
+            {
+                newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
+            }
+
             else
             {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value));
