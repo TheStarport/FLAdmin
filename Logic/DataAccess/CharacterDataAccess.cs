@@ -354,6 +354,13 @@ public class CharacterDataAccess(
                 fieldName, character);
             return FLAdminError.DatabaseError;
         }
+        catch (KeyNotFoundException ex)
+        {
+            logger.LogWarning(ex, "Attempting to remove nonexistent field {fieldName} on character {character}",
+                fieldName,
+                character);
+            return FLAdminError.CharacterFieldDoesNotExist;
+        }
     }
 
     public async Task<List<Character>> GetCharactersByFilter(Expression<Func<Character, bool>> filter, int page = 1,
