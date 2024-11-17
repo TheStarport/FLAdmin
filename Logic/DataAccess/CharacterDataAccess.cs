@@ -270,6 +270,17 @@ public class CharacterDataAccess(
 
             return new Option<FLAdminError>();
         }
+        catch (MongoWriteException ex)
+        {
+            if (ex.InnerException is MongoBulkWriteException wx)
+            {
+                return wx.WriteErrors[0].Code is (int) MongoErrorCodes.DuplicateKey
+                    ? FLAdminError.CharacterNameIsTaken
+                    : FLAdminError.DatabaseError;
+            }
+
+            return FLAdminError.DatabaseError;
+        }
         catch (MongoException ex)
         {
             logger.LogError(ex,
