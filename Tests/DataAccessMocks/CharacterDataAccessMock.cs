@@ -65,17 +65,15 @@ public class CharacterDataAccessMock : ICharacterDataAccess
 
     public async Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName)
     {
-        var val = characterName.Match<Character?>(
-            Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch); },
-            Right: ch => { return _characters.FirstOrDefault(x => x.CharacterName == ch); }
+        var val = characterName.Match<Option<Character>>(
+            Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch) ?? new Option<Character>(); },
+            Right: ch => { return _characters.FirstOrDefault(x => x.CharacterName == ch) ?? new Option<Character>(); }
         );
 
-        if (val is null)
-        {
-            return FLAdminError.CharacterNotFound;
-        }
-
-        return val;
+        return val.Match<Either<FLAdminError, Character>>(
+            None: () => FLAdminError.CharacterNotFound,
+            Some: ch => ch
+        );
     }
 
     public async Task<Option<FLAdminError>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character,
@@ -109,7 +107,7 @@ public class CharacterDataAccessMock : ICharacterDataAccess
             return FLAdminError.CharacterNotFound;
         }
 
-        if (fieldName != "characterNam" || fieldName != "money" || fieldName != "accountId")
+        if (fieldName != "characterName" && fieldName != "money" && fieldName != "accountId")
         {
             return FLAdminError.CharacterFieldDoesNotExist;
         }
@@ -139,6 +137,7 @@ public class CharacterDataAccessMock : ICharacterDataAccess
         return new Option<FLAdminError>();
     }
 
+    
     public async Task<List<Character>> GetCharactersByFilter(Expression<Func<Character, bool>> filter, int page = 1,
         int pageSize = 100)
     {
@@ -146,5 +145,8 @@ public class CharacterDataAccessMock : ICharacterDataAccess
         return _characters.Filter(func).Skip((page - 1) * pageSize).Take(pageSize).ToList();
     }
 
+    
+    
+    
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 }

@@ -153,7 +153,7 @@ public class CharacterService : ICharacterService
         var result2 = await _accountDataAccess.UpdateFieldOnAccount(oldAccount.Id, "characters", oldAccount.Characters);
         if (result2.IsSome) return result2;
 
-        var result3 = await _accountDataAccess.UpdateFieldOnAccount(newAccount.Id, "accounts", newAccount.Characters);
+        var result3 = await _accountDataAccess.UpdateFieldOnAccount(newAccount.Id, "characters", newAccount.Characters);
         if (result3.IsSome) return result3;
 
         return new Option<FLAdminError>();
