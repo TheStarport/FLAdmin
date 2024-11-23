@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Linq.Expressions;
 using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
@@ -18,7 +19,6 @@ public class CharacterDataAccess(
     : ICharacterDataAccess
 {
     private readonly MongoClient _client = databaseAccess.GetClient();
-
     private readonly IMongoCollection<Character> _characters =
         databaseAccess.GetCollection<Character>(config.Mongo.CharacterCollectionName);
 
@@ -247,14 +247,13 @@ public class CharacterDataAccess(
             {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
             }
-
             else
             {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value));
             }
 
             var oldValuePair = charDoc.Elements.FirstOrDefault(field => field.Name == newValuePair.Name);
-
+            
             if (oldValuePair.Value.GetType() != newValuePair.Value.GetType())
             {
                 return FLAdminError.CharacterElementTypeMismatch;

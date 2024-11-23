@@ -135,6 +135,7 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         }
     }
 
+    //TODO: Guarantee Type safety for Lists, currently any arbitrary list can be updated to a list of another type.
     public async Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(string accountId, string fieldName, T value)
     {
         switch (fieldName)
@@ -174,7 +175,9 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
                 return FLAdminError.AccountFieldDoesNotExist;
             }
 
+
             var oldValuePair = account.Elements.FirstOrDefault(field => field.Name == newValuePair.Name);
+
 
             if (oldValuePair.Value.GetType() != newValuePair.Value.GetType())
             {
