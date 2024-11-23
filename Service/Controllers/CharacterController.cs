@@ -85,4 +85,27 @@ public class CharacterController(ICharacterService characterService) : Controlle
             Ok($"Character {character.CharacterName} added.")
         );
     }
+
+    [HttpPatch("rename")]
+    public async Task<IActionResult> RenameCharacter([FromQuery] string oldName, [FromQuery] string newName)
+    {
+        var res = await characterService.RenameCharacter(oldName, newName);
+
+        return res.Match<IActionResult>(
+            err => err.ParseError(this),
+            Ok($"{oldName} successfully renamed to {newName}.")
+        );
+    }
+
+    [HttpPatch("movetoaccount")]
+    public async Task<IActionResult> MoveCharacterToAccount([FromQuery] string characterName,
+        [FromQuery] string newAccountId)
+    {
+        var res = await characterService.MoveCharacter(characterName, newAccountId);
+
+        return res.Match<IActionResult>(
+            err => err.ParseError(this),
+            Ok($"{characterName} successfully moved to account {newAccountId}.")
+        );
+    }
 }
