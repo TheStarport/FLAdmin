@@ -13,14 +13,14 @@ public class AccountDataAccessTests : IDisposable
 {
     private readonly EphemeralTestDatabase _fixture;
     private readonly IAccountDataAccess _accountDataAccess;
-    
+
     public AccountDataAccessTests()
     {
         _fixture = new EphemeralTestDatabase();
         _accountDataAccess =
             new AccountDataAccess(_fixture.DatabaseAccess, _fixture.Config, new NullLogger<AccountDataAccess>());
     }
-    
+
     [Fact]
     public async Task When_Grabbing_All_Accounts_Should_Count_Of_150()
     {
@@ -58,7 +58,7 @@ public class AccountDataAccessTests : IDisposable
     public async Task When_Getting_Nonexistent_Account_Should_Return_Account_NotFound()
     {
         var result = await _accountDataAccess.GetAccount("123");
-        
+
         result.IsLeft.Should().BeTrue();
     }
 
@@ -115,7 +115,7 @@ public class AccountDataAccessTests : IDisposable
 
         result.Match(err => err == FLAdminError.AccountNotFound, false).Should().BeTrue();
     }
-    
+
     [Fact]
     public async Task When_Deleting_Existing_Account_Should_Delete_Successfully()
     {
@@ -144,7 +144,7 @@ public class AccountDataAccessTests : IDisposable
     public async Task When_Editing_Field_On_Account_With_Correct_Type_Should_Update_Successfully()
     {
         var result = await _accountDataAccess.UpdateFieldOnAccount("123abc456", "cash", 12345);
-        
+
         result.IsNone.Should().BeTrue();
     }
 
@@ -152,7 +152,7 @@ public class AccountDataAccessTests : IDisposable
     public async Task When_Editing_Field_On_Account_With_Incorrect_Type_Should_Return_Type_Element_Mismatch()
     {
         var result = await _accountDataAccess.UpdateFieldOnAccount("123abc456", "cash", "bob");
-        
+
         result.Match(err => err == FLAdminError.AccountElementTypeMismatch, false).Should().BeTrue();
     }
 
@@ -160,7 +160,7 @@ public class AccountDataAccessTests : IDisposable
     public async Task When_Attempting_To_Edit_Field_On_Non_Existing_Account_Should_Return_Account_Not_Found()
     {
         var result = await _accountDataAccess.UpdateFieldOnAccount("123", "cash", 123);
-        
+
         result.Match(err => err == FLAdminError.AccountNotFound, false).Should().BeTrue();
     }
 
@@ -168,7 +168,7 @@ public class AccountDataAccessTests : IDisposable
     public async Task When_Attempting_To_Edit_Field_On_Non_Existing_Field_Should_Return_Field_Does_Not_Exist()
     {
         var result = await _accountDataAccess.UpdateFieldOnAccount("123abc456", "gabsdf", "bob");
-        
+
         result.Match(err => err == FLAdminError.AccountFieldDoesNotExist, false).Should().BeTrue();
     }
 
@@ -176,7 +176,7 @@ public class AccountDataAccessTests : IDisposable
     public async Task When_Attempting_To_Delete_Field_Should_Delete_Successfully()
     {
         var result = await _accountDataAccess.RemoveFieldOnAccount("123abc456", "cash");
-        
+
         result.IsNone.Should().BeTrue();
     }
 
@@ -184,7 +184,7 @@ public class AccountDataAccessTests : IDisposable
     public async Task When_Attempting_To_Delete_Field_From_Non_Existing_Account_Should_Return_Account_Not_Found()
     {
         var result = await _accountDataAccess.RemoveFieldOnAccount("123", "cash");
-        
+
         result.Match(err => err == FLAdminError.AccountNotFound, false).Should().BeTrue();
     }
 
@@ -192,7 +192,7 @@ public class AccountDataAccessTests : IDisposable
     public async Task When_Attempting_To_Delete_Non_Existing_Field_Should_Return_Field_Does_Not_Exist()
     {
         var result = await _accountDataAccess.RemoveFieldOnAccount("123abc456", "gagds");
-        
+
         result.Match(err => err == FLAdminError.AccountFieldDoesNotExist, false).Should().BeTrue();
     }
 
@@ -200,7 +200,7 @@ public class AccountDataAccessTests : IDisposable
     public async Task When_Attempting_To_Create_Valid_Field_On_Valid_Account_Should_Be_Successful()
     {
         var result = await _accountDataAccess.CreateNewFieldOnAccount("123abc456", "someNewField", 456);
-        
+
         result.IsNone.Should().BeTrue();
     }
 
@@ -219,7 +219,26 @@ public class AccountDataAccessTests : IDisposable
 
         result.Match(err => err == FLAdminError.AccountFieldAlreadyExists, false).Should().BeTrue();
     }
-    
+
+    [Fact]
+    public async Task When_Attempting_To_Update_List_Field_On_Account_Should_Succeed()
+    {
+        var result = await _accountDataAccess.UpdateFieldOnAccount("123abc456", "characters", new List<ObjectId>());
+
+        result.IsNone.Should().BeTrue();
+    }
+
+
+    //TODO: This function currently doesn't do this so when applying it finish this test case.
+    [Fact]
+    public void When_Attempting_To_Update_List_With_List_Of_Wrong_Type_Should_Fail()
+    {
+        /*var result =
+            await _accountDataAccess.UpdateFieldOnAccount("123abc456", "characters", new List<int> {123, 456});
+
+      //  result.Match(err => err == FLAdminError.AccountElementTypeMismatch, false).Should().BeTrue();*/
+    }
+
 
     public void Dispose()
     {

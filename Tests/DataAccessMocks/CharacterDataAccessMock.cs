@@ -49,9 +49,18 @@ public class CharacterDataAccessMock : ICharacterDataAccess
 
     public async Task<Option<FLAdminError>> DeleteCharacters(params string[] characters)
     {
-        return characters.Any(character => _characters.Any(ch => ch.CharacterName == character))
-            ? FLAdminError.CharacterNotFound
-            : new Option<FLAdminError>();
+        bool found = false;
+
+        foreach (var ch in characters)
+        {
+            if (_characters.Any(c => c.CharacterName == ch))
+            {
+                found = true;
+                break;
+            }
+        }
+
+        return !found ? FLAdminError.CharacterNotFound : new Option<FLAdminError>();
     }
 
     public async Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName)
@@ -136,6 +145,6 @@ public class CharacterDataAccessMock : ICharacterDataAccess
         var func = filter.Compile();
         return _characters.Filter(func).Skip((page - 1) * pageSize).Take(pageSize).ToList();
     }
-    
+
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 }

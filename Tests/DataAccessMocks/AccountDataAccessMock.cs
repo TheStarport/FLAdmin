@@ -20,19 +20,20 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
 
     public AccountDataAccessMock()
     {
-        _accounts = HelperFunctions.GenerateRandomAccounts();
+        _accounts = HelperFunctions.GenerateRandomAccounts(HelperFunctions.GenerateRandomCharacters());
     }
 
 
     public Task<Option<FLAdminError>> CreateAccounts(params Account[] accounts)
     {
-        foreach (var account in accounts){
+        foreach (var account in accounts)
+        {
             if (_accounts.Any(acc => acc.Id == account.Id))
             {
                 return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountIdAlreadyExists);
             }
         }
-        
+
         return Task.FromResult(new Option<FLAdminError>());
     }
 
@@ -87,11 +88,27 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
             return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
         }
 
+
         var doc = account.ToBsonDocument();
         try
         {
-            var element = doc[fieldName];
-            if (element.GetType() != value!.GetType())
+            BsonElement newValuePair;
+            if (typeof(T) == typeof(int))
+            {
+                newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
+            }
+            else if (typeof(T) == typeof(float))
+            {
+                newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToDouble());
+            }
+            else
+            {
+                newValuePair = new BsonElement(fieldName, BsonValue.Create(value));
+            }
+
+            var oldPair = doc.Elements.First(el => el.Name == fieldName);
+
+            if (oldPair.Value.GetType() != newValuePair.Value.GetType())
             {
                 return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountElementTypeMismatch);
             }
@@ -165,7 +182,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
             ? Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound)
             : Task.FromResult(new Option<FLAdminError>());
     }
-    
+
 
     public void Dispose()
     {
