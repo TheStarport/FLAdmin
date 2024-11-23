@@ -30,6 +30,14 @@ public class CharacterService : ICharacterService
 
     public async Task<Either<FLAdminError, List<Character>>> GetCharactersOfAccount(string accountId)
     {
+        var accountCheck = await _accountDataAccess.GetAccount(accountId);
+        if (accountCheck.IsLeft)
+            return accountCheck.Match
+            (Left: err => err,
+                Right: _ => FLAdminError.Unknown
+            );
+
+
         var characters = await _characterDataAccess.GetCharactersByFilter(x => x.AccountId == accountId);
 
         if (characters.Count is 0) return FLAdminError.CharacterNotFound;
@@ -64,7 +72,7 @@ public class CharacterService : ICharacterService
 
         var result = await _characterDataAccess.DeleteCharacters(charNames.ToArray());
         if (result.IsSome) return result;
-        
+
         List<ObjectId> cleanedCharacterList = new();
         var result2 = await _accountDataAccess.UpdateFieldOnAccount(accountId, "characters", cleanedCharacterList);
 
@@ -76,7 +84,7 @@ public class CharacterService : ICharacterService
         var charRes = await _characterDataAccess.GetCharacter(character);
         if (charRes.IsLeft)
             return charRes.Match(
-                Left: err => err, 
+                Left: err => err,
                 //Right should never really be reached as we're checking it.
                 Right: _ => FLAdminError.InvalidCharacter);
 
