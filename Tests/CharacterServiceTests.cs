@@ -99,7 +99,7 @@ public class CharacterServiceTests
     public async Task When_Renaming_Nonexistent_Character_Should_Return_Character_Not_Found()
     {
         var result = await _characterService.RenameCharacter("Not_Chad_Games", "More_Not_Chad_Games");
-        
+
         result.Match(
             Some: err => err == FLAdminError.CharacterNotFound,
             None: false
@@ -112,8 +112,28 @@ public class CharacterServiceTests
     {
         var result = await _characterService.MoveCharacter("Chad_Games", "abc123456");
 
-
         result.IsNone.Should().BeTrue();
     }
-    
+
+    [Fact]
+    public async Task When_Moving_Character_To_Nonexistent_Account_Should_Return_Account_Not_Found()
+    {
+        var result = await _characterService.MoveCharacter("Chad_Games", "123");
+
+        result.Match(
+            Some: err => err == FLAdminError.AccountNotFound,
+            None: false
+        ).Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task When_Nonexistent_Character_Should_Return_Character_Not_Found()
+    {
+        var result = await _characterService.MoveCharacter("Not_Chad_Games", "abc123456");
+
+        result.Match(
+            Some: err => err == FLAdminError.CharacterNotFound,
+            None: false
+        ).Should().BeTrue();
+    }
 }
