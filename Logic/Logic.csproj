@@ -25,7 +25,6 @@
         <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.8"/>
         <PackageReference Include="MongoDB.Driver" Version="2.29.0"/>
         <PackageReference Include="MongoDB.Driver.Core" Version="2.29.0"/>
-        <PackageReference Include="NetMQ" Version="4.0.1.13"/>
     </ItemGroup>
 
 </Project>

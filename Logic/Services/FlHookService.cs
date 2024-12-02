@@ -10,8 +10,7 @@ namespace FlAdmin.Logic.Services;
 
 public class FlHookService : IFlHookService
 {
-    
-    
+ 
     public Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<string, ObjectId> characterName)
     {
         throw new NotImplementedException();
