@@ -11,7 +11,7 @@ namespace FlAdmin.Service.Controllers;
 [ApiController]
 [Route("api/characters")]
 [AdminAuthorize(Role.ManageAccounts)]
-public class CharacterController(ICharacterService characterService) : ControllerBase
+public class CharacterController(ICharacterService characterService, IFlHookService flHookService) : ControllerBase
 {
     [HttpGet("charactername")]
     public async Task<IActionResult> GetCharacterByName([FromQuery] string name)
@@ -19,6 +19,16 @@ public class CharacterController(ICharacterService characterService) : Controlle
         var character = await characterService.GetCharacterByName(name);
 
         return character.Match<IActionResult>(
+            Left: err => err.ParseError(this),
+            Right: val => Ok(val));
+    }
+
+    [HttpGet("onlinecharacters")]
+    public async Task<IActionResult> GetOnlineCharacters()
+    {
+        var characters = await flHookService.GetOnlineCharacters();
+
+        return characters.Match<IActionResult>(
             Left: err => err.ParseError(this),
             Right: val => Ok(val));
     }

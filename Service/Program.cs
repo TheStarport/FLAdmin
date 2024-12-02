@@ -56,6 +56,7 @@ builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<IAccountService, AccountService>();
 builder.Services.AddSingleton<ICharacterService, CharacterService>();
 builder.Services.AddSingleton<IAuthService, AuthService>();
+builder.Services.AddSingleton<IFlHookService,FlHookService>();
 
 // Extend the shutdown timer to allow FLServer time to gracefully shutdown
 builder.Services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(10));
