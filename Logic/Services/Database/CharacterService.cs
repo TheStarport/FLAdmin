@@ -6,9 +6,6 @@ using FlAdmin.Common.Services;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using NetMQ;
-using NetMQ.Sockets;
 
 namespace FlAdmin.Logic.Services.Database;
 
@@ -18,9 +15,7 @@ public class CharacterService : ICharacterService
     private readonly ICharacterDataAccess _characterDataAccess;
     private readonly ILogger<CharacterService> _logger;
     private readonly IValidationService _validation;
-
-    private List<Character> _onlineCharacters;
-
+    
     //TODO: Most of this functions need to implement checks to see if the character is online or not.
 
     public CharacterService(ICharacterDataAccess characterDataAccess, IAccountDataAccess accountDataAccess,
@@ -31,7 +26,7 @@ public class CharacterService : ICharacterService
         _accountDataAccess = accountDataAccess;
         _logger = logger;
         _validation = validator;
-        
+   
     }
     
     

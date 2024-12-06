@@ -1,19 +1,32 @@
+using FlAdmin.Common.Configs;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
 using Flurl;
 using Flurl.Http;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 
 namespace FlAdmin.Logic.Services;
 
-public class FlHookService : IFlHookService
+public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger) : IFlHookService
 {
- 
-    public Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<string, ObjectId> characterName)
+    ILogger<FlHookService> _logger = logger;
+    private readonly string _flHookUrl = config.FlHook.HttpUrl;
+
+
+    public async Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<string, ObjectId> characterName)
     {
-        throw new NotImplementedException();
+        try
+        {
+            return true;
+        }
+        catch (FlurlHttpException e)
+        {
+            //TODO: Return Http error. 
+            return FLAdminError.Unknown;
+        }
     }
 
     public Task<Option<FLAdminError>> KickCharacter(Either<string, ObjectId> characterName)
@@ -41,12 +54,14 @@ public class FlHookService : IFlHookService
         throw new NotImplementedException();
     }
 
-    public Task<Option<FLAdminError>> BeamPlayerToBase(Either<string, ObjectId> characterName, Either<string, int> baseName)
+    public Task<Option<FLAdminError>> BeamPlayerToBase(Either<string, ObjectId> characterName,
+        Either<string, int> baseName)
     {
         throw new NotImplementedException();
     }
 
-    public Task<Option<FLAdminError>> TeleportPlayerToSpot(Either<string, ObjectId> characterName, Either<string, int> system, float[]? position)
+    public Task<Option<FLAdminError>> TeleportPlayerToSpot(Either<string, ObjectId> characterName,
+        Either<string, int> system, float[]? position)
     {
         throw new NotImplementedException();
     }

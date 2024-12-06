@@ -3,6 +3,7 @@ using FlAdmin.Common.Models;
 using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
+using FlAdmin.Common.Models.Payloads;
 using FlAdmin.Common.Services;
 using FlAdmin.Logic.Services;
 using FlAdmin.Service.Extensions;
@@ -18,10 +19,10 @@ public class AccountController(IAccountService accountService) : ControllerBase
 {
     [HttpPatch("addroles")]
     [AdminAuthorize(Role.ManageRoles)]
-    public async Task<IActionResult> AddRolesToAccount([FromQuery] string accountId, string[] rolesStr)
+    public async Task<IActionResult> AddRolesToAccount([FromBody] RolePayload rolePayload)
     {
         var roles = new List<Role>();
-        foreach (var roleStr in rolesStr)
+        foreach (var roleStr in rolePayload.Roles)
             if (Enum.TryParse(roleStr, out Role role))
             {
                 if (role == Role.SuperAdmin)
@@ -30,19 +31,19 @@ public class AccountController(IAccountService accountService) : ControllerBase
             }
 
         if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
-        var res = await accountService.AddRolesToAccount(accountId.Trim(), roles);
+        var res = await accountService.AddRolesToAccount(rolePayload.AccountId.Trim(), roles);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
-            Ok($"Role(s) added to {accountId} successfully.")
+            Ok($"Role(s) added to {rolePayload.AccountId} successfully.")
         );
     }
 
     [HttpPatch("removeroles")]
     [AdminAuthorize(Role.ManageRoles)]
-    public async Task<IActionResult> RemoveRolesFromAccount([FromQuery] string accountId, string[] rolesStr)
+    public async Task<IActionResult> RemoveRolesFromAccount([FromBody] RolePayload rolePayload)
     {
         var roles = new List<Role>();
-        foreach (var roleStr in rolesStr)
+        foreach (var roleStr in rolePayload.Roles)
             if (Enum.TryParse(roleStr, out Role role))
             {
                 if (role == Role.SuperAdmin)
@@ -53,10 +54,10 @@ public class AccountController(IAccountService accountService) : ControllerBase
         if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
 
 
-        var res = await accountService.RemoveRolesFromAccount(accountId.Trim(), roles);
+        var res = await accountService.RemoveRolesFromAccount(rolePayload.AccountId.Trim(), roles);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
-            Ok($"Role(s) removed from account {accountId} successfully.")
+            Ok($"Role(s) removed from account {rolePayload.AccountId} successfully.")
         );
     }
 
@@ -142,7 +143,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
 
     [HttpPatch("addusername")]
     [AdminAuthorize(Role.ManageAdmins)]
-    public async Task<IActionResult> AddUsernameToAccount([FromQuery] string accountId, [FromQuery] LoginModel login)
+    public async Task<IActionResult> AddUsernameToAccount([FromBody] string accountId, [FromBody] LoginModel login)
     {
         if (login?.Username is null || login?.Password is null || login.Password.Trim().Length is 0 ||
             login.Username.Trim().Length is 0)
@@ -157,7 +158,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
     }
 
     [HttpPatch("updatepassword")]
-    public async Task<IActionResult> UpdatePassword([FromQuery] LoginModel login, [FromQuery] string newPassword)
+    public async Task<IActionResult> UpdatePassword([FromBody] LoginModel login, [FromBody] string newPassword)
     {
         if (newPassword.Trim().Length is 0) return BadRequest();
         var res = await accountService.ChangePassword(login, newPassword);
