@@ -5,8 +5,11 @@ using FlAdmin.Common.Services;
 using Flurl;
 using Flurl.Http;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using SharpDX;
 
 namespace FlAdmin.Logic.Services;
 
@@ -20,7 +23,24 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger) 
     {
         try
         {
-            return true;
+            var isOnlineBytes = await characterName.Match(
+                    Left: str => _flHookUrl.AppendQueryParam("characterName", str),
+                    Right: obj => _flHookUrl.AppendQueryParam("id", Convert.ToBase64String(obj.ToByteArray())))
+                .AppendPathSegment("core/getonlinecharacter")
+                .GetBytesAsync();
+            
+            var isOnlineBson = BsonSerializer.Deserialize<BsonDocument>(isOnlineBytes);
+            if (!isOnlineBson.TryGetValue("isOnline", out var isOnline) || !isOnline.IsBoolean)
+            {
+                return FLAdminError.Unknown;
+            }
+
+            return isOnline.AsBoolean;
+        }
+        catch (BsonException ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            return FLAdminError.Unknown;
         }
         catch (FlurlHttpException e)
         {
