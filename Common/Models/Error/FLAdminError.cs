@@ -90,5 +90,7 @@ public enum FLAdminError
     FlServerFailedToTerminate,
     
     [Description("HTTP Request to FLHook timed out.")]
-    FLHookRequestTimeout    
+    FLHookRequestTimeout,
+    [Description("FlHook encountered an error.")]
+    FlHookHttpError
 }

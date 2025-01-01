@@ -24,7 +24,7 @@ public class CharacterDataAccessTests : IDisposable
     [Fact]
     public async Task When_Grabbing_Characters_Then_List_Should_Be_Non_Empty()
     {
-        var charList = await _characterDataAccess.GetCharactersByFilter(x => true, 1, 100);
+        var charList = await _characterDataAccess.GetCharactersByFilter(x => true);
 
         charList.Count.Should().Be(100);
     }
@@ -52,7 +52,7 @@ public class CharacterDataAccessTests : IDisposable
         var character = await _characterDataAccess.GetCharacter("Not_Chad_Games");
 
         character.Match(
-            x => false,
+            _ => false,
             err => err == FLAdminError.CharacterNotFound
         ).Should().BeTrue();
     }
@@ -176,7 +176,7 @@ public class CharacterDataAccessTests : IDisposable
     }
 
     [Fact]
-    public async Task When_Creating_Character_With_Same_Name_Should_Error()
+    public async Task When_Creating_Character_With_Same_Name_Should_Return_Character_Already_Exists()
     {
         var testCharacter = new Character()
         {
