@@ -1,4 +1,5 @@
 using System.Net;
+using System.Numerics;
 using System.Text.Json;
 using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
@@ -63,10 +64,17 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     {
         try
         {
-            await characterName.Match(
-                    Left: str => _flHookUrl.AppendQueryParam("characterName", str),
-                    Right: obj => _flHookUrl.AppendQueryParam("id", Convert.ToBase64String(obj.ToByteArray())))
-                .AppendPathSegment(FlHookApiRoutes.KickCharacter).PatchAsync();
+            var request = new BsonDocument();
+
+            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+            characterName.Match(
+                Left: str => request.Set("characterName", str),
+                Right: id => request.Set("id", Convert.ToBase64String(id.ToByteArray()))
+            );
+
+            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.KickCharacter);
+            var content = new ByteArrayContent(request.ToBson());
+            await str.PatchAsync(content);
 
             return new Option<FLAdminError>();
         }
@@ -85,10 +93,17 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     {
         try
         {
-            await characterName.Match(
-                    Left: str => _flHookUrl.AppendQueryParam("characterName", str),
-                    Right: obj => _flHookUrl.AppendQueryParam("id", Convert.ToBase64String(obj.ToByteArray())))
-                .AppendPathSegment(FlHookApiRoutes.KillCharacter).PatchAsync();
+            var request = new BsonDocument();
+
+            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+            characterName.Match(
+                Left: str => request.Set("characterName", str),
+                Right: id => request.Set("id", Convert.ToBase64String(id.ToByteArray()))
+            );
+
+            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.KillCharacter);
+            var content = new ByteArrayContent(request.ToBson());
+            await str.PatchAsync(content);
 
             return new Option<FLAdminError>();
         }
@@ -107,11 +122,18 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     {
         try
         {
-            await characterName.Match(
-                    Left: str => _flHookUrl.AppendQueryParam("characterName", str),
-                    Right: obj => _flHookUrl.AppendQueryParam("id", Convert.ToBase64String(obj.ToByteArray())))
-                .AppendQueryParam("message", message)
-                .AppendPathSegment(FlHookApiRoutes.MessagePlayer).PatchAsync();
+            var request = new BsonDocument();
+
+            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+            characterName.Match(
+                Left: str => request.Set("characterName", str),
+                Right: id => request.Set("id", Convert.ToBase64String(id.ToByteArray()))
+            );
+            request.Set("message", message);
+
+            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessagePlayer);
+            var content = new ByteArrayContent(request.ToBson());
+            await str.PatchAsync(content);
 
             return new Option<FLAdminError>();
         }
@@ -130,13 +152,18 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     {
         try
         {
-            //We can't async the whole function as FLHash is not awaitable
-            var str = system.Match(
-                Left: name => _flHookUrl.AppendQueryParam("system", FLHash.CreateID(name)),
-                Right: id => _flHookUrl.AppendQueryParam("system", id)
-                    .AppendQueryParam("message", message)
-                    .AppendPathSegment(FlHookApiRoutes.MessageUniverse));
-            await str.PatchAsync();
+            var request = new BsonDocument();
+
+            var sysId = system.Match(
+                Left: name => unchecked((int) FLHash.CreateID(name)),
+                Right: id => id
+            );
+            request.Set("system", sysId);
+            request.Set("message", message);
+
+            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessagePlayer);
+            var content = new ByteArrayContent(request.ToBson());
+            await str.PatchAsync(content);
 
             return new Option<FLAdminError>();
         }
@@ -155,8 +182,13 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     {
         try
         {
-            await _flHookUrl.AppendQueryParam("message", message)
-                .AppendPathSegment(FlHookApiRoutes.MessageSystem).PatchAsync();
+            var request = new BsonDocument();
+
+            request.Set("message", message);
+
+            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessagePlayer);
+            var content = new ByteArrayContent(request.ToBson());
+            await str.PatchAsync(content);
 
             return new Option<FLAdminError>();
         }
@@ -176,16 +208,23 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     {
         try
         {
-            var str = baseName.Match(
-                    Left: name => _flHookUrl.AppendQueryParam("base", FLHash.CreateID(name)),
-                    Right: id => _flHookUrl.AppendQueryParam("base", id)
-                        .AppendQueryParam(characterName.Match(
-                            Left: str => _flHookUrl.AppendQueryParam("characterName", str),
-                            Right: obj => _flHookUrl.AppendQueryParam("id", Convert.ToBase64String(obj.ToByteArray()))))
-                        .AppendPathSegment(FlHookApiRoutes.BeamPlayer))
-                ;
-            await str.PatchAsync();
+            var request = new BsonDocument();
 
+            var baseId = baseName.Match(
+                Left: name => unchecked((int) FLHash.CreateID(name)),
+                Right: id => id
+            );
+            request.Set("base", baseId);
+            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+            characterName.Match(
+                Left: str => request.Set("characterName", str),
+                Right: id => request.Set("id", Convert.ToBase64String(id.ToByteArray()))
+            );
+            
+            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessagePlayer);
+            var content = new ByteArrayContent(request.ToBson());
+            await str.PatchAsync(content);
+            
             return new Option<FLAdminError>();
         }
         catch (FlurlHttpException e)
@@ -200,20 +239,30 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     }
 
     public async Task<Option<FLAdminError>> TeleportPlayerToSpot(Either<string, ObjectId> characterName,
-        Either<string, int> system, float[]? position)
+        Either<string, int> system, Vector3? position)
     {
         try
         {
-            var str = system.Match(
-                    Left: name => _flHookUrl.AppendQueryParam("system", FLHash.CreateID(name)),
-                    Right: id => _flHookUrl.AppendQueryParam("system", id)
-                        .AppendQueryParam(characterName.Match(
-                            Left: str => _flHookUrl.AppendQueryParam("characterName", str),
-                            Right: obj => _flHookUrl.AppendQueryParam("id", Convert.ToBase64String(obj.ToByteArray()))))
-                        .AppendQueryParam("position", position ?? [0, 0, 0])
-                        .AppendPathSegment(FlHookApiRoutes.TeleportPlayer))
-                ;
-            await str.PatchAsync();
+            var request = new BsonDocument();
+
+            var sysId = system.Match(
+                Left: name => unchecked((int) FLHash.CreateID(name)),
+                Right: id => id
+            );
+            request.Set("system", sysId);
+            // ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+            characterName.Match(
+                Left: str => request.Set("characterName", str),
+                Right: id => request.Set("id", Convert.ToBase64String(id.ToByteArray()))
+            );
+            if (position.HasValue)
+            {
+                request.Set("position", new BsonArray() {position.Value.X, position.Value.Y, position.Value.Z});
+            }
+
+            var content = new ByteArrayContent(request.ToBson());
+            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.TeleportPlayer);
+            await str.PatchAsync(content);
 
             return new Option<FLAdminError>();
         }
@@ -228,14 +277,14 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
     }
 
-    public async Task<Either<FLAdminError, List<Character>>> GetOnlineCharacters()
+    public async Task<Either<FLAdminError, OnlinePlayerPayload>> GetOnlineCharacters()
     {
         try
         {
             var onlineCharactersBytes = await
-                _flHookUrl.AppendPathSegment(FlHookApiRoutes.GetOnlineCharacters).GetBytesAsync();
+                _flHookUrl.AppendPathSegment(FlHookApiRoutes.GetOnlinePlayers).GetBytesAsync();
 
-            return BsonSerializer.Deserialize<List<Character>>(onlineCharactersBytes);
+            return BsonSerializer.Deserialize<OnlinePlayerPayload>(onlineCharactersBytes);
         }
         catch (BsonException ex)
         {

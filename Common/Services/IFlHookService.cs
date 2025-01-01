@@ -1,3 +1,5 @@
+using System.Numerics;
+using FlAdmin.Common.Models;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
 using LanguageExt;
@@ -20,7 +22,7 @@ public interface IFlHookService
 
     public Task<Option<FLAdminError>> TeleportPlayerToSpot(Either<string, ObjectId> characterName,
         Either<string, int> system,
-        float[]? position);
+        Vector3? position);
 
-    public Task<Either<FLAdminError, List<Character>>> GetOnlineCharacters();
+    public Task<Either<FLAdminError, OnlinePlayerPayload>> GetOnlineCharacters();
 }

@@ -10,5 +10,5 @@ public static class FlHookApiRoutes
     public const string MessageUniverse = "core/messageuniverse";
     public const string BeamPlayer = "core/beamplayer";
     public const string TeleportPlayer = "core/teleportplayer";
-    public const string GetOnlineCharacters = "core/getonlinecharacters";
+    public const string GetOnlinePlayers = "core/onlineplayers";
 }
