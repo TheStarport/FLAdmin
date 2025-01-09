@@ -141,9 +141,10 @@ public class AccountController(IAccountService accountService) : ControllerBase
         return Ok($"Account {account.Id} updated successfully");
     }
 
+
     [HttpPatch("addusername")]
     [AdminAuthorize(Role.ManageAdmins)]
-    public async Task<IActionResult> AddUsernameToAccount([FromBody] string accountId, [FromBody] LoginModel login)
+    public async Task<IActionResult> AddUsernameToAccount( [FromBody] LoginModel login, [FromQuery] string accountId)
     {
         if (login?.Username is null || login?.Password is null || login.Password.Trim().Length is 0 ||
             login.Username.Trim().Length is 0)
@@ -156,9 +157,10 @@ public class AccountController(IAccountService accountService) : ControllerBase
             Ok("Username and password set successfully.")
         );
     }
+ 
 
     [HttpPatch("updatepassword")]
-    public async Task<IActionResult> UpdatePassword([FromBody] LoginModel login, [FromBody] string newPassword)
+    public async Task<IActionResult> UpdatePassword([FromBody] LoginModel login, [FromQuery] string newPassword)
     {
         if (newPassword.Trim().Length is 0) return BadRequest();
         var res = await accountService.ChangePassword(login, newPassword);

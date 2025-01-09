@@ -2,6 +2,7 @@ using FlAdmin.Common.Auth;
 using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Services;
+using FlAdmin.Logic;
 using FlAdmin.Logic.DataAccess;
 using FlAdmin.Logic.Services;
 using FlAdmin.Logic.Services.Auth;
@@ -16,7 +17,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 var config = new FlAdminConfig();
 var keyProvider = new KeyProvider();
-
 
 builder.Services.AddAuthentication(x =>
 {
@@ -57,6 +57,9 @@ builder.Services.AddSingleton<IAccountService, AccountService>();
 builder.Services.AddSingleton<ICharacterService, CharacterService>();
 builder.Services.AddSingleton<IAuthService, AuthService>();
 builder.Services.AddSingleton<IFlHookService,FlHookService>();
+
+//Background Services
+builder.Services.AddHostedService<FlServerManager>();
 
 // Extend the shutdown timer to allow FLServer time to gracefully shutdown
 builder.Services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(10));
