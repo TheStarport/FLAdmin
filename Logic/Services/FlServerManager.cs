@@ -61,6 +61,9 @@ public class FlServerManager(ILogger<FlServerManager> logger, FlAdminConfig conf
             FLServer.StartInfo.FileName = _flServer;
             FLServer.StartInfo.UseShellExecute = false;
             FLServer.StartInfo.CreateNoWindow = false;
+            
+            FLServer.StartInfo.WorkingDirectory = config.Server.FreelancerPath + "/EXE/";
+            
             FLServer.Start();
 
             return true;
