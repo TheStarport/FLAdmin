@@ -1,125 +1,154 @@
-using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using FlAdmin.Common.Configs;
-using FlAdmin.Common.Services;
-using LanguageExt.Pipes;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
+using Serilog.Context;
 
-namespace FlAdmin.Logic;
+namespace FlAdmin.Logic.Services;
 
-public class FlServerManager(ILogger<FlServerManager> logger, FlAdminConfig config) : IHostedService, IFlServerManager
+public class FlServerManager(
+    ILogger<FlServerManager> logger,
+    FlAdminConfig configuration)
+    : BackgroundService
 {
-    private readonly string _flServer = config.Server.FreelancerPath + "/EXE/FLServer.exe";
-    private readonly ILogger<FlServerManager> _logger = logger;
-
-    private Thread thread;
-    private Process FLServer;
-    private bool threadshouldClose;
-
-    ConcurrentQueue<BsonDocument> _commands = new ConcurrentQueue<BsonDocument>();
-
-
-    public Task StartAsync(CancellationToken cancellationToken)
+    private Process? _flServer;
+    private readonly List<string> _consoleMessages = new();
+    private bool _readyToStart = true;
+    
+    
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!StartServer())
+        while (!stoppingToken.IsCancellationRequested)
         {
-            return Task.CompletedTask;
-        }
-
-        thread = new Thread(ServerTask);
-        thread.IsBackground = true;
-        threadshouldClose = false;
-        thread.Start();
-
-        return Task.CompletedTask;
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        threadshouldClose = true;
-        ShutdownServer();
-        thread.Join();
-        return Task.CompletedTask;
-    }
-
-    private void ServerTask()
-    {
-        int timestampBefore = DateTime.Now.Millisecond;
-        int timeStampAfter = DateTime.Now.Millisecond;
-
-        while (!threadshouldClose)
-        {
-            ProcessCommands();
-
-            //In order to not do excessive calculations we sleep for up to 5 seconds per loop. 
-            Thread.Sleep(5000);
-        }
-
-        return;
-    }
-
-    private void ProcessCommands()
-    {
-        foreach (var cmd in _commands)
-        {
-            var command = cmd["Command"].AsString;
-            if (command is "RestartFLServer")
+            if (!_readyToStart || (configuration.Server.AutoStart &&
+                                   string.IsNullOrWhiteSpace(configuration.Server.FreelancerPath)))
             {
-                var delay = cmd["DelayInSeconds"].AsInt32;
-                ShutdownServer();
-                Thread.Sleep(delay * 1000);
-                StartServer();
+                // Await or we block the main thread from starting
+                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
+                continue;
+            }
+
+            try
+            {
+                if ((_flServer is null || _flServer.HasExited) && !await StartProcess())
+                {
+                    continue;
+                }
+
+                await _flServer!.WaitForExitAsync(stoppingToken);
+            }
+            finally
+            {
+                if (_flServer is not null && !_flServer.HasExited)
+                {
+                    _flServer.CancelOutputRead();
+                    _flServer.Kill();
+                    await _flServer.WaitForExitAsync(stoppingToken);
+                    _flServer.Dispose();
+                    _flServer = null;
+                }
             }
         }
     }
 
-    private bool StartServer()
+    public void SendCommandToConsole(string command) => _flServer?.StandardInput.WriteLine(command);
+
+    public void Terminate()
     {
+        _flServer?.Kill();
+        _flServer?.WaitForExit();
+        _readyToStart = false;
+    }
+
+    public IEnumerable<string> GetConsoleMessages(int page) => _consoleMessages
+        .AsEnumerable()
+        .Reverse()
+        .Skip((page - 1) * 50)
+        .Take(50);
+
+    public int GetMessageCount() => _consoleMessages.Count;
+
+    private async Task<bool> StartProcess()
+    {
+        if (string.IsNullOrWhiteSpace(configuration.Server.FreelancerPath))
+        {
+            return false;
+        }
+
         try
         {
-            FLServer = new Process();
+            // Close FLServer if already open
+            Process[] activeProcesses;
+            do
+            {
+                activeProcesses = Process.GetProcessesByName("FLServer").Where(x => x.MainWindowTitle != "FLHook")
+                    .ToArray();
+                foreach (var process in activeProcesses)
+                {
+                    process.Kill();
+                }
 
-            FLServer.StartInfo.FileName = _flServer;
-            FLServer.StartInfo.UseShellExecute = false;
-            FLServer.StartInfo.CreateNoWindow = false;
-            FLServer.StartInfo.WorkingDirectory = config.Server.FreelancerPath + "/EXE/";
-            FLServer.StartInfo.Arguments = "/c";
-            FLServer.Start();
+                await Task.Delay(TimeSpan.FromSeconds(0.5));
+            } while (activeProcesses.Length > 0);
+        }
+        catch (Win32Exception ex)
+        {
+            logger.LogError(ex, "Unable to terminate existing FLServer. FLAdmin does not control active instance.");
+            _readyToStart = false;
+            return false;
+        }
+
+        var path = Environment.ExpandEnvironmentVariables(configuration.Server.FreelancerPath);
+
+        var exePath = Path.Combine(path, "EXE");
+        var fileNamePath = Path.Combine(exePath, "FLServer.exe");
+
+        ProcessStartInfo startInfo = new()
+        {
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            Arguments = $"-noconsole /p{configuration.Server.Port} /c {configuration.Server.LaunchArgs}",
+            WorkingDirectory = exePath,
+            FileName = fileNamePath
+        };
+
+        try
+        {
+            _flServer = Process.Start(startInfo);
+            if (_flServer is null)
+            {
+                throw new InvalidOperationException("Unable to start FLServer.exe");
+            }
+
+            _flServer.OutputDataReceived += (_, args) => AddLog(args?.Data ?? "");
+            _flServer.BeginOutputReadLine();
 
             return true;
         }
-        catch (Win32Exception ex)
+        catch (Exception ex)
         {
-            _logger.LogError(ex, "Encountered an issue when attempting to start FLSever.exe");
+            logger.LogError(ex, "Failed to start process");
+            // Sleep as to not overwhelm with attempts
+            await Task.Delay(TimeSpan.FromSeconds(20));
             return false;
         }
     }
-
-    private void ShutdownServer()
+    
+    private void AddLog(string message)
     {
-        try
+        if (string.IsNullOrWhiteSpace(message))
         {
-            FLServer.Kill();
+            return;
         }
-        catch (Win32Exception ex)
-        {
-            _logger.LogError(ex, "Encountered an issue when attempting to shut down FLSever.exe");
-        }
+
+        using var prop = LogContext.PushProperty("FLHook", true);
+        logger.Log(LogLevel.Information, message);
+        _consoleMessages.Add(message);
     }
 
-    public bool RestartServer(int delayInSeconds)
-    {
-        BsonDocument doc = new BsonDocument();
+    public bool IsAlive() => _flServer is not null && !_flServer.HasExited;
+    public bool ReadyToStart() => _readyToStart;
 
-        doc.Add("DelayInSeconds", delayInSeconds);
-        doc.Add("Command", "RestartFLServer");
-
-        _commands.Enqueue(doc);
-
-        return true;
-    }
+    public void Start() => _readyToStart = true;
 }

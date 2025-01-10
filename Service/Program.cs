@@ -2,7 +2,6 @@ using FlAdmin.Common.Auth;
 using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Services;
-using FlAdmin.Logic;
 using FlAdmin.Logic.DataAccess;
 using FlAdmin.Logic.Services;
 using FlAdmin.Logic.Services.Auth;
@@ -89,3 +88,4 @@ app.MapGet("/", () => "Server Online.");
 app.MapControllers();
 
 app.Run();
+
