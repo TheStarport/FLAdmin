@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using FlAdmin.Common.Configs;
+using FlAdmin.Common.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
@@ -9,11 +10,12 @@ namespace FlAdmin.Logic.Services;
 
 public class FlServerManager(
     ILogger<FlServerManager> logger,
-    FlAdminConfig configuration)
+    FlAdminConfig configuration, IFlHookService flHookService)
     : BackgroundService
 {
     private Process? _flServer;
     private readonly List<string> _consoleMessages = new();
+    private List<long> _flserverMemUsage;
     private bool _readyToStart = true;
     
     
@@ -35,10 +37,16 @@ public class FlServerManager(
                 {
                     continue;
                 }
+                var pingRes = await flHookService.PingFlHook();
 
-                await _flServer!.WaitForExitAsync(stoppingToken);
+                if (pingRes.IsSome)
+                {
+                    throw new Exception();
+                }
+                
+                await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
             }
-            finally
+            catch 
             {
                 if (_flServer is not null && !_flServer.HasExited)
                 {
@@ -50,6 +58,23 @@ public class FlServerManager(
                 }
             }
         }
+        if (_flServer is not null && !_flServer.HasExited)
+        {
+            _flServer.CancelOutputRead();
+            _flServer.Kill();
+            await _flServer.WaitForExitAsync(stoppingToken);
+            _flServer.Dispose();
+            _flServer = null;
+        }
+    }
+
+
+    private void ServerDiagnostics()
+    {
+        var memory = _flServer!.VirtualMemorySize64;
+        _flserverMemUsage.Add(memory);
+        
+        
     }
 
     public void SendCommandToConsole(string command) => _flServer?.StandardInput.WriteLine(command);
