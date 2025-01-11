@@ -79,18 +79,22 @@ public enum FLAdminError
 
     [Description("That character is currently logged into the game therefor operation cannot be performed.")]
     CharacterIsLoggedIn,
-    
+
     [Description("FLAdmin was unable to initialize FLServer.")]
     FLServerFailedToStart = 4000,
 
     [Description("FLHook failed to initialize alongside FLServer.")]
     FLHookFailedToStart,
-    
+
     [Description("FLAdmin was unable to terminate FLServer.")]
     FlServerFailedToTerminate,
-    
+
     [Description("HTTP Request to FLHook timed out.")]
     FLHookRequestTimeout,
+
     [Description("FlHook encountered an error.")]
-    FlHookHttpError
+    FlHookHttpError,
+    
+    [Description("FlHook is failing to respond and likely frozen.")]
+    FlHookFailedToRespond,
 }

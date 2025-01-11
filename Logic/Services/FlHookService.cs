@@ -26,15 +26,20 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     FreelancerData _freelancerData = fldata.GetFreelancerData()!;
 
 
-    public async Task<Either<FLAdminError, bool>> PingFlHook()
+    public async Task<Option<FLAdminError>> PingFlHook()
     {
         try
         {
             var ping = 
                  await _flHookUrl.AppendPathSegment(FlHookApiRoutes.Ping)
                 .GetAsync();
-            
-            return ping.StatusCode is (int)HttpStatusCode.OK;
+
+            if (ping.StatusCode is (int) HttpStatusCode.OK)
+            {
+                return new Option<FLAdminError>();
+            }
+
+            return FLAdminError.FlHookFailedToRespond;
         }
         catch (BsonException ex)
         {
