@@ -26,6 +26,32 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     FreelancerData _freelancerData = fldata.GetFreelancerData()!;
 
 
+    public async Task<Either<FLAdminError, bool>> PingFlHook()
+    {
+        try
+        {
+            var ping = 
+                 await _flHookUrl.AppendPathSegment(FlHookApiRoutes.Ping)
+                .GetAsync();
+            
+            return ping.StatusCode is (int)HttpStatusCode.OK;
+        }
+        catch (BsonException ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            return FLAdminError.FlHookHttpError;
+        }
+        catch (FlurlHttpException e)
+        {
+            if (e.StatusCode is (int) HttpStatusCode.RequestTimeout or (int) HttpStatusCode.GatewayTimeout)
+            {
+                return FLAdminError.FLHookRequestTimeout;
+            }
+
+            return FLAdminError.FlHookHttpError;
+        }
+    }
+
     public async Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<string, ObjectId> characterName)
     {
         try
@@ -161,7 +187,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
             request.Set("system", sysId);
             request.Set("message", message);
 
-            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessagePlayer);
+            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessageSystem);
             var content = new ByteArrayContent(request.ToBson());
             await str.PatchAsync(content);
 
@@ -186,7 +212,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
 
             request.Set("message", message);
 
-            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessagePlayer);
+            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessageUniverse);
             var content = new ByteArrayContent(request.ToBson());
             await str.PatchAsync(content);
 
@@ -221,7 +247,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
                 Right: id => request.Set("id", Convert.ToBase64String(id.ToByteArray()))
             );
             
-            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessagePlayer);
+            var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.BeamPlayer);
             var content = new ByteArrayContent(request.ToBson());
             await str.PatchAsync(content);
             

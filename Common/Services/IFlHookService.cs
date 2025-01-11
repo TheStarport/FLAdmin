@@ -9,6 +9,8 @@ namespace FlAdmin.Common.Services;
 
 public interface IFlHookService
 {
+    public Task<Either<FLAdminError, bool>> PingFlHook();
+    
     public Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<string, ObjectId> characterName);
     public Task<Option<FLAdminError>> KickCharacter(Either<string, ObjectId> characterName);
     public Task<Option<FLAdminError>> KillCharacter(Either<string, ObjectId> characterName);

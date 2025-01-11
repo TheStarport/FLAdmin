@@ -2,6 +2,7 @@ namespace FlAdmin.Common.Models;
 
 public static class FlHookApiRoutes
 {
+    public const string Ping = "core/ping";
     public const string CharacterIsOnline = "core/getonlinecharacter";
     public const string KickCharacter = "core/kickcharacter";
     public const string KillCharacter = "core/killcharacter";
