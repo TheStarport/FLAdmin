@@ -10,15 +10,17 @@ namespace FlAdmin.Logic.Services;
 
 public class FlServerManager(
     ILogger<FlServerManager> logger,
-    FlAdminConfig configuration, IFlHookService flHookService)
+    FlAdminConfig configuration,
+    IFlHookService flHookService)
     : BackgroundService
 {
-    private Process? _flServer;
     private readonly List<string> _consoleMessages = new();
+    private Process? _flServer;
     private List<long> _flserverMemUsage;
+    private bool _flserverReady;
     private bool _readyToStart = true;
-    
-    
+
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -33,73 +35,83 @@ public class FlServerManager(
 
             try
             {
-                if ((_flServer is null || _flServer.HasExited) && !await StartProcess())
+                if ((_flServer is null || _flServer.HasExited) && !await StartProcess()) continue;
+                if (!_flserverReady)
                 {
+                    await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
                     continue;
                 }
-                var pingRes = await flHookService.PingFlHook();
-
-                if (pingRes.IsSome)
-                {
-                    throw new Exception();
-                }
                 
+                
+
                 await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
             }
-            catch 
+            catch
             {
                 if (_flServer is not null && !_flServer.HasExited)
                 {
                     _flServer.CancelOutputRead();
+                    _flServer.CancelErrorRead();
                     _flServer.Kill();
                     await _flServer.WaitForExitAsync(stoppingToken);
                     _flServer.Dispose();
                     _flServer = null;
+                    _flserverReady = false;
                 }
             }
         }
+    }
+
+    public override void Dispose()
+    {
         if (_flServer is not null && !_flServer.HasExited)
         {
             _flServer.CancelOutputRead();
+            _flServer.CancelErrorRead();
             _flServer.Kill();
-            await _flServer.WaitForExitAsync(stoppingToken);
             _flServer.Dispose();
             _flServer = null;
+            _flserverReady = false;
         }
     }
-
 
     private void ServerDiagnostics()
     {
         var memory = _flServer!.VirtualMemorySize64;
         _flserverMemUsage.Add(memory);
-        
-        
     }
 
-    public void SendCommandToConsole(string command) => _flServer?.StandardInput.WriteLine(command);
+    public void SendCommandToConsole(string command)
+    {
+        _flServer?.StandardInput.WriteLine(command);
+    }
 
     public void Terminate()
     {
         _flServer?.Kill();
         _flServer?.WaitForExit();
         _readyToStart = false;
+        _flserverReady = false;
     }
 
-    public IEnumerable<string> GetConsoleMessages(int page) => _consoleMessages
-        .AsEnumerable()
-        .Reverse()
-        .Skip((page - 1) * 50)
-        .Take(50);
+    public IEnumerable<string> GetConsoleMessages(int page)
+    {
+        return _consoleMessages
+            .AsEnumerable()
+            .Reverse()
+            .Skip((page - 1) * 50)
+            .Take(50);
+    }
 
-    public int GetMessageCount() => _consoleMessages.Count;
+    public int GetMessageCount()
+    {
+        return _consoleMessages.Count;
+    }
 
     private async Task<bool> StartProcess()
     {
-        if (string.IsNullOrWhiteSpace(configuration.Server.FreelancerPath))
-        {
-            return false;
-        }
+        _flserverReady = false;
+        if (string.IsNullOrWhiteSpace(configuration.Server.FreelancerPath)) return false;
 
         try
         {
@@ -107,12 +119,9 @@ public class FlServerManager(
             Process[] activeProcesses;
             do
             {
-                activeProcesses = Process.GetProcessesByName("FLServer").Where(x => x.MainWindowTitle != "FLHook")
+                activeProcesses = Process.GetProcessesByName("FLServer")
                     .ToArray();
-                foreach (var process in activeProcesses)
-                {
-                    process.Kill();
-                }
+                foreach (var process in activeProcesses) process.Kill();
 
                 await Task.Delay(TimeSpan.FromSeconds(0.5));
             } while (activeProcesses.Length > 0);
@@ -131,8 +140,9 @@ public class FlServerManager(
 
         ProcessStartInfo startInfo = new()
         {
-            RedirectStandardInput = true,
+            RedirectStandardError = true,
             RedirectStandardOutput = true,
+            UseShellExecute = false,
             Arguments = $"-noconsole /p{configuration.Server.Port} /c {configuration.Server.LaunchArgs}",
             WorkingDirectory = exePath,
             FileName = fileNamePath
@@ -140,14 +150,18 @@ public class FlServerManager(
 
         try
         {
-            _flServer = Process.Start(startInfo);
-            if (_flServer is null)
-            {
-                throw new InvalidOperationException("Unable to start FLServer.exe");
-            }
+            _flServer = new Process();
 
-            _flServer.OutputDataReceived += (_, args) => AddLog(args?.Data ?? "");
+            _flServer.ErrorDataReceived += AddLog;
+            _flServer.OutputDataReceived += AddLog;
+
+            _flServer.StartInfo = startInfo;
+            _flServer.Start();
+            if (_flServer is null) throw new InvalidOperationException("Unable to start FLServer.exe");
+
+
             _flServer.BeginOutputReadLine();
+            _flServer.BeginErrorReadLine();
 
             return true;
         }
@@ -155,25 +169,41 @@ public class FlServerManager(
         {
             logger.LogError(ex, "Failed to start process");
             // Sleep as to not overwhelm with attempts
-            await Task.Delay(TimeSpan.FromSeconds(20));
+            await Task.Delay(TimeSpan.FromSeconds(10));
             return false;
         }
     }
-    
-    private void AddLog(string message)
+
+    private void AddLog(object sendingProcess, DataReceivedEventArgs args)
     {
-        if (string.IsNullOrWhiteSpace(message))
+        if (string.IsNullOrWhiteSpace(args.Data))
         {
             return;
         }
 
+        if (args.Data.Contains("FLHook Ready"))
+        {
+            _flserverReady = true;
+        }
+
         using var prop = LogContext.PushProperty("FLHook", true);
-        logger.Log(LogLevel.Information, message);
-        _consoleMessages.Add(message);
+
+        logger.Log(LogLevel.Information, args.Data);
+        _consoleMessages.Add(args.Data);
     }
 
-    public bool IsAlive() => _flServer is not null && !_flServer.HasExited;
-    public bool ReadyToStart() => _readyToStart;
+    public bool IsAlive()
+    {
+        return _flServer is not null && !_flServer.HasExited;
+    }
 
-    public void Start() => _readyToStart = true;
+    public bool ReadyToStart()
+    {
+        return _readyToStart;
+    }
+
+    public void Start()
+    {
+        _readyToStart = true;
+    }
 }

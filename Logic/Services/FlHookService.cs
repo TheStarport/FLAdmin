@@ -22,7 +22,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     : IFlHookService
 {
     ILogger<FlHookService> _logger = logger;
-    private readonly string _flHookUrl = config.FlHook.HttpUrl;
+    private readonly string _flHookUrl = config.FlHook.HttpUrl + config.Server.Port;
     FreelancerData _freelancerData = fldata.GetFreelancerData()!;
 
 
