@@ -1,9 +1,12 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text.Json;
 using FlAdmin.Common.Configs;
+using FlAdmin.Common.Models;
 using FlAdmin.Common.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using Serilog.Context;
 
 namespace FlAdmin.Logic.Services;
@@ -14,9 +17,8 @@ public class FlServerManager(
     IFlHookService flHookService)
     : BackgroundService
 {
-    private readonly List<string> _consoleMessages = new();
     private Process? _flServer;
-    private List<long> _flserverMemUsage;
+    private List<long> _flserverMemUsage = new();
     private bool _flserverReady;
     private bool _readyToStart = true;
 
@@ -36,20 +38,29 @@ public class FlServerManager(
             try
             {
                 if ((_flServer is null || _flServer.HasExited) && !await StartProcess()) continue;
+                
+                if (_flServer is not null) _flserverMemUsage.Add(_flServer.VirtualMemorySize64 / (1024 * 1024));
+
                 if (!_flserverReady)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
                     continue;
                 }
-                
-                
 
+                if ((await flHookService.PingFlHook()).IsSome)
+                {
+                    //FLHook failed to respond after startup so we move to the catch block to restart it.
+                    throw new Exception();
+                }
+                
+                
                 await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
             }
             catch
             {
                 if (_flServer is not null && !_flServer.HasExited)
                 {
+                    logger.LogInformation("FLServer stopped responding, restarting.");
                     _flServer.CancelOutputRead();
                     _flServer.CancelErrorRead();
                     _flServer.Kill();
@@ -93,26 +104,13 @@ public class FlServerManager(
         _readyToStart = false;
         _flserverReady = false;
     }
-
-    public IEnumerable<string> GetConsoleMessages(int page)
-    {
-        return _consoleMessages
-            .AsEnumerable()
-            .Reverse()
-            .Skip((page - 1) * 50)
-            .Take(50);
-    }
-
-    public int GetMessageCount()
-    {
-        return _consoleMessages.Count;
-    }
-
+    
     private async Task<bool> StartProcess()
     {
         _flserverReady = false;
         if (string.IsNullOrWhiteSpace(configuration.Server.FreelancerPath)) return false;
-
+        
+        
         try
         {
             // Close FLServer if already open
@@ -180,21 +178,38 @@ public class FlServerManager(
         {
             return;
         }
-
-        if (args.Data.Contains("FLHook Ready"))
+        if (args.Data.Contains("FLHook Ready") && !_flserverReady)
         {
             _flserverReady = true;
         }
 
-        using var prop = LogContext.PushProperty("FLHook", true);
+        try
+        {
+            var doc = JsonSerializer.Deserialize<FLHookLog>(args.Data);
 
-        logger.Log(LogLevel.Information, args.Data);
-        _consoleMessages.Add(args.Data);
+            if (doc is null)
+            {
+                return;
+            }
+            using (LogContext.PushProperty("FLHook", true))
+            {
+                logger.Log(doc.GetLogLevel(), doc.ToString());
+            }
+        }
+        catch
+        {
+            // ignored
+        }
     }
 
     public bool IsAlive()
     {
         return _flServer is not null && !_flServer.HasExited;
+    }
+
+    public bool FlSeverIsReady()
+    {
+        return _flserverReady;
     }
 
     public bool ReadyToStart()
