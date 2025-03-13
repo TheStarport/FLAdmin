@@ -22,6 +22,9 @@ public class FlServerManager(
     private bool _flserverReady;
     private bool _readyToStart = true;
 
+    private bool _shouldRestartServer = false;
+    private int _restartDelayInSeconds = 30;
+
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -38,7 +41,7 @@ public class FlServerManager(
             try
             {
                 if ((_flServer is null || _flServer.HasExited) && !await StartProcess()) continue;
-                
+
                 if (_flServer is not null) _flserverMemUsage.Add(_flServer.VirtualMemorySize64 / (1024 * 1024));
 
                 if (!_flserverReady)
@@ -52,8 +55,26 @@ public class FlServerManager(
                     //FLHook failed to respond after startup so we move to the catch block to restart it.
                     throw new Exception();
                 }
+
+                if (_shouldRestartServer)
+                {
+                    if (_flServer is not null && !_flServer.HasExited)
+                    {
+                        logger.LogInformation("Restart manually requested. Restarting.");
+                        _flServer.CancelOutputRead();
+                        _flServer.CancelErrorRead();
+                        _flServer.Kill();
+                        await _flServer.WaitForExitAsync(stoppingToken);
+                        await Task.Delay(TimeSpan.FromSeconds(_restartDelayInSeconds), stoppingToken);
+                        _flServer.Dispose();
+                        _flServer = null;
+                        _flserverReady = false;
+                    }
+                }
                 
+                ServerDiagnostics();
                 
+
                 await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
             }
             catch
@@ -71,6 +92,19 @@ public class FlServerManager(
                 }
             }
         }
+    }
+
+
+    /// <summary>
+    /// Restarts the FlServer instance that FlAdmin is managing, delay is not exact and may vary a few seconds.
+    /// </summary>
+    /// <param name="delayInSeconds"> Default of 30 seconds if none is provided, how long FLAdmin will wait after killing the server to start it back up.</param>
+    public async Task RestartServer(int delayInSeconds = 30)
+    {
+        _restartDelayInSeconds = delayInSeconds;
+        _shouldRestartServer = true;
+        if(_flServer is not null && !_flServer.HasExited)
+            await _flServer.WaitForExitAsync();
     }
 
     public override void Dispose()
@@ -104,13 +138,13 @@ public class FlServerManager(
         _readyToStart = false;
         _flserverReady = false;
     }
-    
+
     private async Task<bool> StartProcess()
     {
         _flserverReady = false;
         if (string.IsNullOrWhiteSpace(configuration.Server.FreelancerPath)) return false;
-        
-        
+
+
         try
         {
             // Close FLServer if already open
@@ -178,6 +212,7 @@ public class FlServerManager(
         {
             return;
         }
+
         if (args.Data.Contains("FLHook Ready") && !_flserverReady)
         {
             _flserverReady = true;
@@ -191,6 +226,7 @@ public class FlServerManager(
             {
                 return;
             }
+
             using (LogContext.PushProperty("FLHook", true))
             {
                 logger.Log(doc.GetLogLevel(), doc.ToString());
