@@ -8,7 +8,7 @@ namespace FlAdmin.Service.Controllers;
 [ApiController]
 [Route("api/flserver")]
 [AdminAuthorize(Role.Web)]
-public class FlServerController(IFlServerManager server) : ControllerBase
+public class FlServerController(FlServerManager server) : ControllerBase
 {
     [HttpPatch("restartserver")]
     public async Task<IActionResult> RestartServer([FromBody] int delay)

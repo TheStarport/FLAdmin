@@ -15,7 +15,7 @@ public class FlServerManager(
     ILogger<FlServerManager> logger,
     FlAdminConfig configuration,
     IFlHookService flHookService)
-    : BackgroundService , IFlServerManager
+    : BackgroundService
 {
     private Process? _flServer;
     private List<long> _flserverMemUsage = new();
