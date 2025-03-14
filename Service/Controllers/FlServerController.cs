@@ -1,4 +1,5 @@
 using FlAdmin.Common.Models.Auth;
+using FlAdmin.Common.Services;
 using FlAdmin.Logic.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +8,7 @@ namespace FlAdmin.Service.Controllers;
 [ApiController]
 [Route("api/flserver")]
 [AdminAuthorize(Role.Web)]
-public class FlServerController(FlServerManager server) : ControllerBase
+public class FlServerController(IFlServerManager server) : ControllerBase
 {
     [HttpPatch("restartserver")]
     public async Task<IActionResult> RestartServer([FromBody] int delay)

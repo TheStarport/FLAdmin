@@ -2,5 +2,11 @@ namespace FlAdmin.Common.Services;
 
 public interface IFlServerManager
 {
-    public bool RestartServer(int delayInSeconds);
+    public Task RestartServer(int delayInSeconds);
+
+    public bool IsAlive();
+    
+    public bool FlSeverIsReady();
+    
+    
 }
