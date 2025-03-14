@@ -8,6 +8,7 @@ using FlAdmin.Logic.Services.Auth;
 using FlAdmin.Logic.Services.Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
@@ -73,13 +74,24 @@ builder.Host.UseSerilog((_, lc) =>
 });
 
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(swaggerGenOptions =>
+{
+    swaggerGenOptions.SwaggerDoc("v1", new OpenApiInfo() { Title = "FlAdmin API", Version = "v1" });
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(swaggerGenOptions =>
+    {
+        swaggerGenOptions.SwaggerEndpoint("/swagger/v1/swagger.json", "FlAdmin API");
+    });
 }
+
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
