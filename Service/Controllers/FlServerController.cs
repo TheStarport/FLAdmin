@@ -7,9 +7,10 @@ namespace FlAdmin.Service.Controllers;
 
 [ApiController]
 [Route("api/flserver")]
-[AdminAuthorize(Role.Web)]
+[AdminAuthorize(Role.ManageServer)]
 public class FlServerController(FlServerManager server) : ControllerBase
 {
+    // ReSharper disable once StringLiteralTypo
     [HttpPatch("restartserver")]
     public async Task<IActionResult> RestartServer([FromBody] int delay)
     {

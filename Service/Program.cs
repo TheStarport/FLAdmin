@@ -92,7 +92,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -100,4 +99,3 @@ app.MapGet("/", () => "Server Online.");
 app.MapControllers();
 
 app.Run();
-

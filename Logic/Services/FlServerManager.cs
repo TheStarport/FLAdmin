@@ -6,7 +6,6 @@ using FlAdmin.Common.Models;
 using FlAdmin.Common.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
 using Serilog.Context;
 
 namespace FlAdmin.Logic.Services;
@@ -24,8 +23,7 @@ public class FlServerManager(
 
     private bool _shouldRestartServer = false;
     private int _restartDelayInSeconds = 30;
-
-
+    
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -237,6 +235,10 @@ public class FlServerManager(
             // ignored
         }
     }
+    
+    
+    
+    
 
     public bool IsAlive()
     {

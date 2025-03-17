@@ -53,7 +53,6 @@ public class AccountController(IAccountService accountService) : ControllerBase
 
         if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
 
-
         var res = await accountService.RemoveRolesFromAccount(rolePayload.AccountId.Trim(), roles);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
@@ -144,7 +143,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
 
     [HttpPatch("addusername")]
     [AdminAuthorize(Role.ManageAdmins)]
-    public async Task<IActionResult> AddUsernameToAccount( [FromBody] LoginModel login, [FromQuery] string accountId)
+    public async Task<IActionResult> AddUsernameToAccount([FromBody] LoginModel login, [FromQuery] string accountId)
     {
         if (login?.Username is null || login?.Password is null || login.Password.Trim().Length is 0 ||
             login.Username.Trim().Length is 0)
@@ -157,7 +156,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
             Ok("Username and password set successfully.")
         );
     }
- 
+
 
     [HttpPatch("updatepassword")]
     public async Task<IActionResult> UpdatePassword([FromBody] LoginModel login, [FromQuery] string newPassword)

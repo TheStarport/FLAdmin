@@ -6,6 +6,7 @@ public enum Role : uint
     ManageAdmins,
     ManageAutomation,
     ManageAccounts,
+    ManageServer,
     SuperAdmin, // Essentially has all roles.
     ManageRoles
 }
