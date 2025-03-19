@@ -14,10 +14,9 @@ namespace FlAdmin.Logic.Services.Database;
 public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig config, ILogger<AccountService> logger)
     : IAccountService
 {
-    
-    public async Task<List<Account>> GetAllAccounts()
+    public async Task<List<Account>> GetAccounts(int pageCount, int pageSize)
     {
-        return await accountDataAccess.GetAccountsByFilter(account => true);
+        return await accountDataAccess.GetAccountsByFilter(account => true, pageCount, pageSize);
     }
 
     public List<Account> QueryAccounts(IQueryable<Account> query)
@@ -58,7 +57,6 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         throw new NotImplementedException();
     }
 
-    //TODO: Configurable SuperAdmin Id.
     public async Task<Option<FLAdminError>> CreateWebMaster(LoginModel loginModel)
     {
         var name = loginModel.Username.Trim();
@@ -70,10 +68,10 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         byte[]? salt = null;
         var hashedPass = PasswordHasher.GenerateSaltedHash(password, ref salt);
 
-   
+
         var account = new Account
         {
-            Id = "SuperAdmin",
+            Id = config.SuperAdminName,
             PasswordHash = hashedPass,
             Salt = salt,
             Username = name,
@@ -180,8 +178,8 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         duration ??= TimeSpan.FromDays(109500);
         var doc = new BsonDocument
         {
-            {"_id", id},
-            {"duration", BsonValue.Create(duration.Value)}
+            { "_id", id },
+            { "duration", BsonValue.Create(duration.Value) }
         };
         return await accountDataAccess.UpdateAccount(doc);
     }
@@ -190,8 +188,8 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
     {
         var doc = new BsonDocument
         {
-            {"_id", id},
-            {"duration", BsonValue.Create(null)}
+            { "_id", id },
+            { "duration", BsonValue.Create(null) }
         };
         return await accountDataAccess.UpdateAccount(doc);
     }

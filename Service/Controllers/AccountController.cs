@@ -38,6 +38,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         );
     }
 
+
     [HttpPatch("removeroles")]
     [AdminAuthorize(Role.ManageRoles)]
     public async Task<IActionResult> RemoveRolesFromAccount([FromBody] RolePayload rolePayload)
@@ -60,10 +61,10 @@ public class AccountController(IAccountService accountService) : ControllerBase
         );
     }
 
-    [HttpGet("all")]
-    public async Task<IActionResult> GetAllAccounts()
+    [HttpGet("getaccounts")]
+    public async Task<IActionResult> GetAccounts([FromQuery] int pageCount, [FromQuery] int pageSize)
     {
-        var accounts = await accountService.GetAllAccounts();
+        var accounts = await accountService.GetAccounts(pageCount, pageSize);
         var accountModels = new List<AccountModel>();
         accounts.ForEach(account => accountModels.Add(account.ToModel()));
         if (accountModels.Count is 0) return NotFound("No accounts were found,");
@@ -103,7 +104,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
     }
 
     [HttpDelete("delete")]
-    public async Task<IActionResult> DeleteAccounts([FromQuery] string[] id)
+    public async Task<IActionResult> DeleteAccounts([FromBody] string[] id)
     {
         if (id.Length is 0) return BadRequest();
         var res = await accountService.DeleteAccounts(id);
