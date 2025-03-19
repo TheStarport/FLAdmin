@@ -15,7 +15,7 @@ public static class ResultExtensions
             ? value.ToString()
             : attribute.Description;
     }
-    
+
     public static IActionResult ParseError(this FLAdminError error, ControllerBase controller)
     {
         return error switch

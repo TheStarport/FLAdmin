@@ -94,7 +94,7 @@ public enum FLAdminError
 
     [Description("FlHook encountered an error.")]
     FlHookHttpError,
-    
+
     [Description("FlHook is failing to respond and likely frozen.")]
-    FlHookFailedToRespond,
+    FlHookFailedToRespond
 }

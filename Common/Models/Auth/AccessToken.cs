@@ -11,5 +11,5 @@ public class AccessToken
 
     public string Token { get; set; }
     public string UserName { get; set; }
-    List<Role> Roles { get; set; }
+    private List<Role> Roles { get; set; }
 }

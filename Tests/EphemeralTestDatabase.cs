@@ -1,28 +1,21 @@
-using System.Security.Cryptography;
-using Bogus;
 using EphemeralMongo;
 using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
-using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Logic.DataAccess;
-using FlAdmin.Service.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
-using MongoDB.Bson;
 using MongoDB.Driver;
-using Encoding = System.Text.Encoding;
-
 
 namespace FlAdmin.Tests;
 
 public class EphemeralTestDatabase : IDisposable
 {
     private const int Port = 12345;
+    private readonly IFreelancerDataProvider _freelancerDataProvider;
+    private readonly IMongoRunner _mongoRunner;
 
     public readonly FlAdminConfig Config;
     public readonly IDatabaseAccess DatabaseAccess;
-    private readonly IMongoRunner _mongoRunner;
-    private readonly IFreelancerDataProvider _freelancerDataProvider;
 
     public EphemeralTestDatabase()
     {
@@ -55,7 +48,7 @@ public class EphemeralTestDatabase : IDisposable
         var accountCollection = database.GetCollection<Account>(Config.Mongo.AccountCollectionName);
         var characterCollection = database.GetCollection<Character>(Config.Mongo.CharacterCollectionName);
 
-        var indexOptions = new CreateIndexOptions {Unique = true};
+        var indexOptions = new CreateIndexOptions { Unique = true };
         var indexModel =
             new CreateIndexModel<Character>(Builders<Character>.IndexKeys.Ascending(x => x.CharacterName),
                 indexOptions);
@@ -81,5 +74,4 @@ public class EphemeralTestDatabase : IDisposable
         _mongoRunner.Dispose();
         Directory.Delete("./TestData", true);
     }
-    
 }

@@ -11,14 +11,19 @@ namespace FlAdmin.Tests;
 [Collection("DatabaseTests")]
 public class CharacterDataAccessTests : IDisposable
 {
-    private readonly EphemeralTestDatabase _fixture;
     private readonly ICharacterDataAccess _characterDataAccess;
+    private readonly EphemeralTestDatabase _fixture;
 
     public CharacterDataAccessTests()
     {
         _fixture = new EphemeralTestDatabase();
         _characterDataAccess = new CharacterDataAccess(_fixture.DatabaseAccess, _fixture.Config,
             new NullLogger<CharacterDataAccess>());
+    }
+
+    public void Dispose()
+    {
+        _fixture.Dispose();
     }
 
     [Fact]
@@ -60,7 +65,7 @@ public class CharacterDataAccessTests : IDisposable
     [Fact]
     public async Task When_Updating_Valid_Character_Should_Not_Return_Error()
     {
-        var testCharacter = new Character()
+        var testCharacter = new Character
         {
             CharacterName = "Chad_Games",
             Id = new ObjectId("65d3abc10f019879e20193d2"),
@@ -75,7 +80,7 @@ public class CharacterDataAccessTests : IDisposable
     [Fact]
     public async Task When_Updating_Character_Name_To_Pre_Existing_Name_Should_Return_Character_Already_Exists()
     {
-        var testCharacter = new Character()
+        var testCharacter = new Character
         {
             CharacterName = "Mr_Trent",
             Id = new ObjectId("65d3abc10f019879e20193d2"),
@@ -86,7 +91,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.UpdateCharacter(testCharacter.ToBsonDocument());
 
         result.Match(
-            Some: x => x == FLAdminError.CharacterNameIsTaken,
+            x => x == FLAdminError.CharacterNameIsTaken,
             false
         ).Should().BeTrue();
     }
@@ -94,7 +99,7 @@ public class CharacterDataAccessTests : IDisposable
     [Fact]
     public async Task When_Updating_Non_Existent_Character_Should_Return_Character_Not_Found()
     {
-        var testCharacter = new Character()
+        var testCharacter = new Character
         {
             CharacterName = "Not_Chad_Games",
             Id = new ObjectId("65d3abc10f019879e20193d3"),
@@ -104,7 +109,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.UpdateCharacter(testCharacter.ToBsonDocument());
 
         result.Match(
-            Some: x => x == FLAdminError.CharacterNotFound,
+            x => x == FLAdminError.CharacterNotFound,
             false
         ).Should().BeTrue();
     }
@@ -112,7 +117,7 @@ public class CharacterDataAccessTests : IDisposable
     [Fact]
     public async Task When_Attempting_To_Update_With_Malformed_Bson_Document_Should_Character_Id_Is_Null()
     {
-        var testCharacter = new Character()
+        var testCharacter = new Character
         {
             CharacterName = "Not_Chad_Games",
             Id = new ObjectId("65d3abc10f019879e20193d2"),
@@ -125,7 +130,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.UpdateCharacter(testDoc);
 
         result.Match(
-            Some: x => x == FLAdminError.CharacterIdIsNull,
+            x => x == FLAdminError.CharacterIdIsNull,
             false
         ).Should().BeTrue();
     }
@@ -144,7 +149,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.DeleteCharacters("Not_Chad_Games");
 
         result.Match(
-            Some: x => x == FLAdminError.CharacterNotFound,
+            x => x == FLAdminError.CharacterNotFound,
             false
         ).Should().BeTrue();
     }
@@ -155,7 +160,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.DeleteCharacters("Chad_Games", "Not_Chad_Games");
 
         result.Match(
-            Some: x => x == FLAdminError.CharacterNotFound,
+            x => x == FLAdminError.CharacterNotFound,
             false
         ).Should().BeTrue();
     }
@@ -163,7 +168,7 @@ public class CharacterDataAccessTests : IDisposable
     [Fact]
     public async Task When_Creating_Character_Should_Not_Error()
     {
-        var testCharacter = new Character()
+        var testCharacter = new Character
         {
             CharacterName = "Chad_Games_Jr",
             Id = ObjectId.GenerateNewId(),
@@ -178,7 +183,7 @@ public class CharacterDataAccessTests : IDisposable
     [Fact]
     public async Task When_Creating_Character_With_Same_Name_Should_Return_Character_Already_Exists()
     {
-        var testCharacter = new Character()
+        var testCharacter = new Character
         {
             CharacterName = "Chad_Games",
             Id = ObjectId.GenerateNewId(),
@@ -188,7 +193,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.CreateCharacters(testCharacter);
 
         result.Match(
-            Some: x => x == FLAdminError.CharacterAlreadyExists,
+            x => x == FLAdminError.CharacterAlreadyExists,
             false
         ).Should().BeTrue();
     }
@@ -207,7 +212,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.CreateFieldOnCharacter("Chad_Games", "money", 1234567);
 
         result.Match(
-            Some: x => x == FLAdminError.CharacterFieldAlreadyExists,
+            x => x == FLAdminError.CharacterFieldAlreadyExists,
             false
         ).Should().BeTrue();
     }
@@ -218,17 +223,17 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.CreateFieldOnCharacter("Not_Chad_Games", "someFactor", 1234567);
 
         result.Match(
-            Some: x => x == FLAdminError.CharacterNotFound,
+            x => x == FLAdminError.CharacterNotFound,
             false
         ).Should().BeTrue();
     }
 
 
-[Fact]
+    [Fact]
     public async Task When_Deleting_Existing_Field_Should_Succeed()
     {
         var result = await _characterDataAccess.RemoveFieldOnCharacter("Chad_Games", "money");
-        
+
         result.IsNone.Should().BeTrue();
     }
 
@@ -236,9 +241,9 @@ public class CharacterDataAccessTests : IDisposable
     public async Task When_Deleting_Non_Existing_Field_Should_Return_Field_Does_Not_Exist()
     {
         var result = await _characterDataAccess.RemoveFieldOnCharacter("Chad_Games", "garg");
-        
+
         result.Match(
-            Some: x => x == FLAdminError.CharacterFieldDoesNotExist,
+            x => x == FLAdminError.CharacterFieldDoesNotExist,
             false
         ).Should().BeTrue();
     }
@@ -247,22 +252,21 @@ public class CharacterDataAccessTests : IDisposable
     public async Task When_Deleting_Name_Should_Return_Character_Field_Is_Protected()
     {
         var result = await _characterDataAccess.RemoveFieldOnCharacter("Chad_Games", "characterName");
-        
+
         result.Match(
-            Some: x => x == FLAdminError.CharacterFieldIsProtected,
+            x => x == FLAdminError.CharacterFieldIsProtected,
             false
         ).Should().BeTrue();
     }
 
     [Fact]
-
     public async Task
         When_Attempting_To_Delete_Field_From_Non_Existing_Character_Should_Return_Character_Not_Found()
     {
         var result = await _characterDataAccess.RemoveFieldOnCharacter("Not_Chad_Games", "money");
-        
+
         result.Match(
-            Some: x => x == FLAdminError.CharacterNotFound,
+            x => x == FLAdminError.CharacterNotFound,
             false
         ).Should().BeTrue();
     }
@@ -271,7 +275,7 @@ public class CharacterDataAccessTests : IDisposable
     public async Task When_Updating_Field_Should_Succeed()
     {
         var result = await _characterDataAccess.UpdateFieldOnCharacter("Chad_Games", "money", 1234567);
-        
+
         result.IsNone.Should().BeTrue();
     }
 
@@ -279,9 +283,9 @@ public class CharacterDataAccessTests : IDisposable
     public async Task When_Updating_Field_With_Wrong_Type_Should_Return_Element_Type_Mismatch()
     {
         var result = await _characterDataAccess.UpdateFieldOnCharacter("Chad_Games", "money", "1234567");
-        
+
         result.Match(
-            Some: x => x == FLAdminError.CharacterElementTypeMismatch,
+            x => x == FLAdminError.CharacterElementTypeMismatch,
             false
         ).Should().BeTrue();
     }
@@ -290,9 +294,9 @@ public class CharacterDataAccessTests : IDisposable
     public async Task When_Attempting_To_Update_Id_Should_Return_Field_Is_Protected()
     {
         var result = await _characterDataAccess.UpdateFieldOnCharacter("Chad_Games", "_id", ObjectId.GenerateNewId());
-        
+
         result.Match(
-            Some: x => x == FLAdminError.CharacterFieldIsProtected,
+            x => x == FLAdminError.CharacterFieldIsProtected,
             false
         ).Should().BeTrue();
     }
@@ -301,37 +305,32 @@ public class CharacterDataAccessTests : IDisposable
     public async Task When_Attempting_To_Update_Name_To_A_Taken_Name_Should_Return_Name_Is_Taken()
     {
         var result = await _characterDataAccess.UpdateFieldOnCharacter("Chad_Games", "characterName", "Mr_Trent");
-        
+
         result.Match(
-            Some: x => x == FLAdminError.CharacterNameIsTaken,
+            x => x == FLAdminError.CharacterNameIsTaken,
             false
         ).Should().BeTrue();
     }
 
     [Fact]
     public async Task When_Attempting_To_Update_Non_Existing_Field_Should_Return_Field_Does_Not_Exist()
-    { 
+    {
         var result = await _characterDataAccess.UpdateFieldOnCharacter("Chad_Games", "gagdr", 1234567);
 
         result.Match(
-            Some: x => x == FLAdminError.CharacterFieldDoesNotExist,
+            x => x == FLAdminError.CharacterFieldDoesNotExist,
             false
         ).Should().BeTrue();
     }
-    
+
     [Fact]
     public async Task When_Attempting_To_Update_Field_On_Nonexistent_Character_Should_Return_Character_Not_Found()
     {
         var result = await _characterDataAccess.UpdateFieldOnCharacter("Not_Chad_Games", "money", 1234567);
 
         result.Match(
-            Some: x => x == FLAdminError.CharacterNotFound,
+            x => x == FLAdminError.CharacterNotFound,
             false
         ).Should().BeTrue();
-    }
-    
-    public void Dispose()
-    {
-        _fixture.Dispose();
     }
 }

@@ -11,7 +11,7 @@ public class Character
     [BsonElement("accountId")] public string AccountId { get; set; }
 
     [BsonElement("characterName")] public required string CharacterName { get; set; }
-    
+
     [BsonElement("money")] public int Money { get; set; }
 
     [BsonElement("rank")] public int Rank { get; set; }

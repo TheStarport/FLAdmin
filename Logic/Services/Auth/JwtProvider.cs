@@ -15,7 +15,7 @@ public class JwtProvider(IKeyProvider keyProvider) : IJwtProvider
         // Verification
         var tokenValidationParameters = new TokenValidationParameters
         {
-            ValidIssuers = new[] {"FLAdmin"},
+            ValidIssuers = new[] { "FLAdmin" },
             IssuerSigningKey = new SymmetricSecurityKey(signingKey),
             TokenDecryptionKey = new SymmetricSecurityKey(encryptionKey),
             ValidateAudience = false

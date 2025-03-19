@@ -52,7 +52,7 @@ public static class HelperFunctions
             Id = "abc123456",
             Username = "SuperAdmin",
             PasswordHash = PasswordTestHasher("SuperAdmin", "SuperAdmin Password"),
-            WebRoles = {Role.SuperAdmin.GetEnumDescription()},
+            WebRoles = { Role.SuperAdmin.GetEnumDescription() },
             Salt = TestSalter("SuperAdmin")
         };
 
@@ -80,10 +80,10 @@ public static class HelperFunctions
         var validCharacterGenerator = new Faker<Character>()
             .RuleFor(x => x.CharacterName, _ => Guid.NewGuid().ToString())
             .RuleFor(x => x.Id, _ => ObjectId.GenerateNewId())
-            .RuleFor(x => x.Money, f => f.Random.Int(0, Int32.MaxValue - 1));
+            .RuleFor(x => x.Money, f => f.Random.Int(0, int.MaxValue - 1));
 
 
-        var fixedCharacter = new Character()
+        var fixedCharacter = new Character
         {
             CharacterName = "Chad_Games",
             Id = new ObjectId("65d3abc10f019879e20193d2"),
@@ -91,7 +91,7 @@ public static class HelperFunctions
             AccountId = "123abc456"
         };
 
-        var fixedCharacter2 = new Character()
+        var fixedCharacter2 = new Character
         {
             CharacterName = "Mr_Trent",
             Id = new ObjectId("65d3fde10f019879e20193d2"),
@@ -150,7 +150,7 @@ public static class HelperFunctions
             Id = "abc123456",
             Username = "SuperAdmin",
             PasswordHash = PasswordTestHasher("SuperAdmin", "SuperAdmin Password"),
-            WebRoles = {Role.SuperAdmin.GetEnumDescription()},
+            WebRoles = { Role.SuperAdmin.GetEnumDescription() },
             Salt = TestSalter("SuperAdmin")
         };
 
@@ -173,7 +173,7 @@ public static class HelperFunctions
         var characterIndex = 0;
         foreach (var acc in testAccounts)
         {
-            int numOfCharactersForAccount = Random.Shared.Next(1, 4);
+            var numOfCharactersForAccount = Random.Shared.Next(1, 4);
             for (var i = characterIndex; i < numOfCharactersForAccount + characterIndex; i++)
             {
                 characters[i].AccountId = acc.Id;
@@ -192,14 +192,11 @@ public static class HelperFunctions
         return testAccounts;
     }
 
-    public static System.Collections.Generic.HashSet<string> GenerateRandomWebRoles(string? username)
+    public static HashSet<string> GenerateRandomWebRoles(string? username)
     {
-        if (username is null)
-        {
-            return new System.Collections.Generic.HashSet<string>();
-        }
+        if (username is null) return new HashSet<string>();
 
-        Role[] roles = {Role.Web, Role.ManageAccounts, Role.ManageAdmins, Role.ManageRoles, Role.ManageAutomation};
+        Role[] roles = { Role.Web, Role.ManageAccounts, Role.ManageAdmins, Role.ManageRoles, Role.ManageAutomation };
         var roleNames = new List<string>();
 
         var rnd = new Random();
@@ -216,10 +213,7 @@ public static class HelperFunctions
 
     public static string? PasswordTestHasher(string? username, string password)
     {
-        if (username is null)
-        {
-            return null;
-        }
+        if (username is null) return null;
 
         //Using an old obsolete hashing algorithm since this is just test data. 
         using HashAlgorithm algorithm = SHA1.Create();
@@ -231,8 +225,8 @@ public static class HelperFunctions
     {
         if (username is null) return null;
 
-        Random rnd = new Random();
-        byte[] b = new byte[32];
+        var rnd = new Random();
+        var b = new byte[32];
         rnd.NextBytes(b);
         return b;
     }

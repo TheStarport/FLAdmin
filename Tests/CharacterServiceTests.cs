@@ -1,6 +1,5 @@
 using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
-using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
 using FlAdmin.Logic.Services.Database;
@@ -90,8 +89,8 @@ public class CharacterServiceTests
         var result = await _characterService.RenameCharacter("Chad_Games", "Mr_Trent");
 
         result.Match(
-            Some: err => err == FLAdminError.CharacterNameIsTaken,
-            None: false
+            err => err == FLAdminError.CharacterNameIsTaken,
+            false
         ).Should().BeTrue();
     }
 
@@ -101,8 +100,8 @@ public class CharacterServiceTests
         var result = await _characterService.RenameCharacter("Not_Chad_Games", "More_Not_Chad_Games");
 
         result.Match(
-            Some: err => err == FLAdminError.CharacterNotFound,
-            None: false
+            err => err == FLAdminError.CharacterNotFound,
+            false
         ).Should().BeTrue();
     }
 
@@ -121,8 +120,8 @@ public class CharacterServiceTests
         var result = await _characterService.MoveCharacter("Chad_Games", "123");
 
         result.Match(
-            Some: err => err == FLAdminError.AccountNotFound,
-            None: false
+            err => err == FLAdminError.AccountNotFound,
+            false
         ).Should().BeTrue();
     }
 
@@ -132,8 +131,8 @@ public class CharacterServiceTests
         var result = await _characterService.MoveCharacter("Not_Chad_Games", "abc123456");
 
         result.Match(
-            Some: err => err == FLAdminError.CharacterNotFound,
-            None: false
+            err => err == FLAdminError.CharacterNotFound,
+            false
         ).Should().BeTrue();
     }
 }

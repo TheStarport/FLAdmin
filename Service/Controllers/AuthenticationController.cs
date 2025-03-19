@@ -21,8 +21,8 @@ public class AuthenticationController(
     {
         var token = await authService.Authenticate(login.Username, login.Password);
         return token.Match<IActionResult>(
-            Some: response => Ok(response),
-            None: () => Unauthorized("Invalid username or password.")
+            response => Ok(response),
+            () => Unauthorized("Invalid username or password.")
         );
     }
 
@@ -37,11 +37,11 @@ public class AuthenticationController(
             Username = username,
             Password = password
         };
-        
+
         var res = await accountService.CreateWebMaster(login);
         return res.Match<IActionResult>(
-            Some: err => err.ParseError(this),
-            None: Ok("SuperAdmin successfully created.")
+            err => err.ParseError(this),
+            Ok("SuperAdmin successfully created.")
         );
     }
 

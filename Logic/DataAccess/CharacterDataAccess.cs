@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Linq.Expressions;
 using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
@@ -18,9 +17,10 @@ public class CharacterDataAccess(
     ILogger<CharacterDataAccess> logger)
     : ICharacterDataAccess
 {
-    private readonly MongoClient _client = databaseAccess.GetClient();
     private readonly IMongoCollection<Character> _characters =
         databaseAccess.GetCollection<Character>(config.Mongo.CharacterCollectionName);
+
+    private readonly MongoClient _client = databaseAccess.GetClient();
 
     public async Task<Option<FLAdminError>> CreateCharacters(params Character[] characters)
     {
@@ -33,7 +33,6 @@ public class CharacterDataAccess(
         catch (MongoException ex)
         {
             if (ex is MongoBulkWriteException wx)
-            {
                 if (wx.WriteErrors.Count is not 0)
                 {
                     var writeError = wx.WriteErrors[0];
@@ -45,7 +44,6 @@ public class CharacterDataAccess(
                         return FLAdminError.CharacterAlreadyExists;
                     }
                 }
-            }
 
             logger.LogError(ex,
                 "Encountered unexpected mongo database error when attempting to add a character to the database.");
@@ -60,9 +58,9 @@ public class CharacterDataAccess(
         {
             var characterId = character.GetValue("_id").AsObjectId;
             var filter = Builders<Character>.Filter.Eq(a => a.Id, characterId);
-            var updateDoc = new BsonDocument()
+            var updateDoc = new BsonDocument
             {
-                {"$set", character}
+                { "$set", character }
             };
 
             var result = await _characters.UpdateOneAsync(filter, updateDoc);
@@ -72,11 +70,9 @@ public class CharacterDataAccess(
         catch (MongoWriteException ex)
         {
             if (ex.InnerException is MongoBulkWriteException wx)
-            {
-                return wx.WriteErrors[0].Code is (int) MongoErrorCodes.DuplicateKey
+                return wx.WriteErrors[0].Code is (int)MongoErrorCodes.DuplicateKey
                     ? FLAdminError.CharacterNameIsTaken
                     : FLAdminError.DatabaseError;
-            }
 
             return FLAdminError.DatabaseError;
         }
@@ -118,21 +114,12 @@ public class CharacterDataAccess(
         {
             var charDocRes = await GetCharacterBsonDocument(characterName);
 
-            if (charDocRes.IsNone)
-            {
-                return FLAdminError.CharacterNotFound;
-            }
+            if (charDocRes.IsNone) return FLAdminError.CharacterNotFound;
 
             var charDoc = charDocRes.Match<BsonDocument>(
-                Some: bs => bs,
+                bs => bs,
                 null! as BsonDocument
             );
-
-            if (charDoc is null)
-            {
-                logger.LogWarning("Character {characterName} not found", characterName);
-                return FLAdminError.CharacterNotFound;
-            }
 
             return BsonSerializer.Deserialize<Character>(charDoc);
         }
@@ -153,35 +140,23 @@ public class CharacterDataAccess(
         {
             var charDocRes = await GetCharacterBsonDocument(character);
 
-            if (charDocRes.IsNone)
-            {
-                return FLAdminError.CharacterNotFound;
-            }
+            if (charDocRes.IsNone) return FLAdminError.CharacterNotFound;
 
             var charDoc = charDocRes.Match<BsonDocument>(
-                Some: bs => bs,
+                bs => bs,
                 null! as BsonDocument
             );
 
             BsonElement keyValuePair;
             if (typeof(T) == typeof(int))
-            {
                 keyValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
-            }
             else if (typeof(T) == typeof(float))
-            {
                 keyValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToDouble());
-            }
             else
-            {
                 keyValuePair = new BsonElement(fieldName, BsonValue.Create(value));
-            }
 
             charDoc.TryGetValue(fieldName, out var existCheck);
-            if (existCheck is not null)
-            {
-                return FLAdminError.CharacterFieldAlreadyExists;
-            }
+            if (existCheck is not null) return FLAdminError.CharacterFieldAlreadyExists;
 
             charDoc.Add(keyValuePair);
             var charObj = BsonSerializer.Deserialize<Character>(charDoc);
@@ -209,55 +184,36 @@ public class CharacterDataAccess(
         string fieldName,
         T value)
     {
-        if (fieldName == "_id")
-        {
-            return FLAdminError.CharacterFieldIsProtected;
-        }
+        if (fieldName == "_id") return FLAdminError.CharacterFieldIsProtected;
 
         using var session = await _client.StartSessionAsync();
         try
         {
             var charDocRes = await GetCharacterBsonDocument(character);
 
-            if (charDocRes.IsNone)
-            {
-                return FLAdminError.CharacterNotFound;
-            }
+            if (charDocRes.IsNone) return FLAdminError.CharacterNotFound;
 
             var charDoc = charDocRes.Match<BsonDocument>(
-                Some: bs => bs,
+                bs => bs,
                 null! as BsonDocument
             );
 
-            if (charDoc[fieldName] is null)
-            {
-                return FLAdminError.CharacterFieldDoesNotExist;
-            }
+            if (charDoc[fieldName] is null) return FLAdminError.CharacterFieldDoesNotExist;
 
             BsonElement newValuePair;
             if (typeof(T) == typeof(int))
-            {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt32());
-            }
             else if (typeof(T) == typeof(float))
-            {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToDouble());
-            }
             else if (typeof(T) == typeof(long))
-            {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
-            }
             else
-            {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value));
-            }
 
             var oldValuePair = charDoc.Elements.FirstOrDefault(field => field.Name == newValuePair.Name);
-            
+
             if (oldValuePair.Value.GetType() != newValuePair.Value.GetType())
-            {
                 return FLAdminError.CharacterElementTypeMismatch;
-            }
 
             charDoc[newValuePair.Name] = newValuePair.Value;
 
@@ -276,11 +232,9 @@ public class CharacterDataAccess(
         catch (MongoWriteException ex)
         {
             if (ex.InnerException is MongoBulkWriteException wx)
-            {
-                return wx.WriteErrors[0].Code is (int) MongoErrorCodes.DuplicateKey
+                return wx.WriteErrors[0].Code is (int)MongoErrorCodes.DuplicateKey
                     ? FLAdminError.CharacterNameIsTaken
                     : FLAdminError.DatabaseError;
-            }
 
             return FLAdminError.DatabaseError;
         }
@@ -304,23 +258,17 @@ public class CharacterDataAccess(
         string fieldName)
     {
         //We only protect against these two as they are both indexed, other fields should be protected at the service layer
-        if (fieldName is "_id" or "characterName")
-        {
-            return FLAdminError.CharacterFieldIsProtected;
-        }
+        if (fieldName is "_id" or "characterName") return FLAdminError.CharacterFieldIsProtected;
 
         using var session = await _client.StartSessionAsync();
         try
         {
             var charDocRes = await GetCharacterBsonDocument(character);
 
-            if (charDocRes.IsNone)
-            {
-                return FLAdminError.CharacterNotFound;
-            }
+            if (charDocRes.IsNone) return FLAdminError.CharacterNotFound;
 
             var charDoc = charDocRes.Match<BsonDocument>(
-                Some: bs => bs,
+                bs => bs,
                 null! as BsonDocument
             );
 
@@ -380,12 +328,12 @@ public class CharacterDataAccess(
     private async Task<Option<BsonDocument>> GetCharacterBsonDocument(Either<ObjectId, string> character)
     {
         return await character.MatchAsync(
-            RightAsync: async x =>
+            async x =>
             {
                 var doc = (await _characters.FindAsync(ch => ch.CharacterName == x)).FirstOrDefault();
                 return doc is null ? new Option<BsonDocument>() : doc.ToBsonDocument();
             },
-            LeftAsync: async x =>
+            async x =>
             {
                 var doc = (await _characters.FindAsync(ch => ch.Id == x)).FirstOrDefault();
                 return doc is null ? new Option<BsonDocument>() : doc.ToBsonDocument();

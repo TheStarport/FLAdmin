@@ -14,6 +14,6 @@ public class OnlinePlayer
 public class OnlinePlayerPayload
 {
     [BsonElement("players")] public required List<OnlinePlayer> OnlinePlayers { get; set; }
-    [BsonElement("memUsage")] long MemoryUsage { get; set; }
-    [BsonElement("npcsEnabled")] bool NpcsEnabled { get; set; }
+    [BsonElement("memUsage")] private long MemoryUsage { get; set; }
+    [BsonElement("npcsEnabled")] private bool NpcsEnabled { get; set; }
 }

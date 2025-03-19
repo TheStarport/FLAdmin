@@ -45,7 +45,7 @@ builder.Services.AddSingleton<FlAdminConfig>();
 builder.Services.AddSingleton<IDatabaseAccess, MongoDatabaseAccess>();
 builder.Services.AddSingleton<IAccountDataAccess, AccountDataAccess>();
 builder.Services.AddSingleton<ICharacterDataAccess, CharacterDataAccess>();
-builder.Services.AddSingleton<IFreelancerDataProvider,FreelancerDataProvider>();
+builder.Services.AddSingleton<IFreelancerDataProvider, FreelancerDataProvider>();
 
 //Authentication
 builder.Services.AddSingleton<IKeyProvider, KeyProvider>(_ => keyProvider);
@@ -56,7 +56,7 @@ builder.Services.AddSingleton<IValidationService, ValidationService>();
 builder.Services.AddSingleton<IAccountService, AccountService>();
 builder.Services.AddSingleton<ICharacterService, CharacterService>();
 builder.Services.AddSingleton<IAuthService, AuthService>();
-builder.Services.AddSingleton<IFlHookService,FlHookService>();
+builder.Services.AddSingleton<IFlHookService, FlHookService>();
 
 //Background Services
 builder.Services.AddHostedService<FlServerManager>();
@@ -68,16 +68,14 @@ builder.Host.UseSerilog((_, lc) =>
 {
     lc.Enrich.FromLogContext();
     if (config.Logging.LoggingLocation == LoggingLocation.Console)
-    {
         lc.WriteTo.Console(new CompactJsonFormatter(), LogEventLevel.Information);
-    }
 });
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(swaggerGenOptions =>
 {
-    swaggerGenOptions.SwaggerDoc("v1", new OpenApiInfo() { Title = "FlAdmin API", Version = "v1" });
+    swaggerGenOptions.SwaggerDoc("v1", new OpenApiInfo { Title = "FlAdmin API", Version = "v1" });
 });
 
 var app = builder.Build();

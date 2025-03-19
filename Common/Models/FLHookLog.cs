@@ -6,20 +6,15 @@ namespace FlAdmin.Common.Models;
 
 public class FLHookLog
 {
-    [JsonPropertyName ("function")]
-    private string _function { get; set; }  = "";
-    
-    [JsonPropertyName ("level")]
-    private FlLogLevel _LogLevel { get; set; }
-    
-    [JsonPropertyName ("valueMap")]
-    private Dictionary<string,string> _valueMap { get; set; } = new Dictionary<string, string>();
-    
-    [JsonPropertyName ("message")]
-    private string _message { get; set; } = "";
-    
-    [JsonPropertyName ("logTime")]
-    private long _logTime;
+    [JsonPropertyName("logTime")] private long _logTime;
+
+    [JsonPropertyName("function")] private string _function { get; set; } = "";
+
+    [JsonPropertyName("level")] private FlLogLevel _LogLevel { get; set; }
+
+    [JsonPropertyName("valueMap")] private Dictionary<string, string> _valueMap { get; set; } = new();
+
+    [JsonPropertyName("message")] private string _message { get; set; } = "";
 
 
     public override string ToString()
@@ -41,7 +36,7 @@ public class FLHookLog
     }
 }
 
-enum FlLogLevel
+internal enum FlLogLevel
 {
     Trace,
     Debug,

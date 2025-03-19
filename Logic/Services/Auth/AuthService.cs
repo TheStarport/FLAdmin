@@ -18,10 +18,7 @@ public class AuthService(IJwtProvider jwtProvider, IAccountService accountServic
             Left: error => new Option<string>(),
             Right: val =>
             {
-                if (!PasswordHasher.VerifyPassword(password, val.PasswordHash!, val.Salt!))
-                {
-                    return new Option<string>();
-                }
+                if (!PasswordHasher.VerifyPassword(password, val.PasswordHash!, val.Salt!)) return new Option<string>();
 
                 var token = jwtProvider.GenerateToken((val.ToClaimsPrincipal().Identity as ClaimsIdentity)!);
                 return token;

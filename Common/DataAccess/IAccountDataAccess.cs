@@ -15,7 +15,7 @@ public interface IAccountDataAccess
     Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(string accountId, string fieldName, T value);
     Task<Option<FLAdminError>> CreateNewFieldOnAccount<T>(string accountId, string fieldName, T value);
     Task<Option<FLAdminError>> RemoveFieldOnAccount(string accountId, string fieldName);
-    
+
     Task<List<Account>> GetAccountsByFilter(Expression<Func<Account, bool>> filter, int page = 1, int pageSize = 100);
     Task<Option<FLAdminError>> ReplaceAccount(Account account);
 }

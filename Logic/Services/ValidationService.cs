@@ -1,37 +1,31 @@
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Services;
+using LibreLancer.Data;
 using Microsoft.Extensions.Logging;
 
 namespace FlAdmin.Logic.Services;
 
 public class ValidationService : IValidationService
 {
-    LibreLancer.Data.FreelancerData _freelancerData;
-    private readonly  ILogger _logger;
+    private readonly ILogger _logger;
+    private FreelancerData _freelancerData;
 
-    public ValidationService(IFreelancerDataProvider freelancerDataProvider,ILogger<IValidationService> logger)
+    public ValidationService(IFreelancerDataProvider freelancerDataProvider, ILogger<IValidationService> logger)
     {
         _logger = logger;
-        
+
         if (freelancerDataProvider.GetFreelancerData() is null)
         {
             logger.LogCritical("No freelancer data available for validation service.");
             throw new Exception("No freelancer data available for validation service.");
         }
-        
+
         _freelancerData = freelancerDataProvider.GetFreelancerData()!;
-        
-      
     }
-    
+
     public bool ValidateCharacter(Character character)
     {
         return true;
     }
-    
-    
-    
-    
-    
 }

@@ -9,7 +9,6 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 
-
 namespace FlAdmin.Logic.DataAccess;
 
 public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig config, ILogger<AccountDataAccess> logger)
@@ -33,7 +32,6 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
             logger.LogError(ex, "Encountered a mongo database issue when adding accounts.");
 
             if (ex is MongoBulkWriteException wx)
-            {
                 if (wx.WriteErrors.Count is not 0)
                 {
                     var writeError = wx.WriteErrors[0];
@@ -44,7 +42,6 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
                         return FLAdminError.AccountIdAlreadyExists;
                     }
                 }
-            }
 
             logger.LogError(ex, "Encountered a mongo database issue when adding accounts.");
             return FLAdminError.DatabaseError;
@@ -61,17 +58,14 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
 
             var filter = Builders<Account>.Filter.Eq(a => a.Id, accountId);
 
-            var updateDoc = new BsonDocument()
+            var updateDoc = new BsonDocument
             {
-                {"$set", account}
+                { "$set", account }
             };
 
             var result = await _accounts.UpdateOneAsync(filter, updateDoc);
 
-            if (result.ModifiedCount is 0)
-            {
-                return FLAdminError.AccountNotFound;
-            }
+            if (result.ModifiedCount is 0) return FLAdminError.AccountNotFound;
 
             return new Option<FLAdminError>();
         }
@@ -92,19 +86,13 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
     {
         using var session = await _client.StartSessionAsync();
 
-        if (ids.Contains("SuperAdmin"))
-        {
-            return FLAdminError.AccountIsProtected;
-        }
+        if (ids.Contains("SuperAdmin")) return FLAdminError.AccountIsProtected;
 
         try
         {
             var result = await _accounts.DeleteManyAsync(account => ids.Contains(account.Id));
 
-            if (result.DeletedCount is 0)
-            {
-                return FLAdminError.AccountNotFound;
-            }
+            if (result.DeletedCount is 0) return FLAdminError.AccountNotFound;
 
             return new Option<FLAdminError>();
         }
@@ -152,37 +140,23 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         {
             BsonElement newValuePair;
             if (typeof(T) == typeof(int))
-            {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
-            }
             else if (typeof(T) == typeof(float))
-            {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToDouble());
-            }
             else
-            {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value));
-            }
 
             var account = (await _accounts.FindAsync(acc => acc.Id == accountId)).FirstOrDefault().ToBsonDocument();
-            if (account is null)
-            {
-                return FLAdminError.AccountNotFound;
-            }
+            if (account is null) return FLAdminError.AccountNotFound;
 
-            if (account[fieldName] is null)
-            {
-                return FLAdminError.AccountFieldDoesNotExist;
-            }
+            if (account[fieldName] is null) return FLAdminError.AccountFieldDoesNotExist;
 
 
             var oldValuePair = account.Elements.FirstOrDefault(field => field.Name == newValuePair.Name);
 
 
             if (oldValuePair.Value.GetType() != newValuePair.Value.GetType())
-            {
                 return FLAdminError.AccountElementTypeMismatch;
-            }
 
             account[newValuePair.Name] = newValuePair.Value;
 
@@ -221,29 +195,17 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         {
             BsonElement keyValuePair;
             if (typeof(T) == typeof(int))
-            {
                 keyValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
-            }
             else if (typeof(T) == typeof(float))
-            {
                 keyValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToDouble());
-            }
             else
-            {
                 keyValuePair = new BsonElement(fieldName, BsonValue.Create(value));
-            }
 
             var account = (await _accounts.FindAsync(acc => acc.Id == accountId)).FirstOrDefault().ToBsonDocument();
-            if (account is null)
-            {
-                return FLAdminError.AccountNotFound;
-            }
+            if (account is null) return FLAdminError.AccountNotFound;
 
             account.TryGetValue(fieldName, out var val);
-            if (val is not null)
-            {
-                return FLAdminError.AccountFieldAlreadyExists;
-            }
+            if (val is not null) return FLAdminError.AccountFieldAlreadyExists;
 
             account.Add(keyValuePair);
 
@@ -281,23 +243,14 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         try
         {
             var account = (await _accounts.FindAsync(acc => acc.Id == accountId)).FirstOrDefault().ToBsonDocument();
-            if (account is null)
-            {
-                return FLAdminError.AccountNotFound;
-            }
+            if (account is null) return FLAdminError.AccountNotFound;
 
-            if (account[fieldName] is null)
-            {
-                return FLAdminError.AccountFieldDoesNotExist;
-            }
+            if (account[fieldName] is null) return FLAdminError.AccountFieldDoesNotExist;
 
             account.Remove(fieldName);
             var accObj = BsonSerializer.Deserialize<Account>(account);
             var result = await _accounts.ReplaceOneAsync(acc => acc.Id == accountId, accObj);
-            if (result.ModifiedCount is 0)
-            {
-                return FLAdminError.DatabaseError;
-            }
+            if (result.ModifiedCount is 0) return FLAdminError.DatabaseError;
 
             return new Option<FLAdminError>();
         }

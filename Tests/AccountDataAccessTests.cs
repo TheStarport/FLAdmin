@@ -11,14 +11,20 @@ namespace FlAdmin.Tests;
 [Collection("DatabaseTests")]
 public class AccountDataAccessTests : IDisposable
 {
-    private readonly EphemeralTestDatabase _fixture;
     private readonly IAccountDataAccess _accountDataAccess;
+    private readonly EphemeralTestDatabase _fixture;
 
     public AccountDataAccessTests()
     {
         _fixture = new EphemeralTestDatabase();
         _accountDataAccess =
             new AccountDataAccess(_fixture.DatabaseAccess, _fixture.Config, new NullLogger<AccountDataAccess>());
+    }
+
+
+    public void Dispose()
+    {
+        _fixture.Dispose();
     }
 
     [Fact]
@@ -65,7 +71,7 @@ public class AccountDataAccessTests : IDisposable
     [Fact]
     public async Task When_Creating_Account_With_Valid_Id_Should_Be_Created_Successfully()
     {
-        var account = new Account()
+        var account = new Account
         {
             Id = "123abc"
         };
@@ -78,7 +84,7 @@ public class AccountDataAccessTests : IDisposable
     [Fact]
     public async Task When_Adding_Duplicate_Account_Should_Return_AccountId_Already_Exists()
     {
-        var account = new Account()
+        var account = new Account
         {
             Id = "123abc456"
         };
@@ -91,7 +97,7 @@ public class AccountDataAccessTests : IDisposable
     [Fact]
     public async Task When_Updating_Valid_Account_Should_Update_Successfully()
     {
-        var account = new Account()
+        var account = new Account
         {
             Id = "123abc456",
             Cash = 1235
@@ -105,7 +111,7 @@ public class AccountDataAccessTests : IDisposable
     [Fact]
     public async Task When_Updating_Non_Existing_Account_Should_Return_Account_Not_Found()
     {
-        var account = new Account()
+        var account = new Account
         {
             Id = "123",
             Cash = 1235
@@ -237,11 +243,5 @@ public class AccountDataAccessTests : IDisposable
             await _accountDataAccess.UpdateFieldOnAccount("123abc456", "characters", new List<int> {123, 456});
 
       //  result.Match(err => err == FLAdminError.AccountElementTypeMismatch, false).Should().BeTrue();*/
-    }
-
-
-    public void Dispose()
-    {
-        _fixture.Dispose();
     }
 }

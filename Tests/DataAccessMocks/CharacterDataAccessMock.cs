@@ -9,8 +9,8 @@ namespace FlAdmin.Tests.DataAccessMocks;
 
 public class CharacterDataAccessMock : ICharacterDataAccess
 {
-    private readonly List<Character> _characters;
     private readonly List<Account> _accounts;
+    private readonly List<Character> _characters;
 
     public CharacterDataAccessMock()
     {
@@ -31,34 +31,25 @@ public class CharacterDataAccessMock : ICharacterDataAccess
 
     public async Task<Option<FLAdminError>> UpdateCharacter(BsonDocument character)
     {
-        if (!character.TryGetValue("_id", out var id))
-        {
-            return FLAdminError.CharacterIdIsNull;
-        }
+        if (!character.TryGetValue("_id", out var id)) return FLAdminError.CharacterIdIsNull;
 
         if (character.TryGetValue("characterName", out var name))
-        {
             if (name == "Mr_Trent" || name == "Chad_Games")
-            {
                 return FLAdminError.CharacterNameIsTaken;
-            }
-        }
 
         return new Option<FLAdminError>();
     }
 
     public async Task<Option<FLAdminError>> DeleteCharacters(params string[] characters)
     {
-        bool found = false;
+        var found = false;
 
         foreach (var ch in characters)
-        {
             if (_characters.Any(c => c.CharacterName == ch))
             {
                 found = true;
                 break;
             }
-        }
 
         return !found ? FLAdminError.CharacterNotFound : new Option<FLAdminError>();
     }
@@ -84,10 +75,7 @@ public class CharacterDataAccessMock : ICharacterDataAccess
             Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch); },
             Right: ch => { return _characters.FirstOrDefault(x => x.CharacterName == ch); }
         );
-        if (val is null)
-        {
-            return FLAdminError.CharacterNotFound;
-        }
+        if (val is null) return FLAdminError.CharacterNotFound;
 
         return fieldName is "_id" or "characterName" or "money"
             ? FLAdminError.CharacterFieldAlreadyExists
@@ -102,23 +90,14 @@ public class CharacterDataAccessMock : ICharacterDataAccess
             Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch); },
             Right: ch => { return _characters.FirstOrDefault(x => x.CharacterName == ch); }
         );
-        if (val is null)
-        {
-            return FLAdminError.CharacterNotFound;
-        }
+        if (val is null) return FLAdminError.CharacterNotFound;
 
         if (fieldName != "characterName" && fieldName != "money" && fieldName != "accountId")
-        {
             return FLAdminError.CharacterFieldDoesNotExist;
-        }
 
         if (fieldName == "characterName")
-        {
             if (value as string is "Mr_Trent" or "Chad_Games")
-            {
                 return FLAdminError.CharacterNameIsTaken;
-            }
-        }
 
         return new Option<FLAdminError>();
     }
@@ -129,15 +108,12 @@ public class CharacterDataAccessMock : ICharacterDataAccess
             Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch); },
             Right: ch => { return _characters.FirstOrDefault(x => x.CharacterName == ch); }
         );
-        if (val is null)
-        {
-            return FLAdminError.CharacterNotFound;
-        }
+        if (val is null) return FLAdminError.CharacterNotFound;
 
         return new Option<FLAdminError>();
     }
 
-    
+
     public async Task<List<Character>> GetCharactersByFilter(Expression<Func<Character, bool>> filter, int page = 1,
         int pageSize = 100)
     {
@@ -145,8 +121,6 @@ public class CharacterDataAccessMock : ICharacterDataAccess
         return _characters.Filter(func).Skip((page - 1) * pageSize).Take(pageSize).ToList();
     }
 
-    
-    
-    
+
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 }

@@ -1,10 +1,8 @@
 using System.Net;
 using System.Numerics;
-using System.Text.Json;
 using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models;
-using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
 using Flurl;
@@ -21,23 +19,20 @@ namespace FlAdmin.Logic.Services;
 public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, IFreelancerDataProvider fldata)
     : IFlHookService
 {
-    ILogger<FlHookService> _logger = logger;
     private readonly string _flHookUrl = config.FlHook.HttpUrl + config.Server.Port;
-    FreelancerData _freelancerData = fldata.GetFreelancerData()!;
+    private readonly ILogger<FlHookService> _logger = logger;
+    private FreelancerData _freelancerData = fldata.GetFreelancerData()!;
 
 
     public async Task<Option<FLAdminError>> PingFlHook()
     {
         try
         {
-            var ping = 
-                 await _flHookUrl.AppendPathSegment(FlHookApiRoutes.Ping)
-                .GetAsync();
+            var ping =
+                await _flHookUrl.AppendPathSegment(FlHookApiRoutes.Ping)
+                    .GetAsync();
 
-            if (ping.StatusCode is (int) HttpStatusCode.OK)
-            {
-                return new Option<FLAdminError>();
-            }
+            if (ping.StatusCode is (int)HttpStatusCode.OK) return new Option<FLAdminError>();
 
             return FLAdminError.FlHookFailedToRespond;
         }
@@ -48,10 +43,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
         catch (FlurlHttpException e)
         {
-            if (e.StatusCode is (int) HttpStatusCode.RequestTimeout or (int) HttpStatusCode.GatewayTimeout)
-            {
+            if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
                 return FLAdminError.FLHookRequestTimeout;
-            }
 
             return FLAdminError.FlHookHttpError;
         }
@@ -69,9 +62,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
 
             var isOnlineBson = BsonSerializer.Deserialize<BsonDocument>(isOnlineBytes);
             if (!isOnlineBson.TryGetValue("isOnline", out var isOnline) || !isOnline.IsBoolean)
-            {
                 return FLAdminError.FlHookHttpError;
-            }
 
             return isOnline.AsBoolean;
         }
@@ -82,10 +73,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
         catch (FlurlHttpException e)
         {
-            if (e.StatusCode is (int) HttpStatusCode.RequestTimeout or (int) HttpStatusCode.GatewayTimeout)
-            {
+            if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
                 return FLAdminError.FLHookRequestTimeout;
-            }
 
             return FLAdminError.FlHookHttpError;
         }
@@ -111,10 +100,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
         catch (FlurlHttpException e)
         {
-            if (e.StatusCode is (int) HttpStatusCode.RequestTimeout or (int) HttpStatusCode.GatewayTimeout)
-            {
+            if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
                 return FLAdminError.FLHookRequestTimeout;
-            }
 
             return FLAdminError.FlHookHttpError;
         }
@@ -140,10 +127,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
         catch (FlurlHttpException e)
         {
-            if (e.StatusCode is (int) HttpStatusCode.RequestTimeout or (int) HttpStatusCode.GatewayTimeout)
-            {
+            if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
                 return FLAdminError.FLHookRequestTimeout;
-            }
 
             return FLAdminError.FlHookHttpError;
         }
@@ -170,10 +155,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
         catch (FlurlHttpException e)
         {
-            if (e.StatusCode is (int) HttpStatusCode.RequestTimeout or (int) HttpStatusCode.GatewayTimeout)
-            {
+            if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
                 return FLAdminError.FLHookRequestTimeout;
-            }
 
             return FLAdminError.FlHookHttpError;
         }
@@ -186,7 +169,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
             var request = new BsonDocument();
 
             var sysId = system.Match(
-                Left: name => unchecked((int) FLHash.CreateID(name)),
+                Left: name => unchecked((int)FLHash.CreateID(name)),
                 Right: id => id
             );
             request.Set("system", sysId);
@@ -200,10 +183,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
         catch (FlurlHttpException e)
         {
-            if (e.StatusCode is (int) HttpStatusCode.RequestTimeout or (int) HttpStatusCode.GatewayTimeout)
-            {
+            if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
                 return FLAdminError.FLHookRequestTimeout;
-            }
 
             return FLAdminError.FlHookHttpError;
         }
@@ -225,10 +206,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
         catch (FlurlHttpException e)
         {
-            if (e.StatusCode is (int) HttpStatusCode.RequestTimeout or (int) HttpStatusCode.GatewayTimeout)
-            {
+            if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
                 return FLAdminError.FLHookRequestTimeout;
-            }
 
             return FLAdminError.FlHookHttpError;
         }
@@ -242,7 +221,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
             var request = new BsonDocument();
 
             var baseId = baseName.Match(
-                Left: name => unchecked((int) FLHash.CreateID(name)),
+                Left: name => unchecked((int)FLHash.CreateID(name)),
                 Right: id => id
             );
             request.Set("base", baseId);
@@ -251,19 +230,17 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
                 Left: str => request.Set("characterName", str),
                 Right: id => request.Set("id", Convert.ToBase64String(id.ToByteArray()))
             );
-            
+
             var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.BeamPlayer);
             var content = new ByteArrayContent(request.ToBson());
             await str.PatchAsync(content);
-            
+
             return new Option<FLAdminError>();
         }
         catch (FlurlHttpException e)
         {
-            if (e.StatusCode is (int) HttpStatusCode.RequestTimeout or (int) HttpStatusCode.GatewayTimeout)
-            {
+            if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
                 return FLAdminError.FLHookRequestTimeout;
-            }
 
             return FLAdminError.FlHookHttpError;
         }
@@ -277,7 +254,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
             var request = new BsonDocument();
 
             var sysId = system.Match(
-                Left: name => unchecked((int) FLHash.CreateID(name)),
+                Left: name => unchecked((int)FLHash.CreateID(name)),
                 Right: id => id
             );
             request.Set("system", sysId);
@@ -287,9 +264,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
                 Right: id => request.Set("id", Convert.ToBase64String(id.ToByteArray()))
             );
             if (position.HasValue)
-            {
-                request.Set("position", new BsonArray() {position.Value.X, position.Value.Y, position.Value.Z});
-            }
+                request.Set("position", new BsonArray { position.Value.X, position.Value.Y, position.Value.Z });
 
             var content = new ByteArrayContent(request.ToBson());
             var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.TeleportPlayer);
@@ -299,10 +274,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
         catch (FlurlHttpException e)
         {
-            if (e.StatusCode is (int) HttpStatusCode.RequestTimeout or (int) HttpStatusCode.GatewayTimeout)
-            {
+            if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
                 return FLAdminError.FLHookRequestTimeout;
-            }
 
             return FLAdminError.FlHookHttpError;
         }
@@ -324,10 +297,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
         catch (FlurlHttpException e)
         {
-            if (e.StatusCode is (int) HttpStatusCode.RequestTimeout or (int) HttpStatusCode.GatewayTimeout)
-            {
+            if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
                 return FLAdminError.FLHookRequestTimeout;
-            }
 
             return FLAdminError.FlHookHttpError;
         }

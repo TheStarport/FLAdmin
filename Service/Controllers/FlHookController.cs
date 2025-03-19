@@ -27,8 +27,8 @@ public class FlHookController(IFlHookService flHookService) : ControllerBase
     {
         var ret = await flHookService.KickCharacter(name);
         return ret.Match<IActionResult>(
-            Some: err => err.ParseError(this),
-            None: Ok());
+            err => err.ParseError(this),
+            Ok());
     }
 
     [HttpPatch("kill")]
@@ -36,8 +36,8 @@ public class FlHookController(IFlHookService flHookService) : ControllerBase
     {
         var ret = await flHookService.KillCharacter(name);
         return ret.Match<IActionResult>(
-            Some: err => err.ParseError(this),
-            None: Ok());
+            err => err.ParseError(this),
+            Ok());
     }
 
     [HttpPatch("messageplayer")]
@@ -45,8 +45,8 @@ public class FlHookController(IFlHookService flHookService) : ControllerBase
     {
         var ret = await flHookService.MessagePlayer(name, message);
         return ret.Match<IActionResult>(
-            Some: err => err.ParseError(this),
-            None: Ok());
+            err => err.ParseError(this),
+            Ok());
     }
 
     [HttpPatch("messagesystem")]
@@ -54,8 +54,8 @@ public class FlHookController(IFlHookService flHookService) : ControllerBase
     {
         var ret = await flHookService.MessageSystem(system, message);
         return ret.Match<IActionResult>(
-            Some: err => err.ParseError(this),
-            None: Ok());
+            err => err.ParseError(this),
+            Ok());
     }
 
     [HttpPatch("messageuniverse")]
@@ -63,8 +63,8 @@ public class FlHookController(IFlHookService flHookService) : ControllerBase
     {
         var ret = await flHookService.MessageUniverse(message);
         return ret.Match<IActionResult>(
-            Some: err => err.ParseError(this),
-            None: Ok());
+            err => err.ParseError(this),
+            Ok());
     }
 
     [HttpPatch("beamplayer")]
@@ -72,19 +72,17 @@ public class FlHookController(IFlHookService flHookService) : ControllerBase
     {
         var ret = await flHookService.BeamPlayerToBase(player, baseName);
         return ret.Match<IActionResult>(
-            Some: err => err.ParseError(this),
-            None: Ok());
+            err => err.ParseError(this),
+            Ok());
     }
 
     [HttpPatch("teleportplayer")]
     public async Task<IActionResult> TeleportPlayer([FromQuery] string player, [FromQuery] string system,
         [FromQuery] Vector3 pos)
     {
-        var ret  = await flHookService.TeleportPlayerToSpot(player, system, pos);
+        var ret = await flHookService.TeleportPlayerToSpot(player, system, pos);
         return ret.Match<IActionResult>(
-            Some: err => err.ParseError(this),
-            None: Ok());
+            err => err.ParseError(this),
+            Ok());
     }
-    
-    
 }

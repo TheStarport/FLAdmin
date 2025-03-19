@@ -6,10 +6,7 @@ namespace FlAdmin.Service.Controllers;
 
 [ApiController]
 [Route("api/admin")]
-
 [AdminAuthorize(Role.SuperAdmin)]
 public class AdminController : ControllerBase
 {
-    
-    
 }

@@ -4,7 +4,5 @@ namespace FlAdmin.Common.Services;
 
 public interface IValidationService
 {
-    
     public bool ValidateCharacter(Character character);
-    
 }

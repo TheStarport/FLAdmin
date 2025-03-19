@@ -1,5 +1,4 @@
 using FlAdmin.Common.Configs;
-using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Logic.Services.Database;
 using FlAdmin.Tests.DataAccessMocks;
@@ -10,11 +9,11 @@ namespace FlAdmin.Tests;
 
 public class AccountServiceTests : IDisposable
 {
-    AccountDataAccessMock _accountDataAccess;
-    private AccountService _service;
-    private FlAdminConfig config;
+    private readonly AccountDataAccessMock _accountDataAccess;
+    private readonly AccountService _service;
+    private readonly FlAdminConfig config;
 
-    
+
     public AccountServiceTests()
     {
         _accountDataAccess = new AccountDataAccessMock();
@@ -22,10 +21,16 @@ public class AccountServiceTests : IDisposable
         _service = new AccountService(_accountDataAccess, config, new NullLogger<AccountService>());
     }
 
+
+    public void Dispose()
+    {
+        _accountDataAccess.Dispose();
+    }
+
     [Fact]
     public async Task When_Adding_Valid_Id_Account_Should_Succeed()
     {
-        var account = new Account()
+        var account = new Account
         {
             Id = "123abc"
         };
@@ -33,13 +38,5 @@ public class AccountServiceTests : IDisposable
         var result = await _service.CreateAccounts(account);
 
         result.IsNone.Should().BeTrue();
-    }
-    
-    
-    
-    
-    public void Dispose()
-    {
-        _accountDataAccess.Dispose();
     }
 }

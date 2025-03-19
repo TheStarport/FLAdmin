@@ -1,22 +1,15 @@
 using System.Linq.Expressions;
-using System.Security.Cryptography;
-using System.Text;
-using Bogus;
 using FlAdmin.Common.DataAccess;
-using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
-using FlAdmin.Service.Extensions;
-using MongoDB.Bson;
-using System.Collections.Generic;
 using LanguageExt;
-
+using MongoDB.Bson;
 
 namespace FlAdmin.Tests.DataAccessMocks;
 
 public class AccountDataAccessMock : IAccountDataAccess, IDisposable
 {
-    List<Account> _accounts;
+    private readonly List<Account> _accounts;
 
     public AccountDataAccessMock()
     {
@@ -27,12 +20,8 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
     public Task<Option<FLAdminError>> CreateAccounts(params Account[] accounts)
     {
         foreach (var account in accounts)
-        {
             if (_accounts.Any(acc => acc.Id == account.Id))
-            {
                 return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountIdAlreadyExists);
-            }
-        }
 
         return Task.FromResult(new Option<FLAdminError>());
     }
@@ -44,9 +33,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
             return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountIdIsNull);
 
         if (_accounts.All(x => x.Id != accountId))
-        {
             return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
-        }
 
         return Task.FromResult(new Option<FLAdminError>());
     }
@@ -54,9 +41,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
     public Task<Option<FLAdminError>> DeleteAccounts(params string[] ids)
     {
         if (ids.ToList().Any(_ => ids.Contains("SuperAdmin")))
-        {
             return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountIsProtected);
-        }
 
         return ids.Any(id => _accounts.Any(x => x.Id == id))
             ? Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound)
@@ -83,10 +68,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
         }
 
         var account = _accounts.FirstOrDefault(x => x.Id == accountId);
-        if (account is null)
-        {
-            return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
-        }
+        if (account is null) return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
 
 
         var doc = account.ToBsonDocument();
@@ -94,24 +76,16 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
         {
             BsonElement newValuePair;
             if (typeof(T) == typeof(int))
-            {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
-            }
             else if (typeof(T) == typeof(float))
-            {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToDouble());
-            }
             else
-            {
                 newValuePair = new BsonElement(fieldName, BsonValue.Create(value));
-            }
 
             var oldPair = doc.Elements.First(el => el.Name == fieldName);
 
             if (oldPair.Value.GetType() != newValuePair.Value.GetType())
-            {
                 return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountElementTypeMismatch);
-            }
         }
         catch (KeyNotFoundException ex)
         {
@@ -133,10 +107,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
         }
 
         var account = _accounts.FirstOrDefault(a => a.Id == accountId);
-        if (account is null)
-        {
-            return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
-        }
+        if (account is null) return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
 
         var doc = account.ToBsonDocument();
         doc.TryGetValue(fieldName, out var element);
@@ -154,10 +125,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
         }
 
         var account = _accounts.FirstOrDefault(a => a.Id == accountId);
-        if (account is null)
-        {
-            return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
-        }
+        if (account is null) return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound);
 
         var doc = account.ToBsonDocument();
         doc.TryGetValue(fieldName, out var element);

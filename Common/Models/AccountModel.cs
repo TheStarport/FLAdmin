@@ -1,5 +1,4 @@
-﻿using FlAdmin.Common.Models.Database;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace FlAdmin.Common.Models;

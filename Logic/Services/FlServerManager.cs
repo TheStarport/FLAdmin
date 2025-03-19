@@ -16,14 +16,14 @@ public class FlServerManager(
     IFlHookService flHookService)
     : BackgroundService
 {
+    private readonly List<long> _flserverMemUsage = new();
     private Process? _flServer;
-    private List<long> _flserverMemUsage = new();
     private bool _flserverReady;
     private bool _readyToStart = true;
-
-    private bool _shouldRestartServer = false;
     private int _restartDelayInSeconds = 30;
-    
+
+    private bool _shouldRestartServer;
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -49,13 +49,10 @@ public class FlServerManager(
                 }
 
                 if ((await flHookService.PingFlHook()).IsSome)
-                {
                     //FLHook failed to respond after startup so we move to the catch block to restart it.
                     throw new Exception();
-                }
 
                 if (_shouldRestartServer)
-                {
                     if (_flServer is not null && !_flServer.HasExited)
                     {
                         logger.LogInformation("Restart manually requested. Restarting.");
@@ -68,10 +65,9 @@ public class FlServerManager(
                         _flServer = null;
                         _flserverReady = false;
                     }
-                }
-                
+
                 ServerDiagnostics();
-                
+
 
                 await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
             }
@@ -94,14 +90,17 @@ public class FlServerManager(
 
 
     /// <summary>
-    /// Restarts the FlServer instance that FlAdmin is managing, delay is not exact and may vary a few seconds.
+    ///     Restarts the FlServer instance that FlAdmin is managing, delay is not exact and may vary a few seconds.
     /// </summary>
-    /// <param name="delayInSeconds"> Default of 30 seconds if none is provided, how long FLAdmin will wait after killing the server to start it back up.</param>
+    /// <param name="delayInSeconds">
+    ///     Default of 30 seconds if none is provided, how long FLAdmin will wait after killing the
+    ///     server to start it back up.
+    /// </param>
     public async Task RestartServer(int delayInSeconds = 30)
     {
         _restartDelayInSeconds = delayInSeconds;
         _shouldRestartServer = true;
-        if(_flServer is not null && !_flServer.HasExited)
+        if (_flServer is not null && !_flServer.HasExited)
             await _flServer.WaitForExitAsync();
     }
 
@@ -206,24 +205,15 @@ public class FlServerManager(
 
     private void AddLog(object sendingProcess, DataReceivedEventArgs args)
     {
-        if (string.IsNullOrWhiteSpace(args.Data))
-        {
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(args.Data)) return;
 
-        if (args.Data.Contains("FLHook Ready") && !_flserverReady)
-        {
-            _flserverReady = true;
-        }
+        if (args.Data.Contains("FLHook Ready") && !_flserverReady) _flserverReady = true;
 
         try
         {
             var doc = JsonSerializer.Deserialize<FLHookLog>(args.Data);
 
-            if (doc is null)
-            {
-                return;
-            }
+            if (doc is null) return;
 
             using (LogContext.PushProperty("FLHook", true))
             {
@@ -235,10 +225,7 @@ public class FlServerManager(
             // ignored
         }
     }
-    
-    
-    
-    
+
 
     public bool IsAlive()
     {
