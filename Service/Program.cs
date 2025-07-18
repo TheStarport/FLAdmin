@@ -68,7 +68,7 @@ builder.Host.UseSerilog((_, lc) =>
 {
     lc.Enrich.FromLogContext();
     if (config.Logging.LoggingLocation == LoggingLocation.Console)
-        lc.WriteTo.Console(new CompactJsonFormatter(), LogEventLevel.Information);
+        lc.WriteTo.MongoDBBson(config.Mongo.ConnectionString + "/" + config.Mongo.FlAdminLogCollectionName);
 });
 
 builder.Services.AddControllers();

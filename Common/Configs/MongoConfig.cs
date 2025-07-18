@@ -7,5 +7,5 @@ public class MongoConfig
     public string AccountCollectionName { get; set; } = "accounts";
     public string CharacterCollectionName { get; set; } = "characters";
 
-    public string FlAdminLogCollectionName { get; set; } = "fladminlogs";
+    public string FlAdminLogCollectionName { get; set; } = "logs";
 }
