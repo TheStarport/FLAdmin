@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.Json;
 using FlAdmin.Common.Configs;
+using FlAdmin.Common.Containers;
 using FlAdmin.Common.Models;
 using FlAdmin.Common.Services;
 using Microsoft.Extensions.Hosting;
@@ -21,8 +22,19 @@ public class FlServerManager(
     private bool _flserverReady;
     private bool _readyToStart = true;
     private int _restartDelayInSeconds = 30;
+    private int totalServerLogins;
+
+    private DateTimeOffset _startTime;
+    private TimeSpan _serverOnlineTime;
+
 
     private bool _shouldRestartServer;
+
+    private ServerDiagnosticData _currentServerDiagnosticData = new ServerDiagnosticData();
+
+    //Keeps track of the past 6 hours of server diagnostics.
+    private FixedSizeQueue<ServerDiagnosticData> _pastServerDiagnostics =
+        new FixedSizeQueue<ServerDiagnosticData>(360);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -119,8 +131,11 @@ public class FlServerManager(
 
     private void ServerDiagnostics()
     {
+        _serverOnlineTime = DateTimeOffset.Now - _startTime;
         var memory = _flServer!.VirtualMemorySize64;
-        _flserverMemUsage.Add(memory);
+        _currentServerDiagnosticData.Memory = memory;
+        _currentServerDiagnosticData.TimeStamp = DateTimeOffset.Now;
+        _currentServerDiagnosticData.ServerUptime = _serverOnlineTime;
     }
 
     public void SendCommandToConsole(string command)
@@ -188,7 +203,7 @@ public class FlServerManager(
             _flServer.Start();
             if (_flServer is null) throw new InvalidOperationException("Unable to start FLServer.exe");
 
-
+            _startTime = DateTimeOffset.Now;
             _flServer.BeginOutputReadLine();
             _flServer.BeginErrorReadLine();
 
