@@ -33,6 +33,7 @@ public static class ResultExtensions
             FLAdminError.AccountIsProtected => controller.Forbid(error.GetEnumDescription()),
             FLAdminError.AccountFieldIsProtected => controller.Forbid(error.GetEnumDescription()),
             FLAdminError.AccountFieldAlreadyExists => controller.Conflict(error.GetEnumDescription()),
+            FLAdminError.SuperAdminRoleIsProtected => controller.Forbid(error.GetEnumDescription()),
             FLAdminError.CharacterAlreadyExists => controller.Conflict(error.GetEnumDescription()),
             FLAdminError.CharacterIdIsNull => controller.BadRequest(error.GetEnumDescription()),
             FLAdminError.CharacterNotFound => controller.NotFound(error.GetEnumDescription()),
@@ -43,6 +44,7 @@ public static class ResultExtensions
             FLAdminError.CharacterInvalidCharacter => controller.BadRequest(error.GetEnumDescription()),
             FLAdminError.CharacterAccountError => controller.BadRequest(error.GetEnumDescription()),
             FLAdminError.CharacterIsLoggedIn => controller.BadRequest(error.GetEnumDescription()),
+            
 
             _ => throw new ArgumentOutOfRangeException(nameof(error), error, null)
         };

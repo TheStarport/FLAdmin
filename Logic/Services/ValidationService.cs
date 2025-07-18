@@ -24,6 +24,7 @@ public class ValidationService : IValidationService
         _freelancerData = freelancerDataProvider.GetFreelancerData()!;
     }
 
+    //TODO:Proper validation
     public bool ValidateCharacter(Character character)
     {
         return true;

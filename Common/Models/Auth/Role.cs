@@ -8,5 +8,7 @@ public enum Role : uint
     ManageAccounts,
     ManageServer,
     SuperAdmin, // Essentially has all roles.
-    ManageRoles
+    ManageRoles,
+    Database,
+    
 }

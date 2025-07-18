@@ -17,6 +17,8 @@ namespace FlAdmin.Service.Controllers;
 [AdminAuthorize(Role.ManageAccounts)]
 public class AccountController(IAccountService accountService) : ControllerBase
 {
+    
+    
     [HttpPatch("addroles")]
     [AdminAuthorize(Role.ManageRoles)]
     public async Task<IActionResult> AddRolesToAccount([FromBody] RolePayload rolePayload)
@@ -25,7 +27,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         foreach (var roleStr in rolePayload.Roles)
             if (Enum.TryParse(roleStr, out Role role))
             {
-                if (role == Role.SuperAdmin)
+                if (role is Role.SuperAdmin)
                     continue;
                 roles.Add(role);
             }
@@ -47,7 +49,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         foreach (var roleStr in rolePayload.Roles)
             if (Enum.TryParse(roleStr, out Role role))
             {
-                if (role == Role.SuperAdmin)
+                if (role is Role.SuperAdmin)
                     continue;
                 roles.Add(role);
             }
@@ -114,12 +116,13 @@ public class AccountController(IAccountService accountService) : ControllerBase
             Ok("Account(s) successfully deleted.")
         );
     }
-
+    
     [HttpPatch("update")]
+    [AdminAuthorize(Role.SuperAdmin)]
     public async Task<IActionResult> UpdateAccount([FromBody] AccountModel accountModel)
     {
         var account = accountModel.ToDatabaseAccount();
-
+        
         //Since our external model is different from the database we need to check if any old information is on it and
         // preserve it if it exists (such as password and salts. and username)
         _ = (await accountService.GetAccountById(account.Id)).Match(
@@ -140,8 +143,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
         await accountService.UpdateAccount(account);
         return Ok($"Account {account.Id} updated successfully");
     }
-
-
+    
     [HttpPatch("addusername")]
     [AdminAuthorize(Role.ManageAdmins)]
     public async Task<IActionResult> AddUsernameToAccount([FromBody] LoginModel login, [FromQuery] string accountId)

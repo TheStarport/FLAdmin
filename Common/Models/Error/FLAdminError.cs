@@ -38,6 +38,9 @@ public enum FLAdminError
 
     [Description("Editing this field is disallowed.")]
     AccountFieldIsProtected,
+    
+    [Description("SuperAdmin may not be granted as a role to any account nor removed.")]
+    SuperAdminRoleIsProtected,
 
     [Description("A field with this name already exists.")]
     AccountFieldAlreadyExists,

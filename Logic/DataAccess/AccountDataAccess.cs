@@ -85,9 +85,7 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
     public async Task<Option<FLAdminError>> DeleteAccounts(params string[] ids)
     {
         using var session = await _client.StartSessionAsync();
-
-        if (ids.Contains("SuperAdmin")) return FLAdminError.AccountIsProtected;
-
+        
         try
         {
             var result = await _accounts.DeleteManyAsync(account => ids.Contains(account.Id));

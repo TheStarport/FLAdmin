@@ -37,16 +37,24 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
 
     public async Task<Option<FLAdminError>> UpdateAccount(Account account)
     {
+        var acc = accountDataAccess.GetAccount(account.Id);
+        
+        
         return await accountDataAccess.UpdateAccount(account.ToBsonDocument());
     }
 
     public async Task<Option<FLAdminError>> DeleteAccounts(params string[] ids)
     {
+        if (ids.Contains(config.SuperAdminName)) return FLAdminError.AccountIsProtected;
+
+
         return await accountDataAccess.DeleteAccounts(ids);
     }
 
     public async Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(string accountId, string name, T value)
     {
+        if(name is "WebRoles" or "GameRoles") return FLAdminError.AccountFieldIsProtected;
+        
         return await accountDataAccess.UpdateFieldOnAccount(accountId, name, value);
     }
 
@@ -196,6 +204,12 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
 
     public async Task<Option<FLAdminError>> RemoveRolesFromAccount(string id, List<Role> roles)
     {
+        if (roles.Contains(Role.SuperAdmin))
+        {
+            return FLAdminError.SuperAdminRoleIsProtected;
+        }
+        
+        
         var set = roles.Select(x => x.ToString()).ToHashSet();
         var accountEnum = await accountDataAccess.GetAccount(id);
         var acc = accountEnum.Match<Account>(
@@ -209,6 +223,12 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
 
     public async Task<Option<FLAdminError>> AddRolesToAccount(string id, List<Role> roles)
     {
+
+        if (roles.Contains(Role.SuperAdmin))
+        {
+            return FLAdminError.SuperAdminRoleIsProtected;
+        }
+        
         var set = roles.Select(x => x.ToString()).ToHashSet();
         var accountEnum = await accountDataAccess.GetAccount(id);
         var acc = accountEnum.Match<Account>(
