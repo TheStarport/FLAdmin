@@ -8,6 +8,18 @@ public enum FLAdminError
 
     [Description("Database encountered an unexpected error.")]
     DatabaseError = 1000,
+    
+    [Description("A query or closure was attempted when a Mongo session was not started.")]
+    SessionNotStarted,
+    
+    [Description("An exception occured when attempting to run a command to the database.")]
+    CommandError,
+    
+    [Description("A session is already started, finish or abort the currrent session before starting a new one.")]
+    SessionAlreadyExists,
+    
+    [Description("Session ID mismatch.")]
+    SessionIdMismatch,
 
     [Description("No accounts were found that match the provided criteria.")]
     AccountNotFound = 2000,
