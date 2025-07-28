@@ -19,6 +19,8 @@ Client/*.log
 **/pnpm-debug.log*
 **/lerna-debug.log*
 
+**/.tanstack
+
 **/node_modules
 **/dist
 **/dist-ssr
