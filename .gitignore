@@ -19,6 +19,8 @@ Client/*.log
 **/pnpm-debug.log*
 **/lerna-debug.log*
 
+**/stories/assets
+
 **/.tanstack
 
 **/node_modules
@@ -35,3 +37,5 @@ Client/*.log
 **/*.njsproj
 **/*.sln
 **/*.sw?
+*storybook.log
+storybook-static
