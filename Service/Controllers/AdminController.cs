@@ -109,4 +109,15 @@ public class AdminController(IDatabaseAccess database, IAccountService accountSe
         );
     }
 
+    [HttpPatch("updatepassword")]
+    public async Task<IActionResult> UpdatePassword([FromBody] LoginModel login, [FromQuery] string newPassword)
+    {
+        if (newPassword.Trim().Length is 0) return BadRequest();
+        var res = await accountService.ChangePassword(login, newPassword);
+
+        return res.Match<IActionResult>(
+            err => err.ParseError(this),
+            Ok("Password changed successfully.")
+        );
+    }
 }
