@@ -16,7 +16,7 @@ public class CharacterService : ICharacterService
     private readonly ILogger<CharacterService> _logger;
     private readonly IValidationService _validation;
 
-    //TODO: Most of this functions need to implement checks to see if the character is online or not.
+    //TODO: Most of these functions need to implement checks to see if the character is online or not.
 
     public CharacterService(ICharacterDataAccess characterDataAccess, IAccountDataAccess accountDataAccess,
         IValidationService validator,

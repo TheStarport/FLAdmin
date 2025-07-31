@@ -40,7 +40,7 @@ public class FlHookController(IFlHookService flHookService) : ControllerBase
             Ok());
     }
 
-    [HttpPatch("messageplayer")]
+    [HttpPatch("messagecharacter")]
     public async Task<IActionResult> MessagePlayer([FromQuery] string name, [FromQuery] string message)
     {
         var ret = await flHookService.MessagePlayer(name, message);
@@ -67,7 +67,7 @@ public class FlHookController(IFlHookService flHookService) : ControllerBase
             Ok());
     }
 
-    [HttpPatch("beamplayer")]
+    [HttpPatch("beamcharacter")]
     public async Task<IActionResult> BeamPlayer([FromQuery] string player, [FromQuery] string baseName)
     {
         var ret = await flHookService.BeamPlayerToBase(player, baseName);
@@ -76,7 +76,7 @@ public class FlHookController(IFlHookService flHookService) : ControllerBase
             Ok());
     }
 
-    [HttpPatch("teleportplayer")]
+    [HttpPatch("beamcharacter")]
     public async Task<IActionResult> TeleportPlayer([FromQuery] string player, [FromQuery] string system,
         [FromQuery] Vector3 pos)
     {
