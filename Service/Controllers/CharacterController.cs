@@ -23,6 +23,12 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
             Right: val => Ok(val));
     }
 
+    [HttpGet("charactersummary")]
+    public async Task<IActionResult> GetCharacterSummary([FromQuery] int pageSize, [FromQuery] int page)
+    {
+        return BadRequest("Currently not implemented");
+    }
+
     [HttpGet("onlinecharacters")]
     public async Task<IActionResult> GetOnlineCharacters()
     {
@@ -64,7 +70,7 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
         );
     }
 
-    [HttpPatch("update")]
+    [HttpPatch("movecharactertoaccount")]
     public async Task<IActionResult> MoveCharacter([FromQuery] string characterName, [FromQuery] string newAccountId)
     {
         var res = await characterService.MoveCharacter(characterName, newAccountId);

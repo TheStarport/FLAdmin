@@ -31,6 +31,15 @@ public class FlHookController(IFlHookService flHookService) : ControllerBase
             Ok());
     }
 
+    [HttpGet("onlineplayers")]
+    public async Task<IActionResult> GetOnlinePlayers()
+    {
+        var ret = await flHookService.GetOnlineCharacters();
+        return ret.Match<IActionResult>(
+            Left: err => err.ParseError(this),
+            Right: val => Ok(val));
+    }
+
     [HttpPatch("kill")]
     public async Task<IActionResult> KillCharacter([FromQuery] string name)
     {
