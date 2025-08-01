@@ -4,6 +4,7 @@ using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models;
 using FlAdmin.Common.Models.Error;
+using FlAdmin.Common.Models.Payloads;
 using FlAdmin.Common.Services;
 using Flurl;
 using Flurl.Http;
@@ -50,13 +51,14 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
     }
 
-    public async Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<string, ObjectId> characterName)
+    public async Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<ObjectId, string> characterName)
     {
         try
         {
             var isOnlineBytes = await characterName.Match(
-                    Left: str => _flHookUrl.AppendQueryParam("characterName", str),
-                    Right: obj => _flHookUrl.AppendQueryParam("id", Convert.ToBase64String(obj.ToByteArray())))
+                    Left: obj => _flHookUrl.AppendQueryParam("id", Convert.ToBase64String(obj.ToByteArray())),
+                    Right: str => _flHookUrl.AppendQueryParam("characterName", str)
+                )
                 .AppendPathSegment(FlHookApiRoutes.CharacterIsOnline)
                 .GetBytesAsync();
 

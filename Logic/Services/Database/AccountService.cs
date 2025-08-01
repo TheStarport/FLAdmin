@@ -183,6 +183,9 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
 
     public async Task<Option<FLAdminError>> BanAccount(string id, TimeSpan? duration)
     {
+        var acc = await accountDataAccess.GetAccount(id);
+        
+        
         duration ??= TimeSpan.FromDays(109500);
         var doc = new BsonDocument
         {

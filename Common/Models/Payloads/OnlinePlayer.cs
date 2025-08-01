@@ -1,6 +1,6 @@
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace FlAdmin.Common.Models;
+namespace FlAdmin.Common.Models.Payloads;
 
 public class OnlinePlayer
 {

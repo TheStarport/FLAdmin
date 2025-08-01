@@ -8,18 +8,17 @@ public enum FLAdminError
 
     [Description("Database encountered an unexpected error.")]
     DatabaseError = 1000,
-    
+
     [Description("A query or closure was attempted when a Mongo session was not started.")]
     SessionNotStarted,
-    
+
     [Description("An exception occured when attempting to run a command to the database.")]
     CommandError,
-    
+
     [Description("A session is already started, finish or abort the currrent session before starting a new one.")]
     SessionAlreadyExists,
-    
-    [Description("Session ID mismatch.")]
-    SessionIdMismatch,
+
+    [Description("Session ID mismatch.")] SessionIdMismatch,
 
     [Description("No accounts were found that match the provided criteria.")]
     AccountNotFound = 2000,
@@ -50,7 +49,7 @@ public enum FLAdminError
 
     [Description("Editing this field is disallowed.")]
     AccountFieldIsProtected,
-    
+
     [Description("SuperAdmin may not be granted as a role to any account nor removed.")]
     SuperAdminRoleIsProtected,
 
@@ -92,7 +91,8 @@ public enum FLAdminError
     [Description("An error occured when attempting to modify the account associated with this character.")]
     CharacterAccountError,
 
-    [Description("That character is currently logged into the game therefor operation cannot be performed.")]
+    [Description(
+        "The character is either logged in or can't be confirmed that they are logged off and thus the operation can't be performed.")]
     CharacterIsLoggedIn,
 
     [Description("FLAdmin was unable to initialize FLServer.")]

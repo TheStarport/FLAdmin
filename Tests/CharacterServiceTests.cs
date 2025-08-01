@@ -18,9 +18,10 @@ public class CharacterServiceTests
         ICharacterDataAccess characterDataAccess = new CharacterDataAccessMock();
         IAccountDataAccess accountDataAccess = new AccountDataAccessMock();
         IValidationService validationService = new ValidationServiceMock();
+        IFlHookService flHookService = new FLHookServiceMock();
 
 
-        _characterService = new CharacterService(characterDataAccess, accountDataAccess, validationService,
+        _characterService = new CharacterService(characterDataAccess, accountDataAccess, validationService, flHookService,
             new FlAdminConfig(), new NullLogger<CharacterService>());
     }
 

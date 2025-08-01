@@ -3,6 +3,7 @@
 public enum Role : uint
 {
     Web,
+    Game,
     ManageAdmins,
     ManageAutomation,
     ManageAccounts,
@@ -10,5 +11,4 @@ public enum Role : uint
     SuperAdmin, // Essentially has all roles.
     ManageRoles,
     Database,
-    
 }
