@@ -24,6 +24,7 @@ import {
   CollapsibleTrigger,
   CollapsibleContent,
 } from "../ui/collapsible";
+import BanAccountDialog from "./BanAccountDialog";
 
 interface AccountManagementDialogProps {
   editingAccountId: string;
@@ -116,9 +117,7 @@ function AccountManagementDialog({
                 Danger Zone
               </CollapsibleTrigger>
               <CollapsibleContent className="flex flex-row justify-between mt-2">
-                <Button disabled variant="destructive">
-                  Ban Account
-                </Button>
+                <BanAccountDialog banningAccountIds={[editingAccountId]} />
                 <Button disabled variant="secondary">
                   Unban Account
                 </Button>
