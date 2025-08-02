@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import SetRolesGroup from "@/components/AccountManagement/SetRolesGroup";
 import { fn } from "storybook/test";
 import { useState } from "react";
+import type { FLAdminRole } from "@/types/roles";
 
 export const ActionsData = {
   onSetRole: fn(),
@@ -46,20 +47,37 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: (args) => {
-    const [accountRoles, setAccountRoles] = useState<string[]>(args.accountRoles!);
-    const handleSetRole = (role: string) => {
-      setAccountRoles((prev: string[]) => 
-        prev.includes(role) 
-          ? prev.filter((r: string) => r !== role)
+    const [accountRoles, setAccountRoles] = useState<FLAdminRole[]>(
+      args.accountRoles!
+    );
+    const handleSetRole = (role: FLAdminRole) => {
+      setAccountRoles((prev: FLAdminRole[]) =>
+        prev.includes(role)
+          ? prev.filter((r: FLAdminRole) => r !== role)
           : [...prev, role]
       );
       args.onSetRole!(role);
     };
-    return <SetRolesGroup {...args} accountRoles={accountRoles} onSetRole={handleSetRole} />;
+    return (
+      <SetRolesGroup
+        {...args}
+        accountRoles={accountRoles}
+        onSetRole={handleSetRole}
+      />
+    );
   },
   args: {
-    accountRoles: ["Player"],
-    validRoles: ["Admin", "Player", "Superadmin"],
+    accountRoles: ["Web", "Game"] as FLAdminRole[],
+    validRoles: [
+      "Web",
+      "Game",
+      "ManageAdmins",
+      "ManageAutomation",
+      "ManageAccounts",
+      "ManageServer",
+      "SuperAdmin",
+      "ManageRoles",
+    ] as FLAdminRole[],
     onSetRole: ActionsData.onSetRole,
   },
 };
@@ -67,35 +85,16 @@ export const Default: Story = {
 export const ManyTags: Story = {
   args: {
     accountRoles: [
-      "Player",
-      "Role_1",
-      "Role_2",
-      "Role_3",
-      "Role_4",
-      "Role_5",
-      "Role_6",
-      "Role_7",
-      "Role_8",
-      "Role_9",
-      "Role_10",
-      "Role_11",
-      "Role_12",
-      "Role_13",
-      "Role_14",
-      "Role_15",
-      "Role_16",
-      "Role_17",
-      "Role_18",
-      "Role_19",
-      "Role_20",
-      "Role_21",
-      "Role_22",
-      "Role_23",
-      "Role_24",
-      "Role_25",
-      "Role_26",
-    ],
-    validRoles: ["Admin", "Player", "Superadmin"],
+      "Web",
+      "Game",
+      "ManageAdmins",
+      "ManageAutomation",
+      "ManageAccounts",
+      "ManageServer",
+      "SuperAdmin",
+      "ManageRoles",
+    ] as FLAdminRole[],
+    validRoles: ["Admin", "Player", "SuperAdmin"] as FLAdminRole[],
     onSetRole: ActionsData.onSetRole,
   },
 };

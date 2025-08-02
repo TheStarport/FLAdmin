@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import type { ReactNode } from "react";
 import { Badge } from "../ui/badge";
+import type { FLAdminRole } from "@/types/roles";
 
 interface SetRolesGroupProps {
-  accountRoles: string[];
-  validRoles: string[];
-  onSetRole: (role: string) => void;
+  accountRoles: FLAdminRole[];
+  validRoles: FLAdminRole[];
+  onSetRole: (role: FLAdminRole) => void;
 }
 
 function SetRolesGroup({
@@ -21,7 +22,7 @@ function SetRolesGroup({
   onSetRole,
 }: SetRolesGroupProps) {
   const listRoleDropdownItems: ReactNode[] = validRoles.map(
-    (validRole: string, index: number) => {
+    (validRole: FLAdminRole, index: number) => {
       return (
         <DropdownMenuCheckboxItem
           key={index}
@@ -35,7 +36,7 @@ function SetRolesGroup({
   );
 
   const listAccountRoleBadges: ReactNode[] = accountRoles.map(
-    (accountRole: string, index: number) => {
+    (accountRole: FLAdminRole, index: number) => {
       return (
         <Badge
           key={index}
@@ -47,20 +48,22 @@ function SetRolesGroup({
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Account roles</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-row gap-2 items-start">
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <Button>Change Roles</Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>{listRoleDropdownItems}</DropdownMenuContent>
-        </DropdownMenu>
-        <div className="flex gap-1 flex-wrap">{listAccountRoleBadges}</div>
-      </CardContent>
-    </Card>
+    <div className="flex flex-row content-start gap-4">
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          <Button>Change Roles</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>{listRoleDropdownItems}</DropdownMenuContent>
+      </DropdownMenu>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Account roles</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-row gap-2 items-start">
+          <div className="flex gap-1 flex-wrap">{listAccountRoleBadges}</div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

@@ -1,7 +1,10 @@
 import type { Preview } from "@storybook/react-vite";
 import { withThemeByClassName } from "@storybook/addon-themes";
+import { initialize, mswLoader } from "msw-storybook-addon";
 import "../src/index.css";
 import "../src/App.css";
+
+initialize();
 
 const preview: Preview = {
   parameters: {
@@ -19,6 +22,9 @@ const preview: Preview = {
       test: "todo",
     },
   },
+
+  loaders: [mswLoader],
+
   decorators: [
     withThemeByClassName({
       themes: {
