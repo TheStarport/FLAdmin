@@ -24,4 +24,13 @@ public class FlServerController(FlServerManager server) : ControllerBase
 
         return new ObjectResult(StatusCodes.Status500InternalServerError);
     }
+
+    
+
+    //TODO: Get Server Memory & Online Player Counts.
+    
+    //TODO: Get Server Uptime
+    
+    //TODO: 
+    
 }

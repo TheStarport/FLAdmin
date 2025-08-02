@@ -1,4 +1,5 @@
-﻿using FlAdmin.Common.Models.Database;
+﻿using FlAdmin.Common.Models;
+using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
 using LanguageExt;
 using MongoDB.Bson;
@@ -131,4 +132,7 @@ public interface ICharacterService
     ///     operation failed.
     /// </returns>
     Task<Option<FLAdminError>> RenameCharacter(string oldName, string newName);
+    
+    
+    Task<Either<FLAdminError, List<CharacterSummary>>> GetCharacterSummaries(BsonElement filter, int page, int pageSize);
 }
