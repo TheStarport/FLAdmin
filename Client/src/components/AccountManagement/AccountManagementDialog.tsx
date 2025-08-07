@@ -25,6 +25,7 @@ import {
   CollapsibleContent,
 } from "../ui/collapsible";
 import BanAccountDialog from "./BanAccountDialog";
+import ConfirmationDialog from "./ConfirmationDialog";
 
 interface AccountManagementDialogProps {
   editingAccountId: string;
@@ -118,15 +119,18 @@ function AccountManagementDialog({
               </CollapsibleTrigger>
               <CollapsibleContent className="flex flex-row justify-between mt-2">
                 <BanAccountDialog banningAccountIds={[editingAccountId]} />
-                <Button disabled variant="secondary">
-                  Unban Account
-                </Button>
-                <Button disabled variant="destructive">
-                  Delete Account
-                </Button>
-                <Button disabled variant="destructive">
-                  Remove Characters
-                </Button>
+                <ConfirmationDialog
+                  variant="Unban Account"
+                  editingAccountIds={[editingAccountId]}
+                />
+                <ConfirmationDialog
+                  variant="Remove Characters"
+                  editingAccountIds={[editingAccountId]}
+                />
+                <ConfirmationDialog
+                  variant="Delete Account"
+                  editingAccountIds={[editingAccountId]}
+                />
               </CollapsibleContent>
             </Collapsible>
             <Separator />

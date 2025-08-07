@@ -6,7 +6,12 @@ const meta = {
   title: "BanAccountDialog",
   component: BanAccountDialog,
   tags: ["autodocs"],
-  argTypes: {},
+  argTypes: {
+    banningAccountIds: {
+      control: "object",
+      description: "An array of account IDs to ban.",
+    },
+  },
   args: {
     banningAccountIds: ["account1"],
   },

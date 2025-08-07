@@ -20,6 +20,9 @@ interface BanAccountDialogProps {
   banningAccountIds: string[];
 }
 
+/*
+    TODO: Replace for-loop endpoints, once batch handling becomes availabled in the back-end.
+*/
 function BanAccountDialog({ banningAccountIds }: BanAccountDialogProps) {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [calendarOpen, setCalendarOpen] = useState<boolean>(false);
@@ -62,14 +65,14 @@ function BanAccountDialog({ banningAccountIds }: BanAccountDialogProps) {
             Some error occured while banning the following accounts:
             <br />
             <br />
-            {failedAccountIds.map((id, index) => (
+            {failedAccountIds.map((id: string, index: number) => (
               <div key={index}>{`${index + 1}. ${id}`}</div>
             ))}
             <br />
             Please try again or contact your maintainer.
           </div>
         ) : (
-          "Some error occured while banning many account(s). Please try again or contact the maintainer."
+          "Some error occured while banning many accounts. Please try again or contact your maintainer."
         );
       toast.error(
         `Failed to ban ${failedAccountIds.length} out of ${banningAccountIds.length}`,
