@@ -37,3 +37,12 @@ export const removeAllCharactersFromAccount = (accountId: string) =>
     data: accountId,
     timeout: 5000,
   });
+
+export const moveCharacterToAccount = (
+  characterName: string,
+  newAccountId: string
+) =>
+  fladminClient.patch<string>("/api/characters/movecharactertoaccount", null, {
+    params: { characterName, newAccountId },
+    timeout: 5000,
+  });
