@@ -46,3 +46,11 @@ export const moveCharacterToAccount = (
     params: { characterName, newAccountId },
     timeout: 5000,
   });
+
+/* Authentication Controler */
+
+export const setup = (password: string) =>
+  fladminClient.post<string>("/api/auth/setup", {
+    data: password,
+    timeout: 5000,
+  });
