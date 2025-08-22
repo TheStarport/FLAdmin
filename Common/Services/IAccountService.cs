@@ -158,7 +158,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> BanAccount(string id, TimeSpan? duration);
+    Task<Option<FLAdminError>> BanAccounts(List<Tuple<string, TimeSpan?>> bans);
 
     /// <summary>
     ///     Unbans the specified account
@@ -168,7 +168,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> UnBanAccount(string id);
+    Task<Option<FLAdminError>> UnBanAccounts(string[] ids);
 
     /// <summary>
     ///     Removes roles from a specified account, roles such as SuperAdmin are protected and unable to be removed.

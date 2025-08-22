@@ -38,8 +38,8 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
     public async Task<Option<FLAdminError>> UpdateAccount(Account account)
     {
         var acc = accountDataAccess.GetAccount(account.Id);
-        
-        
+
+
         return await accountDataAccess.UpdateAccount(account.ToBsonDocument());
     }
 
@@ -53,8 +53,8 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
 
     public async Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(string accountId, string name, T value)
     {
-        if(name is "WebRoles" or "GameRoles") return FLAdminError.AccountFieldIsProtected;
-        
+        if (name is "WebRoles" or "GameRoles") return FLAdminError.AccountFieldIsProtected;
+
         return await accountDataAccess.UpdateFieldOnAccount(accountId, name, value);
     }
 
@@ -181,28 +181,49 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return await accountDataAccess.UpdateAccount(account.ToBsonDocument());
     }
 
-    public async Task<Option<FLAdminError>> BanAccount(string id, TimeSpan? duration)
+    public async Task<Option<FLAdminError>> BanAccounts(List<Tuple<string, TimeSpan?>> bans)
     {
-        var acc = await accountDataAccess.GetAccount(id);
-        
-        
-        duration ??= TimeSpan.FromDays(109500);
-        var doc = new BsonDocument
+        foreach (var ban in bans)
         {
-            { "_id", id },
-            { "duration", BsonValue.Create(duration.Value) }
-        };
-        return await accountDataAccess.UpdateAccount(doc);
+            //entering no duration means it's a permaban so we'll just ban them for 200 years, effectively a perma. 
+            var banDuration = ban.Item2 ?? TimeSpan.FromDays(80000);
+
+            var doc = new BsonDocument
+            {
+                { "_id", ban.Item1 },
+                { "duration", BsonValue.Create(banDuration) }
+            };
+            var ret = await accountDataAccess.UpdateAccount(doc);
+
+            //TODO:When error handling is reworked this should catch each individual error and still attempt to ban every item instead of quitting on first error.
+            if (ret.IsSome)
+            {
+                return ret;
+            }
+        }
+
+        return Option<FLAdminError>.None;
     }
 
-    public async Task<Option<FLAdminError>> UnBanAccount(string id)
+    public async Task<Option<FLAdminError>> UnBanAccounts(string[] ids)
     {
-        var doc = new BsonDocument
+        foreach (var id in ids)
         {
-            { "_id", id },
-            { "duration", BsonValue.Create(null) }
-        };
-        return await accountDataAccess.UpdateAccount(doc);
+            var doc = new BsonDocument
+            {
+                { "_id", id },
+                { "duration", BsonValue.Create(null) }
+            };
+            var ret = await accountDataAccess.UpdateAccount(doc);
+
+            //TODO:When error handling is reworked this should catch each individual error and still attempt to ban every item instead of quitting on first error.
+            if (ret.IsSome)
+            {
+                return ret;
+            }
+        }
+
+        return Option<FLAdminError>.None;
     }
 
     public async Task<Option<FLAdminError>> RemoveRolesFromAccount(string id, List<Role> roles)
@@ -211,8 +232,8 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         {
             return FLAdminError.SuperAdminRoleIsProtected;
         }
-        
-        
+
+
         var set = roles.Select(x => x.ToString()).ToHashSet();
         var accountEnum = await accountDataAccess.GetAccount(id);
         var acc = accountEnum.Match<Account>(
@@ -226,12 +247,11 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
 
     public async Task<Option<FLAdminError>> AddRolesToAccount(string id, List<Role> roles)
     {
-
         if (roles.Contains(Role.SuperAdmin))
         {
             return FLAdminError.SuperAdminRoleIsProtected;
         }
-        
+
         var set = roles.Select(x => x.ToString()).ToHashSet();
         var accountEnum = await accountDataAccess.GetAccount(id);
         var acc = accountEnum.Match<Account>(
