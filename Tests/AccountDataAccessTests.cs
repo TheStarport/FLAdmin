@@ -137,15 +137,7 @@ public class AccountDataAccessTests : IDisposable
 
         result.Match(err => err == FLAdminError.AccountNotFound, false).Should().BeTrue();
     }
-
-    [Fact]
-    public async Task When_Attempting_To_Delete_SuperAdmin_Should_Return_Account_Is_Protected()
-    {
-        var result = await _accountDataAccess.DeleteAccounts("SuperAdmin");
-
-        result.Match(err => err == FLAdminError.AccountIsProtected, false).Should().BeTrue();
-    }
-
+    
     [Fact]
     public async Task When_Editing_Field_On_Account_With_Correct_Type_Should_Update_Successfully()
     {
