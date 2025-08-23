@@ -6,6 +6,7 @@ using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using MongoDB.Bson;
 
 namespace FlAdmin.Logic.Services.Database;
@@ -69,8 +70,8 @@ public class CharacterService : ICharacterService
     public async Task<Option<FLAdminError>> DeleteAllCharactersOnAccount(string accountId)
     {
         var characters = await _characterDataAccess.GetCharactersByFilter(x => x.AccountId == accountId);
-        
-        foreach(var c in characters)
+
+        foreach (var c in characters)
         {
             var res = await _flHookService.CharacterIsOnline(c.CharacterName);
             bool isOnline = res.Match(
@@ -97,7 +98,6 @@ public class CharacterService : ICharacterService
 
     public async Task<Option<FLAdminError>> DeleteCharacter(Either<ObjectId, string> character)
     {
-        
         var isOnlineRes = await _flHookService.CharacterIsOnline(character);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
@@ -106,7 +106,7 @@ public class CharacterService : ICharacterService
         {
             return FLAdminError.CharacterIsLoggedIn;
         }
-        
+
         var charRes = await _characterDataAccess.GetCharacter(character);
         if (charRes.IsLeft)
             return charRes.Match(
@@ -147,7 +147,7 @@ public class CharacterService : ICharacterService
         {
             return FLAdminError.CharacterIsLoggedIn;
         }
-        
+
         var charRes = await _characterDataAccess.GetCharacter(character);
         if (charRes.IsLeft)
             return charRes.Match(
@@ -204,7 +204,7 @@ public class CharacterService : ICharacterService
         {
             return FLAdminError.CharacterIsLoggedIn;
         }
-        
+
         if (_validation.ValidateCharacter(character) is false) return FLAdminError.InvalidCharacter;
 
         return await _characterDataAccess.UpdateCharacter(character.ToBsonDocument());
@@ -222,7 +222,7 @@ public class CharacterService : ICharacterService
         {
             return FLAdminError.CharacterIsLoggedIn;
         }
-        
+
         return await _characterDataAccess.UpdateFieldOnCharacter(character, fieldName, value);
     }
 
@@ -237,7 +237,7 @@ public class CharacterService : ICharacterService
         {
             return FLAdminError.CharacterIsLoggedIn;
         }
-        
+
         return await _characterDataAccess.RemoveFieldOnCharacter(character, fieldName);
     }
 
@@ -258,7 +258,7 @@ public class CharacterService : ICharacterService
         {
             return FLAdminError.CharacterIsLoggedIn;
         }
-        
+
         //First check if new name is available.
         var newNameAvailableCheck = await _characterDataAccess.GetCharacter(newName);
 
@@ -281,8 +281,26 @@ public class CharacterService : ICharacterService
         return await _characterDataAccess.UpdateCharacter(character.ToBsonDocument());
     }
 
-    public Task<Either<FLAdminError, List<CharacterSummary>>> GetCharacterSummaries(BsonElement filter, int page, int pageSize)
+    public async Task<Either<FLAdminError, List<CharacterSummary>>> GetCharacterSummaries(BsonDocument filter, int page,
+        int pageSize)
     {
-        throw new NotImplementedException();
+        var characters = await _characterDataAccess.GetCharactersByFilter(filter, page, pageSize);
+
+        if (characters.IsNullOrEmpty())
+        {
+            return FLAdminError.CharacterNotFound;
+        }
+
+        var summaries = new List<CharacterSummary>(characters.Select(character => new CharacterSummary
+        {
+            Id = character.Id,
+            Name = character.CharacterName,
+            Money = character.Money,
+            AccountId = character.AccountId,
+            Base = character.CurrentBase,
+            Rep = character.RepGroup ?? ""
+        }));
+
+        return summaries;
     }
 }

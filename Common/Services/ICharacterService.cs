@@ -134,5 +134,5 @@ public interface ICharacterService
     Task<Option<FLAdminError>> RenameCharacter(string oldName, string newName);
     
     
-    Task<Either<FLAdminError, List<CharacterSummary>>> GetCharacterSummaries(BsonElement filter, int page, int pageSize);
+    Task<Either<FLAdminError, List<CharacterSummary>>> GetCharacterSummaries(BsonDocument filter, int page, int pageSize);
 }

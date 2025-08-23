@@ -4,6 +4,7 @@ using FlAdmin.Common.Services;
 using FlAdmin.Logic.Services;
 using FlAdmin.Service.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 
 namespace FlAdmin.Service.Controllers;
 
@@ -122,6 +123,17 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
         return res.Match<IActionResult>(
             err => err.ParseError(this),
             Ok($"{characterName} successfully moved to account {newAccountId}.")
+        );
+    }
+
+    [HttpGet("summariesbyfilter")]
+    public async Task<IActionResult> GetCharacterSummariesByFilter([FromQuery] BsonDocument filter, [FromQuery] int pageSize, [FromQuery] int page)
+    {
+        var res = await characterService.GetCharacterSummaries(filter, page, pageSize);
+
+        return res.Match<IActionResult>(
+            Left: err => err.ParseError(this),
+            Right: val => Ok(val)
         );
     }
 }

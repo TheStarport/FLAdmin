@@ -317,6 +317,24 @@ public class CharacterDataAccess(
             var foundAccounts = (await _characters.FindAsync(filter)).ToList();
             return foundAccounts.Skip((page - 1) * pageSize).Take(pageSize).ToList();
         }
+        
+        
+        catch (MongoException ex)
+        {
+            logger.LogError(ex, "Encountered a mongo database error when getting characters by specified filter of {}",
+                filter);
+            return [];
+        }
+    }
+    
+    public async Task<List<Character>> GetCharactersByFilter(BsonDocument filter, int page = 1, int pageSize = 100)
+    {
+        try
+        {
+            var foundAccounts = (await _characters.FindAsync(filter)).ToList();
+            return foundAccounts.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        }
+        
         catch (MongoException ex)
         {
             logger.LogError(ex, "Encountered a mongo database error when getting characters by specified filter of {}",
