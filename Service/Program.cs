@@ -57,6 +57,7 @@ builder.Services.AddSingleton<IAccountService, AccountService>();
 builder.Services.AddSingleton<ICharacterService, CharacterService>();
 builder.Services.AddSingleton<IAuthService, AuthService>();
 builder.Services.AddSingleton<IFlHookService, FlHookService>();
+builder.Services.AddSingleton<IConfigService, ConfigService>();
 
 //Background Services
 builder.Services.AddHostedService<FlServerManager>();
