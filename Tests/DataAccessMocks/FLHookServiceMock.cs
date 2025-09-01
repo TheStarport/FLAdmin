@@ -16,7 +16,7 @@ public class FLHookServiceMock : IFlHookService
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     public async Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<ObjectId, string> characterName)
     {
-        return true;
+        return false;
     }
 
     public Task<Option<FLAdminError>> KickCharacter(Either<string, ObjectId> characterName)

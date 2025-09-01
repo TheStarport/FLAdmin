@@ -23,8 +23,7 @@ public class EphemeralTestDatabase : IDisposable
         {
             DataDirectory = "./TestData",
             StandardErrorLogger = Console.WriteLine,
-            AdditionalArguments = "--quiet",
-            KillMongoProcessesWhenCurrentProcessExits = true,
+            AdditionalArguments = ["--quiet"],
             MongoPort = Port
         };
 

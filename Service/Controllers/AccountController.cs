@@ -17,7 +17,6 @@ namespace FlAdmin.Service.Controllers;
 [AdminAuthorize(Role.ManageAccounts)]
 public class AccountController(IAccountService accountService) : ControllerBase
 {
-
     [HttpGet("getaccounts")]
     public async Task<IActionResult> GetAccounts([FromQuery] int pageCount, [FromQuery] int pageSize)
     {
@@ -71,13 +70,13 @@ public class AccountController(IAccountService accountService) : ControllerBase
             Ok("Account(s) successfully deleted.")
         );
     }
-    
+
     [HttpPatch("update")]
     [AdminAuthorize(Role.SuperAdmin)]
     public async Task<IActionResult> UpdateAccount([FromBody] AccountModel accountModel)
     {
         var account = accountModel.ToDatabaseAccount();
-        
+
         //Since our external model is different from the database we need to check if any old information is on it and
         // preserve it if it exists (such as password and salts. and username)
         _ = (await accountService.GetAccountById(account.Id)).Match(
@@ -98,31 +97,38 @@ public class AccountController(IAccountService accountService) : ControllerBase
         await accountService.UpdateAccount(account);
         return Ok($"Account {account.Id} updated successfully");
     }
-    
-
-
 
 
     [HttpPatch("ban")]
-    public async Task<IActionResult> BanAccount([FromQuery] string accountId, [FromQuery] TimeSpan? duration)
+    public async Task<IActionResult> BanAccounts([FromBody] BanAccountsPayload bans)
     {
-        var okMessage = duration is not null
-            ? $"Account {accountId} banned for {duration}"
-            : $"Account {accountId} has been banned.";
-        var res = await accountService.BanAccount(accountId, duration);
+        string concatOkMessage = "";
+        foreach (var ban in bans.Bans)
+        {
+            var okMessage = ban.Duration is not null
+                ? $"Account {ban.AccountId} banned for {ban.Duration}"
+                : $"Account {ban.AccountId} has been banned.";
+            concatOkMessage += okMessage;
+        }
+
+
+        var res = await accountService.BanAccounts(bans.Bans
+            .Select(ban => new Tuple<string, TimeSpan?>(ban.AccountId, ban.Duration)).ToList());
+
+
         return res.Match<IActionResult>(
             err => err.ParseError(this),
-            Ok(okMessage)
+            Ok(concatOkMessage)
         );
     }
 
     [HttpPatch("unban")]
-    public async Task<IActionResult> UnbanAccount([FromQuery] string accountId)
+    public async Task<IActionResult> UnbanAccount([FromQuery] string[] accountIds)
     {
-        var res = await accountService.UnBanAccount(accountId);
+        var res = await accountService.UnBanAccounts(accountIds);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
-            Ok($"Account {accountId} has been unbanned.")
+            Ok($"Accounts {accountIds} has been unbanned.")
         );
     }
 }

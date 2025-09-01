@@ -121,6 +121,11 @@ public class CharacterDataAccessMock : ICharacterDataAccess
         return _characters.Filter(func).Skip((page - 1) * pageSize).Take(pageSize).ToList();
     }
 
+    public async Task<List<Character>> GetCharactersByFilter(BsonDocument filter, int page = 1, int pageSize = 100)
+    {
+        throw new NotImplementedException();
+    }
+
 
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 }
