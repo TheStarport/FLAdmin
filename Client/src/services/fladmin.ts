@@ -54,3 +54,9 @@ export const setup = (password: string) =>
     data: password,
     timeout: 5000,
   });
+
+export const login = (username: string, password: string) =>
+  fladminClient.post<string>("/api/auth/login", {
+    data: { username, password },
+    timeout: 5000,
+  });

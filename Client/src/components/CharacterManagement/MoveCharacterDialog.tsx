@@ -92,11 +92,11 @@ function MoveCharacterDialog({
   const onClickMoveCharacter = async (): Promise<void> => {
     setInProgress(true);
     const failedCharacterIds: string[] = [];
-    for (let characterId of characterIds) {
+    for (const characterId of characterIds) {
       try {
         const res = await moveCharacterToAccount(characterId, selectedAccount);
         if (!(res.status === 200)) failedCharacterIds.push(characterId);
-      } catch (error) {
+      } catch {
         failedCharacterIds.push(characterId);
       }
     }

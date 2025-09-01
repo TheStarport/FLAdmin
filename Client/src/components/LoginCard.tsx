@@ -13,32 +13,34 @@ import {
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useState } from "react";
-import { setup } from "@/services/fladmin";
+import { login } from "@/services/fladmin";
 import { InfoIcon, LoaderCircleIcon } from "lucide-react";
 
-const setupFormSchema = z.object({
-  password: z.string().min(1, "Setup password is required"),
+const loginFormSchema = z.object({
+  username: z.string().min(1, "Username is required").trim(),
+  password: z.string().min(1, "Username is required"),
 });
 
-function SetupCard() {
+function LoginCard() {
   const [errorState, setErrorState] = useState<boolean>(false);
   const [loadingState, setLoadingState] = useState<boolean>(false);
 
-  const setupForm = useForm<z.infer<typeof setupFormSchema>>({
-    resolver: zodResolver(setupFormSchema),
+  const loginForm = useForm<z.infer<typeof loginFormSchema>>({
+    resolver: zodResolver(loginFormSchema),
     mode: "onChange",
     defaultValues: {
+      username: "",
       password: "",
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof setupFormSchema>) => {
+  const onSubmit = async (values: z.infer<typeof loginFormSchema>) => {
     setLoadingState(true);
     try {
-      const res = await setup(values.password);
+      const res = await login(values.username, values.password);
       if (res.status === 200) {
-        setLoadingState(false);
         //TODO routing
+        setLoadingState(false);
         return;
       }
       setErrorState(true);
@@ -56,21 +58,34 @@ function SetupCard() {
             <b className="text-5xl">FLAdmin</b>
           </CardTitle>
         </CardHeader>
-        <Form {...setupForm}>
+        <Form {...loginForm}>
           <form
-            onSubmit={setupForm.handleSubmit(onSubmit)}
+            onSubmit={loginForm.handleSubmit(onSubmit)}
             className="space-y-8"
           >
             <FormField
-              control={setupForm.control}
+              control={loginForm.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Your Username" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={loginForm.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>One-Time Setup Password</FormLabel>
+                  <FormLabel>Password</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="Setup password"
+                      placeholder="Your Password"
                       {...field}
                     />
                   </FormControl>
@@ -82,13 +97,14 @@ function SetupCard() {
               {errorState && (
                 <span className="flex flex-row gap-2 text-red-500">
                   <InfoIcon />
-                  Something went wrong. Have you entered an incorrect password?
+                  Something went wrong logging in. Did you enter an incorrect
+                  password?
                 </span>
               )}
               <Button
                 className="flex-1"
                 type="submit"
-                disabled={!setupForm.formState.isValid || loadingState}
+                disabled={!loginForm.formState.isValid || loadingState}
               >
                 {loadingState && <LoaderCircleIcon className="animate-spin" />}
                 Submit
@@ -101,4 +117,4 @@ function SetupCard() {
   );
 }
 
-export default SetupCard;
+export default LoginCard;
