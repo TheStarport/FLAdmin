@@ -1,3 +1,4 @@
+import LoginCard from "@/components/LoginCard";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { getCookie } from "typescript-cookie";
 
@@ -12,5 +13,9 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
-  return <div>Hello from Login!</div>;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <LoginCard />
+    </div>
+  );
 }

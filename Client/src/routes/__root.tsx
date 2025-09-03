@@ -1,14 +1,13 @@
-import { Outlet, createRootRoute } from '@tanstack/react-router'
-import { Fragment } from 'react/jsx-runtime'
+import { Outlet, createRootRoute } from "@tanstack/react-router";
 
 export const Route = createRootRoute({
   component: RootComponent,
-})
+});
 
 function RootComponent() {
   return (
-    <Fragment>
+    <div className="h-screen w-screen">
       <Outlet />
-    </Fragment>
-  )
+    </div>
+  );
 }
