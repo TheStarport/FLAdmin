@@ -55,6 +55,10 @@ export const setup = (password: string) =>
     timeout: 5000,
   });
 
+// TODO endpoint could change
+export const isSetup = () =>
+  fladminClient.get<boolean>("/api/auth/issetup", { timeout: 5000 });
+
 export const login = (username: string, password: string) =>
   fladminClient.post<string>("/api/auth/login", {
     data: { username, password },

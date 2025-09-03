@@ -9,18 +9,36 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as MainRouteImport } from './routes/main'
-import { Route as AboutRouteImport } from './routes/about'
+import { Route as SetupRouteImport } from './routes/setup'
+import { Route as Plugin_managerRouteImport } from './routes/plugin_manager'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as CharactersRouteImport } from './routes/characters'
+import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as IndexRouteImport } from './routes/index'
 
-const MainRoute = MainRouteImport.update({
-  id: '/main',
-  path: '/main',
+const SetupRoute = SetupRouteImport.update({
+  id: '/setup',
+  path: '/setup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const Plugin_managerRoute = Plugin_managerRouteImport.update({
+  id: '/plugin_manager',
+  path: '/plugin_manager',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CharactersRoute = CharactersRouteImport.update({
+  id: '/characters',
+  path: '/characters',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountsRoute = AccountsRouteImport.update({
+  id: '/accounts',
+  path: '/accounts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,48 +49,100 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/main': typeof MainRoute
+  '/accounts': typeof AccountsRoute
+  '/characters': typeof CharactersRoute
+  '/login': typeof LoginRoute
+  '/plugin_manager': typeof Plugin_managerRoute
+  '/setup': typeof SetupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/main': typeof MainRoute
+  '/accounts': typeof AccountsRoute
+  '/characters': typeof CharactersRoute
+  '/login': typeof LoginRoute
+  '/plugin_manager': typeof Plugin_managerRoute
+  '/setup': typeof SetupRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/main': typeof MainRoute
+  '/accounts': typeof AccountsRoute
+  '/characters': typeof CharactersRoute
+  '/login': typeof LoginRoute
+  '/plugin_manager': typeof Plugin_managerRoute
+  '/setup': typeof SetupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/main'
+  fullPaths:
+    | '/'
+    | '/accounts'
+    | '/characters'
+    | '/login'
+    | '/plugin_manager'
+    | '/setup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/main'
-  id: '__root__' | '/' | '/about' | '/main'
+  to:
+    | '/'
+    | '/accounts'
+    | '/characters'
+    | '/login'
+    | '/plugin_manager'
+    | '/setup'
+  id:
+    | '__root__'
+    | '/'
+    | '/accounts'
+    | '/characters'
+    | '/login'
+    | '/plugin_manager'
+    | '/setup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  MainRoute: typeof MainRoute
+  AccountsRoute: typeof AccountsRoute
+  CharactersRoute: typeof CharactersRoute
+  LoginRoute: typeof LoginRoute
+  Plugin_managerRoute: typeof Plugin_managerRoute
+  SetupRoute: typeof SetupRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/main': {
-      id: '/main'
-      path: '/main'
-      fullPath: '/main'
-      preLoaderRoute: typeof MainRouteImport
+    '/setup': {
+      id: '/setup'
+      path: '/setup'
+      fullPath: '/setup'
+      preLoaderRoute: typeof SetupRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/plugin_manager': {
+      id: '/plugin_manager'
+      path: '/plugin_manager'
+      fullPath: '/plugin_manager'
+      preLoaderRoute: typeof Plugin_managerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/characters': {
+      id: '/characters'
+      path: '/characters'
+      fullPath: '/characters'
+      preLoaderRoute: typeof CharactersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/accounts': {
+      id: '/accounts'
+      path: '/accounts'
+      fullPath: '/accounts'
+      preLoaderRoute: typeof AccountsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -87,8 +157,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  MainRoute: MainRoute,
+  AccountsRoute: AccountsRoute,
+  CharactersRoute: CharactersRoute,
+  LoginRoute: LoginRoute,
+  Plugin_managerRoute: Plugin_managerRoute,
+  SetupRoute: SetupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

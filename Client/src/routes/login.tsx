@@ -1,16 +1,16 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { getCookie } from "typescript-cookie";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/login")({
   beforeLoad: () => {
     const token = getCookie("flAdminToken");
-    if (!token) {
-      throw redirect({ to: "/login" });
+    if (token) {
+      throw redirect({ to: "/" });
     }
   },
-  component: Dashboard,
+  component: LoginPage,
 });
 
-function Dashboard() {
-  return <div>Hello from Dashboard!</div>;
+function LoginPage() {
+  return <div>Hello from Login!</div>;
 }
