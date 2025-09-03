@@ -9,14 +9,15 @@ export type FLAdminRole =
   | "ManageRoles"
   | "Database";
 
+//TODO Order by 'importance'
 export const FLAdminRoles: FLAdminRole[] = [
-  "Web",
-  "Game",
+  "SuperAdmin",
   "ManageAdmins",
   "ManageAutomation",
   "ManageAccounts",
   "ManageServer",
-  "SuperAdmin",
   "ManageRoles",
   "Database",
+  "Web",
+  "Game",
 ];

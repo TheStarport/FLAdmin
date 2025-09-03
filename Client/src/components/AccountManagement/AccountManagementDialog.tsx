@@ -55,10 +55,10 @@ function AccountManagementDialog({
         const mergeRoles: FLAdminRole[] =
           accountData.data?.gameRoles && accountData.data?.webRoles
             ? [...accountData.data.gameRoles, ...accountData.data.webRoles]
-            : [];
+            : accountData.data?.gameRoles || accountData.data?.webRoles || [];
 
         setEditingAccountRoles(mergeRoles);
-      } catch (err) {
+      } catch {
         setErrorState(true);
       } finally {
         setLoading(false);
@@ -70,8 +70,8 @@ function AccountManagementDialog({
 
   return (
     <Dialog>
-      <DialogTrigger>
-        <Button>
+      <DialogTrigger asChild>
+        <Button variant="outline">
           <EllipsisVerticalIcon />
         </Button>
       </DialogTrigger>
