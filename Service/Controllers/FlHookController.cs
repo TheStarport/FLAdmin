@@ -10,7 +10,7 @@ namespace FlAdmin.Service.Controllers;
 [ApiController]
 [Route("api/flhook")]
 [AdminAuthorize(Role.ManageServer)]
-public class FlHookController(IFlHookService flHookService) : ControllerBase
+public class FlHookController(IFlHookService flHookService,  ConfigService configService) : ControllerBase
 {
     [HttpGet("isonline")]
     public async Task<IActionResult> IsCharacterOnline([FromQuery] string name)
@@ -93,5 +93,14 @@ public class FlHookController(IFlHookService flHookService) : ControllerBase
         return ret.Match<IActionResult>(
             err => err.ParseError(this),
             Ok());
+    }
+    
+    [HttpGet("config")]
+    public async Task<IActionResult> GetFlHookConfig()
+    {
+        var ret = await configService.GetFlHookConfig();    
+        return ret.Match<IActionResult>(
+            Left: err => err.ParseError(this),
+            Right: Ok);
     }
 }

@@ -45,15 +45,5 @@ public class FlServerController(FlServerManager server, ConfigService configServ
           Left: err => err.ParseError(this),
           Right: Ok);
     }
-
-
-    [HttpGet("flhookconfig")]
-    public async Task<IActionResult> GetFlHookConfig()
-    {
-        var ret = await configService.GetFlHookConfig();    
-        return ret.Match<IActionResult>(
-            Left: err => err.ParseError(this),
-            Right: Ok);
-    }
     
 }
