@@ -1,4 +1,5 @@
 using System.Text.Json;
+using FlAdmin.Common.Configs;
 using FlAdmin.Common.Models.Error;
 using LanguageExt;
 
@@ -21,5 +22,17 @@ public interface IConfigService
     /// <returns>Either an error (usually file not found or file is not JSON), or the specified JSON</returns>
     public Task<Either<FLAdminError, JsonDocument>> GetFlHookConfig();
     
+    public Task<Either<FLAdminError, JsonDocument>> GetFlAdminConfig();
     
+    public Task<Option<FLAdminError>> SetJsonConfig(string path, JsonDocument json);
+    
+    public Task<Option<FLAdminError>> SetFlHookConfig(JsonDocument json);
+    
+    public Task<Option<FLAdminError>> SetFlAdminConfig(FlAdminConfig config);
+    
+    /// <summary>
+    /// Generates a default config for FLAdmin and saves it to file, see FLAdminConfig class for more info
+    /// </summary>
+    /// <returns>Error object if the operation fails, otherwise void if successul</returns>
+    public Task<Option<FLAdminError>> GenerateDefaultFladminConfig();
 }

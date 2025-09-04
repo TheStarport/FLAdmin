@@ -64,4 +64,63 @@ public class ConfigService(FlAdminConfig config, Logger<ConfigService> logger) :
             return FLAdminError.FileNotValidJson;
         }
     }
+
+    public async Task<Either<FLAdminError, JsonDocument>> GetFlAdminConfig()
+    {
+        try
+        {
+            var r = await File.ReadAllTextAsync("fladmin.json");
+            
+            return JsonDocument.Parse(r);
+        }
+        //TODO: More metadata on the exception.
+        catch (IOException e)
+        {
+            logger.LogError("{Message}", e.Message);
+            return FLAdminError.FileNotFound;
+        }
+        catch (JsonException e)
+        {
+            logger.LogError("{Message}", e.Message);
+            return FLAdminError.FileNotValidJson;
+        }
+        catch (ArgumentException e)
+        {
+            logger.LogError("{Message}", e.Message);
+            return FLAdminError.FileNotValidJson;
+        }
+    }
+
+    public Task<Option<FLAdminError>> SetJsonConfig(string path, JsonDocument json)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Option<FLAdminError>> SetFlHookConfig(JsonDocument json)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Option<FLAdminError>> SetFlAdminConfig(FlAdminConfig config)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<Option<FLAdminError>> GenerateDefaultFladminConfig()
+    {
+        var newConfig = new FlAdminConfig();
+
+        try
+        {
+            var writer = new StreamWriter("fladmin.json", false);
+            await writer.WriteAsync(JsonSerializer.Serialize(newConfig));
+            return Option<FLAdminError>.None;
+        }
+        //TODO: More specific saving error.
+        catch (IOException e)
+        {
+            logger.LogError("{Message}", e.Message);
+            return FLAdminError.Unknown;
+        }
+    }
 }
