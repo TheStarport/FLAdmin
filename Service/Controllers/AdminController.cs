@@ -11,7 +11,7 @@ namespace FlAdmin.Service.Controllers;
 
 [ApiController]
 [Route("api/admin")]
-public class AdminController(IDatabaseAccess database, IAccountService accountService) : ControllerBase
+public class AdminController(IDatabaseAccess database, IAccountService accountService, IConfigService configService) : ControllerBase
 {
     [HttpPost]
     [Route("startatabasesession")]
@@ -118,6 +118,17 @@ public class AdminController(IDatabaseAccess database, IAccountService accountSe
         return res.Match<IActionResult>(
             err => err.ParseError(this),
             Ok("Password changed successfully.")
+        );
+    }
+
+    [HttpPatch("resetconfig")]
+    [AdminAuthorize(Role.ManageServer)]
+    public async Task<IActionResult> ResetFlAdminConfig()
+    {
+        var res =  await configService.GenerateDefaultFladminConfig();
+        return res.Match<IActionResult>(
+            err => err.ParseError(this),
+            Ok("Config changed successfully.")
         );
     }
 }
