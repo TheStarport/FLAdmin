@@ -12,4 +12,7 @@ public class FlAdminConfig
     public string SuperAdminName { get; set; } = "SuperAdmin";
 
     public int MaxCharactersPerAccount { get; set; } = 5;
+
+    //Cron string, default time is every day at 2AM UTC. 
+    public string DefaultRestartTime = "0 02 * * *";
 }

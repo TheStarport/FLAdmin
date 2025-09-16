@@ -115,6 +115,9 @@ public enum FLAdminError
 
     [Description("FlHook is failing to respond and likely frozen.")]
     FlHookFailedToRespond,
+    
+    [Description("Flserver is already online")]
+    ServerAlreadyOnline,
 
     [Description("File not found at that specified path")]
     FileNotFound = 5000,

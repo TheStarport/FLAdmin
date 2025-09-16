@@ -44,6 +44,9 @@ public static class ResultExtensions
             FLAdminError.CharacterInvalidCharacter => controller.BadRequest(error.GetEnumDescription()),
             FLAdminError.CharacterAccountError => controller.BadRequest(error.GetEnumDescription()),
             FLAdminError.CharacterIsLoggedIn => controller.BadRequest(error.GetEnumDescription()),
+            FLAdminError.FLServerFailedToStart => new ObjectResult(StatusCodes.Status500InternalServerError),
+            FLAdminError.FLHookFailedToStart => new ObjectResult(StatusCodes.Status500InternalServerError),
+            
 
 
             _ => throw new ArgumentOutOfRangeException(nameof(error), error, null)

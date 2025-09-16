@@ -8,7 +8,7 @@ namespace FlAdmin.Service.Controllers;
 [ApiController]
 [Route("api/flserver")]
 [AdminAuthorize(Role.ManageServer)]
-public class FlServerController(FlServerManager server, ConfigService configService) : ControllerBase
+public class FlServerController(FlServerManager server, ConfigService configService, FlHookService flhook) : ControllerBase
 {
     // ReSharper disable once StringLiteralTypo
     [HttpPatch("restartserver")]
@@ -34,13 +34,46 @@ public class FlServerController(FlServerManager server, ConfigService configServ
         return Ok("Server Terminated");
     }
 
+    [HttpPatch("startserver")]
+    public async Task<IActionResult> StartServer(CancellationToken token)
+    {
+        var res = server.StartServer(token);
+        res.Match(Some:  err => err.ParseError(this), None: () => { } );
 
-    //TODO: Get Server Memory & Online Player Counts.
+        try
+        {
+            while (token.IsCancellationRequested == false || server.FlserverReady)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), token);
+            }
 
+            return Ok("Server successfully started.");
 
-    //TODO: Get Server Uptime
+        }
+        catch (OperationCanceledException ex)
+        {
+            return new ObjectResult(StatusCodes.Status499ClientClosedRequest);
+        }
+    }
+ 
+    [HttpGet("playercount")]
+    public Task<IActionResult> GetPlayerCount()
+    {
+        return Task.FromResult<IActionResult>(Ok(server.GetCurrentPlayerCount()));
+    }
 
-    //TODO: Get Server Latency
+    public Task<IActionResult> GetServerMemory()
+    {
+        return Task.FromResult<IActionResult>(Ok(server.GetServerMemory()));
+    }
+    
+    [HttpGet("serveruptime")]
+    public Task<IActionResult> GetServerUptime()
+    {
+        return Task.FromResult<IActionResult>(Ok(server.GetServerUptime()));
+    }
+
+    //TODO: Get Server Latency.
 
     //TODO: Update JSON Configs.
 
@@ -53,5 +86,12 @@ public class FlServerController(FlServerManager server, ConfigService configServ
         return ret.Match<IActionResult>(
             Left: err => err.ParseError(this),
             Right: Ok);
+    }
+
+
+    [HttpGet("flserverdiagnostics")]
+    public Task<IActionResult> GetFlServerDiagnosticHistory()
+    {
+        return Task.FromResult<IActionResult>(Ok(server._pastServerDiagnostics.queue));
     }
 }

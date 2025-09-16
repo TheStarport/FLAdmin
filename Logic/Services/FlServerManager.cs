@@ -4,7 +4,10 @@ using System.Text.Json;
 using FlAdmin.Common.Configs;
 using FlAdmin.Common.Containers;
 using FlAdmin.Common.Models;
+using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
+using Hangfire;
+using LanguageExt;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog.Context;
@@ -21,10 +24,10 @@ public class FlServerManager(
 
     private ServerDiagnosticData _currentServerDiagnosticData;
     private Process? _flServer;
-    private bool _flserverReady;
+    public bool FlserverReady { get; private set; }
 
     //Keeps track of the past 6 hours of server diagnostics.
-    private FixedSizeQueue<ServerDiagnosticData> _pastServerDiagnostics = new(360);
+    public FixedSizeQueue<ServerDiagnosticData> _pastServerDiagnostics { get;} = new(360);
 
     private bool _readyToStart = true;
     private int _restartDelayInSeconds = 30;
@@ -34,6 +37,9 @@ public class FlServerManager(
     private DateTimeOffset _startTime;
     private int totalServerLogins;
 
+    
+    
+    
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -52,7 +58,7 @@ public class FlServerManager(
 
                 if (_flServer is not null) _flserverMemUsage.Add(_flServer.VirtualMemorySize64 / (1024 * 1024));
 
-                if (!_flserverReady)
+                if (!FlserverReady)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
                     continue;
@@ -73,11 +79,8 @@ public class FlServerManager(
                         await Task.Delay(TimeSpan.FromSeconds(_restartDelayInSeconds), stoppingToken);
                         _flServer.Dispose();
                         _flServer = null;
-                        _flserverReady = false;
+                        FlserverReady = false;
                     }
-
-                ServerDiagnostics();
-
 
                 await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
             }
@@ -92,11 +95,13 @@ public class FlServerManager(
                     await _flServer.WaitForExitAsync(stoppingToken);
                     _flServer.Dispose();
                     _flServer = null;
-                    _flserverReady = false;
+                    FlserverReady = false;
                 }
             }
         }
     }
+    
+    
 
 
     /// <summary>
@@ -123,17 +128,20 @@ public class FlServerManager(
             _flServer.Kill();
             _flServer.Dispose();
             _flServer = null;
-            _flserverReady = false;
+            FlserverReady = false;
         }
     }
 
-    private void ServerDiagnostics()
+    private async Task ServerDiagnostics()
     {
         _serverOnlineTime = DateTimeOffset.Now - _startTime;
         var memory = _flServer!.VirtualMemorySize64;
         _currentServerDiagnosticData.Memory = memory;
         _currentServerDiagnosticData.TimeStamp = DateTimeOffset.Now;
         _currentServerDiagnosticData.ServerUptime = _serverOnlineTime;
+        var res = await flHookService.GetOnlineCharacters(CancellationToken.None);
+        res.Match(Left: err => { }, Right: v => { _currentServerDiagnosticData.PlayerCount = v.OnlinePlayers.Count; });
+        _pastServerDiagnostics.Enqueue(_currentServerDiagnosticData);
     }
 
     public void SendCommandToConsole(string command)
@@ -144,14 +152,25 @@ public class FlServerManager(
     public async Task Terminate(CancellationToken token)
     {
         _flServer?.Kill();
-        await _flServer?.WaitForExitAsync()!;
+        await _flServer?.WaitForExitAsync(token)!;
         _readyToStart = false;
-        _flserverReady = false;
+        FlserverReady = false;
+    }
+
+    public Option<FLAdminError> StartServer(CancellationToken token)
+    {
+        if (_readyToStart)
+        {
+            return FLAdminError.ServerAlreadyOnline;
+        }
+        
+        _readyToStart = true;
+        return Option<FLAdminError>.None;
     }
 
     private async Task<bool> StartProcess()
     {
-        _flserverReady = false;
+        FlserverReady = false;
         if (string.IsNullOrWhiteSpace(configuration.Server.FreelancerPath)) return false;
 
 
@@ -205,6 +224,9 @@ public class FlServerManager(
             _flServer.BeginOutputReadLine();
             _flServer.BeginErrorReadLine();
 
+
+            RecurringJob.AddOrUpdate("FLServerDiagnostic", () => ServerDiagnostics(), Cron.Minutely);
+
             return true;
         }
         catch (Exception ex)
@@ -220,7 +242,7 @@ public class FlServerManager(
     {
         if (string.IsNullOrWhiteSpace(args.Data)) return;
 
-        if (args.Data.Contains("FLHook Ready") && !_flserverReady) _flserverReady = true;
+        if (args.Data.Contains("FLHook Ready") && !FlserverReady) FlserverReady = true;
 
         try
         {
@@ -239,6 +261,20 @@ public class FlServerManager(
         }
     }
 
+    public TimeSpan GetServerUptime()
+    {
+        return _currentServerDiagnosticData.ServerUptime;
+    }
+
+    public int GetCurrentPlayerCount()
+    {
+        return _currentServerDiagnosticData.PlayerCount;
+    }
+
+    public long GetServerMemory()
+    {
+        return _currentServerDiagnosticData.Memory;
+    }
 
     public bool IsAlive()
     {
@@ -247,7 +283,7 @@ public class FlServerManager(
 
     public bool FlSeverIsReady()
     {
-        return _flserverReady;
+        return FlserverReady;
     }
 
     public bool ReadyToStart()
