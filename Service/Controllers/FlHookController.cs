@@ -78,7 +78,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
             Ok());
     }
 
-    [HttpPatch("beamcharacter")]
+    [HttpPatch("beamcharactertobase")]
     public async Task<IActionResult> BeamPlayer([FromQuery] string player, [FromQuery] string baseName,
         CancellationToken token)
     {
@@ -88,7 +88,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
             Ok());
     }
 
-    [HttpPatch("beamcharacter")]
+    [HttpPatch("teleportcharacter")]
     public async Task<IActionResult> TeleportPlayer([FromQuery] string player, [FromQuery] string system,
         [FromQuery] Vector3 pos, CancellationToken token)
     {
