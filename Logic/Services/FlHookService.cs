@@ -25,7 +25,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     private FreelancerData _freelancerData = fldata.GetFreelancerData()!;
 
 
-    public async Task<Option<FLAdminError>> PingFlHook()
+    public async Task<Option<FLAdminError>> PingFlHook(CancellationToken token)
     {
         try
         {
@@ -51,7 +51,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
     }
 
-    public async Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<ObjectId, string> characterName)
+    public async Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<ObjectId, string> characterName,
+        CancellationToken token)
     {
         try
         {
@@ -82,7 +83,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
     }
 
-    public async Task<Option<FLAdminError>> KickCharacter(Either<string, ObjectId> characterName)
+    public async Task<Option<FLAdminError>> KickCharacter(Either<string, ObjectId> characterName,
+        CancellationToken token)
     {
         try
         {
@@ -109,7 +111,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
     }
 
-    public async Task<Option<FLAdminError>> KillCharacter(Either<string, ObjectId> characterName)
+    public async Task<Option<FLAdminError>> KillCharacter(Either<string, ObjectId> characterName,
+        CancellationToken token)
     {
         try
         {
@@ -136,7 +139,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
     }
 
-    public async Task<Option<FLAdminError>> MessagePlayer(Either<string, ObjectId> characterName, string message)
+    public async Task<Option<FLAdminError>> MessagePlayer(Either<string, ObjectId> characterName, string message,
+        CancellationToken token)
     {
         try
         {
@@ -164,7 +168,8 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
     }
 
-    public async Task<Option<FLAdminError>> MessageSystem(Either<string, int> system, string message)
+    public async Task<Option<FLAdminError>> MessageSystem(Either<string, int> system, string message,
+        CancellationToken token)
     {
         try
         {
@@ -192,7 +197,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
     }
 
-    public async Task<Option<FLAdminError>> MessageUniverse(string message)
+    public async Task<Option<FLAdminError>> MessageUniverse(string message, CancellationToken token)
     {
         try
         {
@@ -216,7 +221,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     }
 
     public async Task<Option<FLAdminError>> BeamPlayerToBase(Either<string, ObjectId> characterName,
-        Either<string, int> baseName)
+        Either<string, int> baseName, CancellationToken token)
     {
         try
         {
@@ -248,8 +253,9 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
     }
 
+
     public async Task<Option<FLAdminError>> TeleportPlayerToSpot(Either<string, ObjectId> characterName,
-        Either<string, int> system, Vector3? position)
+        Either<string, int> system, Vector3? position, CancellationToken token)
     {
         try
         {
@@ -283,7 +289,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         }
     }
 
-    public async Task<Either<FLAdminError, OnlinePlayerPayload>> GetOnlineCharacters()
+    public async Task<Either<FLAdminError, OnlinePlayerPayload>> GetOnlineCharacters(CancellationToken token)
     {
         try
         {

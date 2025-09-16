@@ -127,7 +127,7 @@ public class AdminController(IDatabaseAccess database, IAccountService accountSe
     [AdminAuthorize(Role.ManageServer)]
     public async Task<IActionResult> ResetFlAdminConfig(CancellationToken token)
     {
-        var res = await configService.GenerateDefaultFlAdminConfig(TODO);
+        var res = await configService.GenerateDefaultFlAdminConfig(token);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
             Ok("Config changed successfully.")

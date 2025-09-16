@@ -15,7 +15,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
     [HttpGet("isonline")]
     public async Task<IActionResult> IsCharacterOnline([FromQuery] string name, CancellationToken token)
     {
-        var ret = await flHookService.CharacterIsOnline(name);
+        var ret = await flHookService.CharacterIsOnline(name, token);
 
         return ret.Match<IActionResult>(
             Left: err => err.ParseError(this),
@@ -25,7 +25,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
     [HttpPatch("kick")]
     public async Task<IActionResult> KickCharacter([FromQuery] string name, CancellationToken token)
     {
-        var ret = await flHookService.KickCharacter(name);
+        var ret = await flHookService.KickCharacter(name, token);
         return ret.Match<IActionResult>(
             err => err.ParseError(this),
             Ok());
@@ -34,7 +34,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
     [HttpGet("onlineplayers")]
     public async Task<IActionResult> GetOnlinePlayers(CancellationToken token)
     {
-        var ret = await flHookService.GetOnlineCharacters();
+        var ret = await flHookService.GetOnlineCharacters(token);
         return ret.Match<IActionResult>(
             Left: err => err.ParseError(this),
             Right: val => Ok(val));
@@ -43,7 +43,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
     [HttpPatch("kill")]
     public async Task<IActionResult> KillCharacter([FromQuery] string name, CancellationToken token)
     {
-        var ret = await flHookService.KillCharacter(name);
+        var ret = await flHookService.KillCharacter(name, token);
         return ret.Match<IActionResult>(
             err => err.ParseError(this),
             Ok());
@@ -53,7 +53,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
     public async Task<IActionResult> MessagePlayer([FromQuery] string name, [FromQuery] string message,
         CancellationToken token)
     {
-        var ret = await flHookService.MessagePlayer(name, message);
+        var ret = await flHookService.MessagePlayer(name, message, token);
         return ret.Match<IActionResult>(
             err => err.ParseError(this),
             Ok());
@@ -63,7 +63,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
     public async Task<IActionResult> MessageSystem([FromQuery] string system, [FromQuery] string message,
         CancellationToken token)
     {
-        var ret = await flHookService.MessageSystem(system, message);
+        var ret = await flHookService.MessageSystem(system, message, token);
         return ret.Match<IActionResult>(
             err => err.ParseError(this),
             Ok());
@@ -72,7 +72,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
     [HttpPatch("messageuniverse")]
     public async Task<IActionResult> MessageUniverse([FromQuery] string message, CancellationToken token)
     {
-        var ret = await flHookService.MessageUniverse(message);
+        var ret = await flHookService.MessageUniverse(message, token);
         return ret.Match<IActionResult>(
             err => err.ParseError(this),
             Ok());
@@ -82,7 +82,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
     public async Task<IActionResult> BeamPlayer([FromQuery] string player, [FromQuery] string baseName,
         CancellationToken token)
     {
-        var ret = await flHookService.BeamPlayerToBase(player, baseName);
+        var ret = await flHookService.BeamPlayerToBase(player, baseName, token);
         return ret.Match<IActionResult>(
             err => err.ParseError(this),
             Ok());
@@ -92,7 +92,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
     public async Task<IActionResult> TeleportPlayer([FromQuery] string player, [FromQuery] string system,
         [FromQuery] Vector3 pos, CancellationToken token)
     {
-        var ret = await flHookService.TeleportPlayerToSpot(player, system, pos);
+        var ret = await flHookService.TeleportPlayerToSpot(system, player, pos, token);
         return ret.Match<IActionResult>(
             err => err.ParseError(this),
             Ok());
@@ -101,7 +101,7 @@ public class FlHookController(IFlHookService flHookService, ConfigService config
     [HttpGet("config")]
     public async Task<IActionResult> GetFlHookConfig(CancellationToken token)
     {
-        var ret = await configService.GetFlHookConfig(TODO);
+        var ret = await configService.GetFlHookConfig(token);
         return ret.Match<IActionResult>(
             Left: err => err.ParseError(this),
             Right: Ok);

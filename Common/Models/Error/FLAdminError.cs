@@ -5,6 +5,9 @@ namespace FlAdmin.Common.Models.Error;
 public enum FLAdminError
 {
     Unknown = 0,
+    
+    [Description("Request was cancelled")]
+    RequestCancelled = 10,
 
     [Description("Database encountered an unexpected error.")]
     DatabaseError = 1000,

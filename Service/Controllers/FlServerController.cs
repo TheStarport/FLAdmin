@@ -48,7 +48,7 @@ public class FlServerController(FlServerManager server, ConfigService configServ
     [HttpGet("jsonconfig")]
     public async Task<IActionResult> GetJsonConfig([FromQuery] string path, CancellationToken token)
     {
-        var ret = await configService.GetJsonConfig(path, TODO);
+        var ret = await configService.GetJsonConfig(path, token);
 
         return ret.Match<IActionResult>(
             Left: err => err.ParseError(this),

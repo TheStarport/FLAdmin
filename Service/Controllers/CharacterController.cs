@@ -34,7 +34,7 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
     [HttpGet("onlinecharacters")]
     public async Task<IActionResult> GetOnlineCharacters(CancellationToken token)
     {
-        var characters = await flHookService.GetOnlineCharacters();
+        var characters = await flHookService.GetOnlineCharacters(token);
 
         return characters.Match<IActionResult>(
             Left: err => err.ParseError(this),

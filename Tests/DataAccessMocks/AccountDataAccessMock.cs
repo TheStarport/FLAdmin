@@ -17,7 +17,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
     }
 
 
-    public Task<Option<FLAdminError>> CreateAccounts(params Account[] accounts)
+    public Task<Option<FLAdminError>> CreateAccounts(CancellationToken token, params Account[] accounts)
     {
         foreach (var account in accounts)
             if (_accounts.Any(acc => acc.Id == account.Id))
@@ -26,7 +26,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
         return Task.FromResult(new Option<FLAdminError>());
     }
 
-    public Task<Option<FLAdminError>> UpdateAccount(BsonDocument account)
+    public Task<Option<FLAdminError>> UpdateAccount(BsonDocument account, CancellationToken token)
     {
         var accountId = account.GetValue("_id").AsString;
         if (accountId is null || accountId.Length is 0)
@@ -38,7 +38,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
         return Task.FromResult(new Option<FLAdminError>());
     }
 
-    public Task<Option<FLAdminError>> DeleteAccounts(params string[] ids)
+    public Task<Option<FLAdminError>> DeleteAccounts(CancellationToken token, params string[] ids)
     {
         if (ids.ToList().Any(_ => ids.Contains("SuperAdmin")))
             return Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountIsProtected);
@@ -48,7 +48,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
             : Task.FromResult(new Option<FLAdminError>());
     }
 
-    public Task<Either<FLAdminError, Account>> GetAccount(string accountId)
+    public Task<Either<FLAdminError, Account>> GetAccount(string accountId, CancellationToken token)
     {
         var account = _accounts.FirstOrDefault(x => x.Id == accountId);
         return account is null
@@ -56,7 +56,8 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
             : Task.FromResult<Either<FLAdminError, Account>>(account);
     }
 
-    public Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(string accountId, string fieldName, T value)
+    public Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(string accountId, string fieldName, T value,
+        CancellationToken token)
     {
         switch (fieldName)
         {
@@ -95,7 +96,8 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
         return Task.FromResult(new Option<FLAdminError>());
     }
 
-    public Task<Option<FLAdminError>> CreateNewFieldOnAccount<T>(string accountId, string fieldName, T value)
+    public Task<Option<FLAdminError>> CreateNewFieldOnAccount<T>(string accountId, string fieldName, T value,
+        CancellationToken token)
     {
         switch (fieldName)
         {
@@ -116,7 +118,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
             : Task.FromResult(new Option<FLAdminError>());
     }
 
-    public Task<Option<FLAdminError>> RemoveFieldOnAccount(string accountId, string fieldName)
+    public Task<Option<FLAdminError>> RemoveFieldOnAccount(string accountId, string fieldName, CancellationToken token)
     {
         switch (fieldName)
         {
@@ -135,7 +137,8 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
     }
 
 
-    public Task<List<Account>> GetAccountsByFilter(Expression<Func<Account, bool>> filter, int page = 1,
+    public Task<List<Account>> GetAccountsByFilter(Expression<Func<Account, bool>> filter, CancellationToken token,
+        int page = 1,
         int pageSize = 100)
     {
         var func = filter.Compile();
@@ -144,7 +147,7 @@ public class AccountDataAccessMock : IAccountDataAccess, IDisposable
         return Task.FromResult(accounts);
     }
 
-    public Task<Option<FLAdminError>> ReplaceAccount(Account account)
+    public Task<Option<FLAdminError>> ReplaceAccount(Account account, CancellationToken token)
     {
         return _accounts.All(x => x.Id != account.Id)
             ? Task.FromResult<Option<FLAdminError>>(FLAdminError.AccountNotFound)

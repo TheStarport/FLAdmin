@@ -58,7 +58,7 @@ public class FlServerManager(
                     continue;
                 }
 
-                if ((await flHookService.PingFlHook()).IsSome)
+                if ((await flHookService.PingFlHook(stoppingToken)).IsSome)
                     //FLHook failed to respond after startup so we move to the catch block to restart it.
                     throw new Exception();
 
