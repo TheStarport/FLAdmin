@@ -13,8 +13,7 @@ namespace FlAdmin.Service.Controllers;
 public class AdminController(IDatabaseAccess database, IAccountService accountService, IConfigService configService)
     : ControllerBase
 {
-    [HttpPost]
-    [Route("startatabasesession")]
+    [HttpPost("startatabasesession")]
     [AdminAuthorize(Role.Database)]
     public async Task<IActionResult> StartDatabaseSession(CancellationToken token)
     {
@@ -25,8 +24,7 @@ public class AdminController(IDatabaseAccess database, IAccountService accountSe
             Right: guid => Ok(guid));
     }
 
-    [HttpPost]
-    [Route("querydatabase")]
+    [HttpPost("querydatabase")]
     [AdminAuthorize(Role.Database)]
     public async Task<IActionResult> DatabaseQuery([FromBody] CommandPayload command, CancellationToken token)
     {
@@ -38,8 +36,7 @@ public class AdminController(IDatabaseAccess database, IAccountService accountSe
         );
     }
 
-    [HttpPost]
-    [Route("enddatabasesession")]
+    [HttpPost("enddatabasesession")]
     [AdminAuthorize(Role.Database)]
     public async Task<IActionResult> EndDatabaseSession([FromQuery] bool commit, CancellationToken token)
     {

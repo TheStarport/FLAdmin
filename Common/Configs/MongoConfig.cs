@@ -8,4 +8,6 @@ public class MongoConfig
     public string CharacterCollectionName { get; set; } = "characters";
 
     public string FlAdminLogCollectionName { get; set; } = "logs";
+    
+    public string JobCollectionName { get; set; } = "jobs";
 }

@@ -1,5 +1,6 @@
 namespace FlAdmin.Logic.Services;
 
-public class PeriodicService
+public class JobService 
 {
+    
 }

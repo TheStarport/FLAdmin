@@ -6,10 +6,15 @@ using FlAdmin.Logic.DataAccess;
 using FlAdmin.Logic.Services;
 using FlAdmin.Logic.Services.Auth;
 using FlAdmin.Logic.Services.Database;
+using Hangfire;
+using Hangfire.Mongo;
+using Hangfire.Mongo.Migration.Strategies;
+using Hangfire.Mongo.Migration.Strategies.Backup;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using SharpDX;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,12 +68,32 @@ builder.Services.AddHostedService<FlServerManager>();
 // Extend the shutdown timer to allow FLServer time to gracefully shutdown
 builder.Services.Configure<HostOptions>(opts => opts.ShutdownTimeout = TimeSpan.FromSeconds(10));
 
+//Logging
 builder.Host.UseSerilog((_, lc) =>
 {
     lc.Enrich.FromLogContext();
     if (config.Logging.LoggingLocation == LoggingLocation.Console)
         lc.WriteTo.MongoDBBson(config.Mongo.ConnectionString + "/" + config.Mongo.FlAdminLogCollectionName);
 });
+
+//Configure Hangfire to use MongoDB
+var mongoConnection = config.Mongo.ConnectionString;
+
+builder.Services.AddHangfire(configuration => 
+    configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseMongoStorage(mongoConnection, config.Mongo.JobCollectionName, new MongoStorageOptions
+        {
+            MigrationOptions = new MongoMigrationOptions
+            {
+                MigrationStrategy = new MigrateMongoMigrationStrategy(),
+                BackupStrategy = new CollectionMongoBackupStrategy()
+            },
+            CheckConnection = true
+        }));
+
+builder.Services.AddHangfireServer( options => options.ServerName = "FLAdmin");
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -88,6 +113,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseHangfireDashboard();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

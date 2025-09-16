@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FlAdmin.Logic.Services;
 
-public class ConfigService(FlAdminConfig config, Logger<ConfigService> logger) : IConfigService
+public class ConfigService(FlAdminConfig config, ILogger<ConfigService> logger) : IConfigService
 {
     private readonly string _freelancerDirectory = config.Server.FreelancerPath;
 
@@ -15,7 +15,7 @@ public class ConfigService(FlAdminConfig config, Logger<ConfigService> logger) :
     {
         try
         {
-            var r = await File.ReadAllTextAsync(_freelancerDirectory + "/" + path);
+            var r = await File.ReadAllTextAsync(_freelancerDirectory + "/" + path, token);
 
             return JsonDocument.Parse(r);
         }
@@ -42,7 +42,7 @@ public class ConfigService(FlAdminConfig config, Logger<ConfigService> logger) :
     {
         try
         {
-            var r = await File.ReadAllTextAsync(_freelancerDirectory + "/" + "flhook.json");
+            var r = await File.ReadAllTextAsync(_freelancerDirectory + "/" + "flhook.json", token);
 
             return JsonDocument.Parse(r);
         }
@@ -68,7 +68,7 @@ public class ConfigService(FlAdminConfig config, Logger<ConfigService> logger) :
     {
         try
         {
-            var r = await File.ReadAllTextAsync("fladmin.json");
+            var r = await File.ReadAllTextAsync("fladmin.json", token);
 
             return JsonDocument.Parse(r);
         }
