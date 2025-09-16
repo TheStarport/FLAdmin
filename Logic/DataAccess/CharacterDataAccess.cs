@@ -22,12 +22,12 @@ public class CharacterDataAccess(
 
     private readonly MongoClient _client = databaseAccess.GetClient();
 
-    public async Task<Option<FLAdminError>> CreateCharacters(params Character[] characters)
+    public async Task<Option<FLAdminError>> CreateCharacters(CancellationToken token, params Character[] characters)
     {
-        using var session = await _client.StartSessionAsync();
+        using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
         {
-            await _characters.InsertManyAsync(characters);
+            await _characters.InsertManyAsync(characters, cancellationToken: token);
             return new Option<FLAdminError>();
         }
         catch (MongoException ex)
@@ -49,11 +49,16 @@ public class CharacterDataAccess(
                 "Encountered unexpected mongo database error when attempting to add a character to the database.");
             return FLAdminError.DatabaseError;
         }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogError(ex, "Request was cancelled{}", ex.Message);
+            return [];
+        }
     }
 
-    public async Task<Option<FLAdminError>> UpdateCharacter(BsonDocument character)
+    public async Task<Option<FLAdminError>> UpdateCharacter(BsonDocument character, CancellationToken token)
     {
-        using var session = await _client.StartSessionAsync();
+        using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
         {
             var characterId = character.GetValue("_id").AsObjectId;
@@ -63,7 +68,7 @@ public class CharacterDataAccess(
                 { "$set", character }
             };
 
-            var result = await _characters.UpdateOneAsync(filter, updateDoc);
+            var result = await _characters.UpdateOneAsync(filter, updateDoc, cancellationToken: token);
 
             return result.ModifiedCount is 0 ? FLAdminError.CharacterNotFound : new Option<FLAdminError>();
         }
@@ -87,14 +92,20 @@ public class CharacterDataAccess(
             logger.LogError(ex, "Attempt to update character with Bson document that does not have an ObjectId");
             return FLAdminError.CharacterIdIsNull;
         }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogError(ex, "Request was cancelled{}", ex.Message);
+            return [];
+        }
     }
 
-    public async Task<Option<FLAdminError>> DeleteCharacters(params string[] characters)
+    public async Task<Option<FLAdminError>> DeleteCharacters(CancellationToken token, params string[] characters)
     {
-        using var session = await _client.StartSessionAsync();
+        using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
         {
-            var result = await _characters.DeleteManyAsync(character => characters.Contains(character.CharacterName));
+            var result = await _characters.DeleteManyAsync(character => characters.Contains(character.CharacterName),
+                cancellationToken: token);
 
             //TODO: Find a way to get more detailed information of which characters were not deleted. 
             return result.DeletedCount != characters.Length
@@ -106,13 +117,19 @@ public class CharacterDataAccess(
             logger.LogError(ex, "Encountered a mongo database issue when attempting to delete characters");
             return FLAdminError.DatabaseError;
         }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogError(ex, "Request was cancelled{}", ex.Message);
+            return [];
+        }
     }
 
-    public async Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName)
+    public async Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName,
+        CancellationToken token)
     {
         try
         {
-            var charDocRes = await GetCharacterBsonDocument(characterName);
+            var charDocRes = await GetCharacterBsonDocument(characterName, token);
 
             if (charDocRes.IsNone) return FLAdminError.CharacterNotFound;
 
@@ -133,12 +150,12 @@ public class CharacterDataAccess(
 
     public async Task<Option<FLAdminError>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
-        T value)
+        T value, CancellationToken token)
     {
-        using var session = await _client.StartSessionAsync();
+        using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
         {
-            var charDocRes = await GetCharacterBsonDocument(character);
+            var charDocRes = await GetCharacterBsonDocument(character, token);
 
             if (charDocRes.IsNone) return FLAdminError.CharacterNotFound;
 
@@ -160,7 +177,8 @@ public class CharacterDataAccess(
 
             charDoc.Add(keyValuePair);
             var charObj = BsonSerializer.Deserialize<Character>(charDoc);
-            var result = await _characters.ReplaceOneAsync(ch => ch.Id == charObj.Id, charObj);
+            var result =
+                await _characters.ReplaceOneAsync(ch => ch.Id == charObj.Id, charObj, cancellationToken: token);
             if (result.ModifiedCount is 0)
             {
                 logger.LogError("{Character} failed to add new field of name {fieldName} with value of {value}",
@@ -178,18 +196,23 @@ public class CharacterDataAccess(
                 fieldName, value, character);
             return FLAdminError.DatabaseError;
         }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogError(ex, "Request was cancelled{}", ex.Message);
+            return [];
+        }
     }
 
     public async Task<Option<FLAdminError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
-        T value)
+        T value, CancellationToken token)
     {
         if (fieldName == "_id") return FLAdminError.CharacterFieldIsProtected;
 
-        using var session = await _client.StartSessionAsync();
+        using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
         {
-            var charDocRes = await GetCharacterBsonDocument(character);
+            var charDocRes = await GetCharacterBsonDocument(character, token);
 
             if (charDocRes.IsNone) return FLAdminError.CharacterNotFound;
 
@@ -218,7 +241,8 @@ public class CharacterDataAccess(
             charDoc[newValuePair.Name] = newValuePair.Value;
 
             var charObj = BsonSerializer.Deserialize<Character>(charDoc);
-            var result = await _characters.ReplaceOneAsync(ch => ch.Id == charObj.Id, charObj);
+            var result =
+                await _characters.ReplaceOneAsync(ch => ch.Id == charObj.Id, charObj, cancellationToken: token);
             if (result.ModifiedCount is 0)
             {
                 logger.LogError("{Character} failed to update field of name {fieldName} with value of {value}",
@@ -252,18 +276,23 @@ public class CharacterDataAccess(
                 character);
             return FLAdminError.CharacterFieldDoesNotExist;
         }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogError(ex, "Request was cancelled{}", ex.Message);
+            return [];
+        }
     }
 
     public async Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character,
-        string fieldName)
+        string fieldName, CancellationToken token)
     {
         //We only protect against these two as they are both indexed, other fields should be protected at the service layer
         if (fieldName is "_id" or "characterName") return FLAdminError.CharacterFieldIsProtected;
 
-        using var session = await _client.StartSessionAsync();
+        using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
         {
-            var charDocRes = await GetCharacterBsonDocument(character);
+            var charDocRes = await GetCharacterBsonDocument(character, token);
 
             if (charDocRes.IsNone) return FLAdminError.CharacterNotFound;
 
@@ -281,7 +310,8 @@ public class CharacterDataAccess(
 
             charDoc.Remove(fieldName);
             var charObj = BsonSerializer.Deserialize<Character>(charDoc);
-            var result = await _characters.ReplaceOneAsync(ch => ch.Id == charObj.Id, charObj);
+            var result =
+                await _characters.ReplaceOneAsync(ch => ch.Id == charObj.Id, charObj, cancellationToken: token);
             if (result.ModifiedCount is 0)
             {
                 logger.LogError(
@@ -307,31 +337,41 @@ public class CharacterDataAccess(
                 character);
             return FLAdminError.CharacterFieldDoesNotExist;
         }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogError(ex, "Request was cancelled{}", ex.Message);
+            return [];
+        }
     }
 
-    public async Task<List<Character>> GetCharactersByFilter(Expression<Func<Character, bool>> filter, int page = 1,
+    public async Task<List<Character>> GetCharactersByFilter(Expression<Func<Character, bool>> filter,
+        CancellationToken token, int page = 1,
         int pageSize = 100)
     {
         try
         {
-            var foundAccounts = (await _characters.FindAsync(filter)).ToList();
+            var foundAccounts = (await _characters.FindAsync(filter, cancellationToken: token)).ToList();
             return foundAccounts.Skip((page - 1) * pageSize).Take(pageSize).ToList();
         }
-
-
         catch (MongoException ex)
         {
             logger.LogError(ex, "Encountered a mongo database error when getting characters by specified filter of {}",
                 filter);
             return [];
         }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogError(ex, "Request was cancelled{}", ex.Message);
+            return [];
+        }
     }
 
-    public async Task<List<Character>> GetCharactersByFilter(BsonDocument filter, int page = 1, int pageSize = 100)
+    public async Task<List<Character>> GetCharactersByFilter(BsonDocument filter, CancellationToken token, int page = 1,
+        int pageSize = 100)
     {
         try
         {
-            var foundAccounts = (await _characters.FindAsync(filter)).ToList();
+            var foundAccounts = (await _characters.FindAsync(filter, cancellationToken: token)).ToList();
             return foundAccounts.Skip((page - 1) * pageSize).Take(pageSize).ToList();
         }
 
@@ -341,21 +381,37 @@ public class CharacterDataAccess(
                 filter);
             return [];
         }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogError(ex, "Request was cancelled{}", ex.Message);
+            return [];
+        }
     }
 
-    private async Task<Option<BsonDocument>> GetCharacterBsonDocument(Either<ObjectId, string> character)
+    private async Task<Option<BsonDocument>> GetCharacterBsonDocument(Either<ObjectId, string> character,
+        CancellationToken token)
     {
-        return await character.MatchAsync(
-            async x =>
-            {
-                var doc = (await _characters.FindAsync(ch => ch.CharacterName == x)).FirstOrDefault();
-                return doc is null ? new Option<BsonDocument>() : doc.ToBsonDocument();
-            },
-            async x =>
-            {
-                var doc = (await _characters.FindAsync(ch => ch.Id == x)).FirstOrDefault();
-                return doc is null ? new Option<BsonDocument>() : doc.ToBsonDocument();
-            }
-        );
+        try
+        {
+            return await character.MatchAsync(
+                async x =>
+                {
+                    var doc = (await _characters.FindAsync(ch => ch.CharacterName == x, cancellationToken: token))
+                        .FirstOrDefault();
+                    return doc is null ? new Option<BsonDocument>() : doc.ToBsonDocument();
+                },
+                async x =>
+                {
+                    var doc = (await _characters.FindAsync(ch => ch.Id == x, cancellationToken: token))
+                        .FirstOrDefault();
+                    return doc is null ? new Option<BsonDocument>() : doc.ToBsonDocument();
+                }
+            );
+        }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogError(ex, "Request was cancelled{}", ex.Message);
+            return [];
+        }
     }
 }

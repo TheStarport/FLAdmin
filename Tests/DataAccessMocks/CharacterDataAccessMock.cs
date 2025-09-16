@@ -20,7 +20,7 @@ public class CharacterDataAccessMock : ICharacterDataAccess
 
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-    public async Task<Option<FLAdminError>> CreateCharacters(params Character[] characters)
+    public async Task<Option<FLAdminError>> CreateCharacters(CancellationToken token, params Character[] characters)
 
     {
         return characters.Any(character =>
@@ -29,7 +29,7 @@ public class CharacterDataAccessMock : ICharacterDataAccess
             : new Option<FLAdminError>();
     }
 
-    public async Task<Option<FLAdminError>> UpdateCharacter(BsonDocument character)
+    public async Task<Option<FLAdminError>> UpdateCharacter(BsonDocument character, CancellationToken token)
     {
         if (!character.TryGetValue("_id", out var id)) return FLAdminError.CharacterIdIsNull;
 
@@ -40,7 +40,7 @@ public class CharacterDataAccessMock : ICharacterDataAccess
         return new Option<FLAdminError>();
     }
 
-    public async Task<Option<FLAdminError>> DeleteCharacters(params string[] characters)
+    public async Task<Option<FLAdminError>> DeleteCharacters(CancellationToken token, params string[] characters)
     {
         var found = false;
 
@@ -54,7 +54,8 @@ public class CharacterDataAccessMock : ICharacterDataAccess
         return !found ? FLAdminError.CharacterNotFound : new Option<FLAdminError>();
     }
 
-    public async Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName)
+    public async Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName,
+        CancellationToken token)
     {
         var val = characterName.Match<Option<Character>>(
             Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch) ?? new Option<Character>(); },
@@ -69,7 +70,7 @@ public class CharacterDataAccessMock : ICharacterDataAccess
 
     public async Task<Option<FLAdminError>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
-        T value)
+        T value, CancellationToken token)
     {
         var val = character.Match<Character?>(
             Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch); },
@@ -84,7 +85,7 @@ public class CharacterDataAccessMock : ICharacterDataAccess
 
     public async Task<Option<FLAdminError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
-        T value)
+        T value, CancellationToken token)
     {
         var val = character.Match<Character?>(
             Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch); },
@@ -102,7 +103,8 @@ public class CharacterDataAccessMock : ICharacterDataAccess
         return new Option<FLAdminError>();
     }
 
-    public async Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName)
+    public async Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName,
+        CancellationToken token)
     {
         var val = character.Match<Character?>(
             Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch); },
@@ -114,14 +116,16 @@ public class CharacterDataAccessMock : ICharacterDataAccess
     }
 
 
-    public async Task<List<Character>> GetCharactersByFilter(Expression<Func<Character, bool>> filter, int page = 1,
+    public async Task<List<Character>> GetCharactersByFilter(Expression<Func<Character, bool>> filter,
+        CancellationToken token, int page = 1,
         int pageSize = 100)
     {
         var func = filter.Compile();
         return _characters.Filter(func).Skip((page - 1) * pageSize).Take(pageSize).ToList();
     }
 
-    public async Task<List<Character>> GetCharactersByFilter(BsonDocument filter, int page = 1, int pageSize = 100)
+    public async Task<List<Character>> GetCharactersByFilter(BsonDocument filter, CancellationToken token, int page = 1,
+        int pageSize = 100)
     {
         throw new NotImplementedException();
     }
