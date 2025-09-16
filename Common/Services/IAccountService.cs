@@ -9,56 +9,58 @@ public interface IAccountService
 {
     /// <summary>
     /// </summary>
+    /// <param name="token">Cancellation Token.</param>
     /// <param name="pageCount"> The page to be retrieved.</param>
     /// <param name="pageSize">How large each page is.</param>
     /// <returns>Returns a list of accounts </returns>
-    Task<List<Account>> GetAccounts(int pageCount, int pageSize);
-
-
-    List<Account> QueryAccounts(IQueryable<Account> query);
+    Task<List<Account>> GetAccounts(CancellationToken token, int pageCount, int pageSize);
 
 
     /// <summary>
     ///     Gets an account that matches the provided id.
     /// </summary>
+    /// <param name="token">Cancellation Token.</param>
     /// <param name="id"> Id to match against</param>
     /// <returns>
     ///     A "Left/Right" Either object, Left being an error if the operation was a failure, Right being the account if
     ///     the operation was successful.
     /// </returns>
-    Task<Either<FLAdminError, Account>> GetAccountById(string id);
+    Task<Either<FLAdminError, Account>> GetAccountById(CancellationToken token, string id);
 
     /// <summary>
     ///     Creates the provided accounts on the Database.
     /// </summary>
     /// <param name="accounts">List of accounts to be added to the database.</param>
+    /// <param name="token">Cancellation Token.</param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> CreateAccounts(params Account[] accounts);
+    Task<Option<FLAdminError>> CreateAccounts(CancellationToken token, params Account[] accounts);
 
 
     /// <summary>
     ///     Replaces an account of the matching Id with the one provided.
     /// </summary>
+    /// <param name="token">Cancellation Token.</param>
     /// <param name="account"></param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> UpdateAccount(Account account);
+    Task<Option<FLAdminError>> UpdateAccount(CancellationToken token, Account account);
 
 
     /// <summary>
     ///     Deletes the accounts on the database that match the provided Ids.
     /// </summary>
     /// <param name="ids"> List of Ids to be deleted.</param>
+    /// <param name="token">Cancellation Token.</param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> DeleteAccounts(params string[] ids);
+    Task<Option<FLAdminError>> DeleteAccounts(CancellationToken token, params string[] ids);
 
     /// <summary>
     ///     Updates an Account's field, Type-safety of empty lists is not guaranteed so exercise caution when updating fields
@@ -68,50 +70,50 @@ public interface IAccountService
     /// <param name="name">Name of the field to be updated.</param>
     /// <param name="value">Value of the field to be updated.</param>
     /// <typeparam name="T">Type of the field to be updated.</typeparam>
+    /// <param name="token">Cancellation Token.</param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(string accountId, string name, T value);
-
-    /// <summary>
-    ///     Gets all accounts that are actively logged into the game.
-    /// </summary>
-    /// <returns>List of accounts that are logged into the game.</returns>
-    List<Account> GetOnlineAccounts();
+    Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(CancellationToken token, string accountId, string name, T value);
 
     /// <summary>
     ///     Sets up the WebMaster/SuperAdmin for the server. Only ran once and will error if ran with one already present.
     /// </summary>
     /// <param name="loginModel"> Username and password of the SuperAdmin</param>
+    /// <param name="token">Cancellation Token.</param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> CreateWebMaster(LoginModel loginModel);
+    Task<Option<FLAdminError>> CreateWebMaster(CancellationToken token, LoginModel loginModel);
 
     /// <summary>
     ///     Gets the account based on the username associated with the account
     /// </summary>
     /// <param name="userName"></param>
+    /// <param name="token">Cancellation Token.</param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Either<FLAdminError, Account>> GetAccountByUserName(string userName);
+    Task<Either<FLAdminError, Account>> GetAccountByUserName(CancellationToken token, string userName);
 
 
     /// <summary>
     ///     Returns a paginated list of all accounts that have logged into the game after the provided date
     /// </summary>
     /// <param name="date">The date</param>
+    /// <param name="token">Cancellation Token.</param>
     /// <param name="page">Page number, default is first. </param>
     /// <param name="pageSize">Size of the pagination, default is 100</param>
     /// <returns>
     ///     A "Left/Right" Either object, Left being an error if the operation was a failure, Right being the List of
     ///     accounts if the operation was successful.
     /// </returns>
-    Task<Either<FLAdminError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date, int page = 1,
+    Task<Either<FLAdminError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date,
+        CancellationToken token,
+        int page = 1,
         int pageSize = 100);
 
 
@@ -120,11 +122,12 @@ public interface IAccountService
     /// </summary>
     /// <param name="id">Id of the account.</param>
     /// <param name="roles">List of roles to be added.</param>
+    /// <param name="token">Cancellation Token.</param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> AddRolesToAccount(string id, List<Role> roles);
+    Task<Option<FLAdminError>> AddRolesToAccount(string id, List<Role> roles, CancellationToken token);
 
 
     /// <summary>
@@ -132,52 +135,59 @@ public interface IAccountService
     /// </summary>
     /// <param name="accountId">Freelancer Account Id the admin account is to be associated with</param>
     /// <param name="login">Username and Password for the admin.</param>
+    /// <param name="token">Cancellation Token.</param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> SetUpAdminAccount(string accountId, LoginModel login);
+    Task<Option<FLAdminError>> SetUpAdminAccount(string accountId, LoginModel login, CancellationToken token);
 
     /// <summary>
     ///     Changes password of a given username.
     /// </summary>
     /// <param name="login"> The login including the username and old password</param>
     /// <param name="newPassword">The new password</param>
+    /// <param name="token">Cancellation Token.</param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> ChangePassword(LoginModel login, string newPassword);
+    Task<Option<FLAdminError>> ChangePassword(LoginModel login, string newPassword, CancellationToken token);
 
     /// <summary>
     ///     Bans an account either permanently or temporarily based on the inclusion of a duration
     /// </summary>
+    /// <param name="bans"></param>
+    /// <param name="token">Cancellation Token.</param>
     /// <param name="id"> id of the account to be banned.</param>
     /// <param name="duration"> Optional Duration of the ban, providing none will make the ban permanent </param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> BanAccounts(List<Tuple<string, TimeSpan?>> bans);
+    Task<Option<FLAdminError>> BanAccounts(List<Tuple<string, TimeSpan?>> bans, CancellationToken token);
 
     /// <summary>
     ///     Unbans the specified account
     /// </summary>
+    /// <param name="ids"></param>
+    /// <param name="token">Cancellation Token.</param>
     /// <param name="id">Account to be unbanned</param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> UnBanAccounts(string[] ids);
+    Task<Option<FLAdminError>> UnBanAccounts(string[] ids, CancellationToken token);
 
     /// <summary>
     ///     Removes roles from a specified account, roles such as SuperAdmin are protected and unable to be removed.
     /// </summary>
     /// <param name="id"> Id of the account.</param>
     /// <param name="roles"> List of roles to Remove.</param>
+    /// <param name="token">Cancellation Token.</param>
     /// <returns>
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> RemoveRolesFromAccount(string id, List<Role> roles);
+    Task<Option<FLAdminError>> RemoveRolesFromAccount(string id, List<Role> roles, CancellationToken token);
 }

@@ -17,9 +17,9 @@ public class AuthenticationController(
 {
     [HttpPost("login")]
     [AllowAnonymous]
-    public async Task<IActionResult> Login([FromBody] LoginModel login)
+    public async Task<IActionResult> Login([FromBody] LoginModel login, CancellationToken cancellationToken)
     {
-        var token = await authService.Authenticate(login.Username, login.Password);
+        var token = await authService.Authenticate( login.Username, login.Password, cancellationToken);
         return token.Match<IActionResult>(
             response => Ok(response),
             () => Unauthorized("Invalid username or password.")
@@ -28,7 +28,7 @@ public class AuthenticationController(
 
     [HttpPost("setup")]
     [AllowAnonymous]
-    public async Task<IActionResult> Setup(string password)
+    public async Task<IActionResult> Setup(string password, CancellationToken token)
     {
         var username = flconfig.SuperAdminName;
 
@@ -38,7 +38,7 @@ public class AuthenticationController(
             Password = password
         };
 
-        var res = await accountService.CreateWebMaster(login);
+        var res = await accountService.CreateWebMaster(token, login);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
             Ok("SuperAdmin successfully created.")

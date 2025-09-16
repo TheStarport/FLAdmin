@@ -13,6 +13,9 @@ public class CharacterServiceTests
 {
     private readonly CharacterService _characterService;
 
+    private CancellationToken _token = CancellationToken.None;
+    
+    
     public CharacterServiceTests()
     {
         ICharacterDataAccess characterDataAccess = new CharacterDataAccessMock();
@@ -21,7 +24,8 @@ public class CharacterServiceTests
         IFlHookService flHookService = new FLHookServiceMock();
 
 
-        _characterService = new CharacterService(characterDataAccess, accountDataAccess, validationService, flHookService,
+        _characterService = new CharacterService(characterDataAccess, accountDataAccess, validationService,
+            flHookService,
             new FlAdminConfig(), new NullLogger<CharacterService>());
     }
 
@@ -29,7 +33,7 @@ public class CharacterServiceTests
     [Fact]
     public async Task Should_Get_Character()
     {
-        var result = await _characterService.GetCharacterByName("Chad_Games");
+        var result = await _characterService.GetCharacterByName("Chad_Games", _token);
 
         result.IsRight.Should().BeTrue();
     }
@@ -37,7 +41,7 @@ public class CharacterServiceTests
     [Fact]
     public async Task When_Removing_Characters_From_Account_Should_Not_Error()
     {
-        var result = await _characterService.DeleteAllCharactersOnAccount("123abc456");
+        var result = await _characterService.DeleteAllCharactersOnAccount("123abc456", _token);
 
         result.IsNone.Should().BeTrue();
     }
@@ -46,7 +50,7 @@ public class CharacterServiceTests
     [Fact]
     public async Task When_Getting_Characters_From_Account_Should_Not_Error()
     {
-        var result = await _characterService.GetCharactersOfAccount("123abc456");
+        var result = await _characterService.GetCharactersOfAccount("123abc456", _token);
 
         result.Match(
             Left: _ => false,
@@ -57,7 +61,7 @@ public class CharacterServiceTests
     [Fact]
     public async Task When_Getting_Characters_From_Nonexistent_Account_Should_Return_Account_Not_Found()
     {
-        var result = await _characterService.GetCharactersOfAccount("123");
+        var result = await _characterService.GetCharactersOfAccount("123", _token);
 
         result.Match(
             Left: err => err == FLAdminError.AccountNotFound,
@@ -68,7 +72,7 @@ public class CharacterServiceTests
     [Fact]
     public async Task When_Getting_Characters_From_Account_Without_Characters_Should_Return_Character_Not_Found()
     {
-        var result = await _characterService.GetCharactersOfAccount("abc123456");
+        var result = await _characterService.GetCharactersOfAccount("abc123456", _token);
 
         result.Match(
             Left: err => err == FLAdminError.CharacterNotFound,
@@ -79,7 +83,7 @@ public class CharacterServiceTests
     [Fact]
     public async Task When_Renaming_Character_To_Available_Name_Should_Succeed()
     {
-        var result = await _characterService.RenameCharacter("Chad_Games", "Not_Chad_Games");
+        var result = await _characterService.RenameCharacter("Chad_Games", "Not_Chad_Games", _token);
 
         result.IsNone.Should().BeTrue();
     }
@@ -87,7 +91,7 @@ public class CharacterServiceTests
     [Fact]
     public async Task When_Renaming_Character_To_Taken_Name_Return_Name_Is_Taken()
     {
-        var result = await _characterService.RenameCharacter("Chad_Games", "Mr_Trent");
+        var result = await _characterService.RenameCharacter("Chad_Games", "Mr_Trent", _token);
 
         result.Match(
             err => err == FLAdminError.CharacterNameIsTaken,
@@ -98,7 +102,7 @@ public class CharacterServiceTests
     [Fact]
     public async Task When_Renaming_Nonexistent_Character_Should_Return_Character_Not_Found()
     {
-        var result = await _characterService.RenameCharacter("Not_Chad_Games", "More_Not_Chad_Games");
+        var result = await _characterService.RenameCharacter("Not_Chad_Games", "More_Not_Chad_Games", _token);
 
         result.Match(
             err => err == FLAdminError.CharacterNotFound,
@@ -110,7 +114,7 @@ public class CharacterServiceTests
     [Fact]
     public async Task When_Moving_Character_Should_Succeed()
     {
-        var result = await _characterService.MoveCharacter("Chad_Games", "abc123456");
+        var result = await _characterService.MoveCharacter("Chad_Games", "abc123456", _token);
 
         result.IsNone.Should().BeTrue();
     }
@@ -118,7 +122,7 @@ public class CharacterServiceTests
     [Fact]
     public async Task When_Moving_Character_To_Nonexistent_Account_Should_Return_Account_Not_Found()
     {
-        var result = await _characterService.MoveCharacter("Chad_Games", "123");
+        var result = await _characterService.MoveCharacter("Chad_Games", "123", _token);
 
         result.Match(
             err => err == FLAdminError.AccountNotFound,
@@ -129,7 +133,7 @@ public class CharacterServiceTests
     [Fact]
     public async Task When_Nonexistent_Character_Should_Return_Character_Not_Found()
     {
-        var result = await _characterService.MoveCharacter("Not_Chad_Games", "abc123456");
+        var result = await _characterService.MoveCharacter("Not_Chad_Games", "abc123456", _token);
 
         result.Match(
             err => err == FLAdminError.CharacterNotFound,

@@ -15,9 +15,9 @@ public class CharacterService : ICharacterService
 {
     private readonly IAccountDataAccess _accountDataAccess;
     private readonly ICharacterDataAccess _characterDataAccess;
+    private readonly IFlHookService _flHookService;
     private readonly ILogger<CharacterService> _logger;
     private readonly IValidationService _validation;
-    private readonly IFlHookService _flHookService;
 
     //TODO: Most of these functions need to implement checks to see if the character is online or not.
 
@@ -33,7 +33,8 @@ public class CharacterService : ICharacterService
     }
 
 
-    public async Task<Either<FLAdminError, List<Character>>> GetCharactersOfAccount(string accountId)
+    public async Task<Either<FLAdminError, List<Character>>> GetCharactersOfAccount(string accountId,
+        CancellationToken token)
     {
         var accountCheck = await _accountDataAccess.GetAccount(accountId);
         if (accountCheck.IsLeft)
@@ -50,37 +51,29 @@ public class CharacterService : ICharacterService
         return characters;
     }
 
-    public async Task<Either<FLAdminError, Character>> GetCharacterByName(string name)
+    public async Task<Either<FLAdminError, Character>> GetCharacterByName(string name, CancellationToken token)
     {
         return await _characterDataAccess.GetCharacter(name);
     }
 
-    public Task<List<Character>> QueryCharacters(IQueryable<Character> query)
-    {
-        throw new NotImplementedException();
-    }
-
-    public async Task<Option<FLAdminError>> AddCharacter(Character character)
+    public async Task<Option<FLAdminError>> AddCharacter(Character character, CancellationToken token)
     {
         if (_validation.ValidateCharacter(character) is false) return FLAdminError.InvalidCharacter;
 
         return await _characterDataAccess.CreateCharacters(character);
     }
 
-    public async Task<Option<FLAdminError>> DeleteAllCharactersOnAccount(string accountId)
+    public async Task<Option<FLAdminError>> DeleteAllCharactersOnAccount(string accountId, CancellationToken token)
     {
         var characters = await _characterDataAccess.GetCharactersByFilter(x => x.AccountId == accountId);
 
         foreach (var c in characters)
         {
             var res = await _flHookService.CharacterIsOnline(c.CharacterName);
-            bool isOnline = res.Match(
+            var isOnline = res.Match(
                 Left: err => true,
                 Right: b => b is true);
-            if (isOnline)
-            {
-                return FLAdminError.CharacterIsLoggedIn;
-            }
+            if (isOnline) return FLAdminError.CharacterIsLoggedIn;
         }
 
         if (characters.Count is 0) return FLAdminError.CharacterNotFound;
@@ -96,16 +89,13 @@ public class CharacterService : ICharacterService
         return result2;
     }
 
-    public async Task<Option<FLAdminError>> DeleteCharacter(Either<ObjectId, string> character)
+    public async Task<Option<FLAdminError>> DeleteCharacter(Either<ObjectId, string> character, CancellationToken token)
     {
         var isOnlineRes = await _flHookService.CharacterIsOnline(character);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline)
-        {
-            return FLAdminError.CharacterIsLoggedIn;
-        }
+        if (isOnline) return FLAdminError.CharacterIsLoggedIn;
 
         var charRes = await _characterDataAccess.GetCharacter(character);
         if (charRes.IsLeft)
@@ -137,16 +127,14 @@ public class CharacterService : ICharacterService
         return res2;
     }
 
-    public async Task<Option<FLAdminError>> MoveCharacter(Either<ObjectId, string> character, string newAccountId)
+    public async Task<Option<FLAdminError>> MoveCharacter(Either<ObjectId, string> character, string newAccountId,
+        CancellationToken token)
     {
         var isOnlineRes = await _flHookService.CharacterIsOnline(character);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline)
-        {
-            return FLAdminError.CharacterIsLoggedIn;
-        }
+        if (isOnline) return FLAdminError.CharacterIsLoggedIn;
 
         var charRes = await _characterDataAccess.GetCharacter(character);
         if (charRes.IsLeft)
@@ -194,16 +182,13 @@ public class CharacterService : ICharacterService
         return new Option<FLAdminError>();
     }
 
-    public async Task<Option<FLAdminError>> UpdateCharacter(Character character)
+    public async Task<Option<FLAdminError>> UpdateCharacter(Character character, CancellationToken token)
     {
         var isOnlineRes = await _flHookService.CharacterIsOnline(character.CharacterName);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline)
-        {
-            return FLAdminError.CharacterIsLoggedIn;
-        }
+        if (isOnline) return FLAdminError.CharacterIsLoggedIn;
 
         if (_validation.ValidateCharacter(character) is false) return FLAdminError.InvalidCharacter;
 
@@ -212,52 +197,43 @@ public class CharacterService : ICharacterService
 
     public async Task<Option<FLAdminError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
-        T value)
+        T value, CancellationToken token)
     {
         var isOnlineRes = await _flHookService.CharacterIsOnline(character);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline)
-        {
-            return FLAdminError.CharacterIsLoggedIn;
-        }
+        if (isOnline) return FLAdminError.CharacterIsLoggedIn;
 
         return await _characterDataAccess.UpdateFieldOnCharacter(character, fieldName, value);
     }
 
     public async Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character,
-        string fieldName)
+        string fieldName, CancellationToken token)
     {
         var isOnlineRes = await _flHookService.CharacterIsOnline(character);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline)
-        {
-            return FLAdminError.CharacterIsLoggedIn;
-        }
+        if (isOnline) return FLAdminError.CharacterIsLoggedIn;
 
         return await _characterDataAccess.RemoveFieldOnCharacter(character, fieldName);
     }
 
     public async Task<Option<FLAdminError>> AddFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
-        T value)
+        T value, CancellationToken token)
     {
         return await _characterDataAccess.CreateFieldOnCharacter(character, fieldName, value);
     }
 
-    public async Task<Option<FLAdminError>> RenameCharacter(string oldName, string newName)
+    public async Task<Option<FLAdminError>> RenameCharacter(string oldName, string newName, CancellationToken token)
     {
         var isOnlineRes = await _flHookService.CharacterIsOnline(oldName);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline)
-        {
-            return FLAdminError.CharacterIsLoggedIn;
-        }
+        if (isOnline) return FLAdminError.CharacterIsLoggedIn;
 
         //First check if new name is available.
         var newNameAvailableCheck = await _characterDataAccess.GetCharacter(newName);
@@ -282,14 +258,11 @@ public class CharacterService : ICharacterService
     }
 
     public async Task<Either<FLAdminError, List<CharacterSummary>>> GetCharacterSummaries(BsonDocument filter, int page,
-        int pageSize)
+        int pageSize, CancellationToken token)
     {
         var characters = await _characterDataAccess.GetCharactersByFilter(filter, page, pageSize);
 
-        if (characters.IsNullOrEmpty())
-        {
-            return FLAdminError.CharacterNotFound;
-        }
+        if (characters.IsNullOrEmpty()) return FLAdminError.CharacterNotFound;
 
         var summaries = new List<CharacterSummary>(characters.Select(character => new CharacterSummary
         {

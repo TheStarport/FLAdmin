@@ -12,7 +12,7 @@ public class FlServerController(FlServerManager server, ConfigService configServ
 {
     // ReSharper disable once StringLiteralTypo
     [HttpPatch("restartserver")]
-    public async Task<IActionResult> RestartServer([FromBody] int delay)
+    public async Task<IActionResult> RestartServer([FromBody] int delay, CancellationToken token)
     {
         if (!server.IsAlive()) return BadRequest("Server is currently not running and thus cant be restarted.");
 
@@ -26,24 +26,32 @@ public class FlServerController(FlServerManager server, ConfigService configServ
 
         return new ObjectResult(StatusCodes.Status500InternalServerError);
     }
-    
+
+    [HttpPatch("stopserver")]
+    public async Task<IActionResult> StopServer(CancellationToken token)
+    {
+        await server.Terminate(token);
+        return Ok("Server Terminated");
+    }
+
+
     //TODO: Get Server Memory & Online Player Counts.
-    
+
+
     //TODO: Get Server Uptime
-    
+
     //TODO: Get Server Latency
-    
+
     //TODO: Update JSON Configs.
-    
+
     //Gets a json config on a specified path
     [HttpGet("jsonconfig")]
-    public async Task<IActionResult> GetJsonConfig([FromQuery] string path)
+    public async Task<IActionResult> GetJsonConfig([FromQuery] string path, CancellationToken token)
     {
-      var ret  = await configService.GetJsonConfig(path);
-      
-      return ret.Match<IActionResult>(
-          Left: err => err.ParseError(this),
-          Right: Ok);
+        var ret = await configService.GetJsonConfig(path, TODO);
+
+        return ret.Match<IActionResult>(
+            Left: err => err.ParseError(this),
+            Right: Ok);
     }
-    
 }

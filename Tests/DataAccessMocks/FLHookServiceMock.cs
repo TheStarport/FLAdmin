@@ -44,12 +44,14 @@ public class FLHookServiceMock : IFlHookService
         throw new NotImplementedException();
     }
 
-    public Task<Option<FLAdminError>> BeamPlayerToBase(Either<string, ObjectId> characterName, Either<string, int> baseName)
+    public Task<Option<FLAdminError>> BeamPlayerToBase(Either<string, ObjectId> characterName,
+        Either<string, int> baseName)
     {
         throw new NotImplementedException();
     }
 
-    public Task<Option<FLAdminError>> TeleportPlayerToSpot(Either<string, ObjectId> characterName, Either<string, int> system, Vector3? position)
+    public Task<Option<FLAdminError>> TeleportPlayerToSpot(Either<string, ObjectId> characterName,
+        Either<string, int> system, Vector3? position)
     {
         throw new NotImplementedException();
     }

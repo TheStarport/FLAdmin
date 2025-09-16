@@ -18,5 +18,4 @@ public interface IAccountDataAccess
 
     Task<List<Account>> GetAccountsByFilter(Expression<Func<Account, bool>> filter, int page = 1, int pageSize = 100);
     Task<Option<FLAdminError>> ReplaceAccount(Account account);
-  
 }

@@ -112,11 +112,10 @@ public enum FLAdminError
 
     [Description("FlHook is failing to respond and likely frozen.")]
     FlHookFailedToRespond,
-    
+
     [Description("File not found at that specified path")]
     FileNotFound = 5000,
-    
+
     [Description("The provided file is not a valid JSON file.")]
-    FileNotValidJson,
-    
+    FileNotValidJson
 }

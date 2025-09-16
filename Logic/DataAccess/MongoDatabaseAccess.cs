@@ -38,10 +38,7 @@ public class MongoDatabaseAccess : IDatabaseAccess
 
     public async Task<Either<FLAdminError, Guid>> StartSession()
     {
-        if (_session is not null)
-        {
-            return FLAdminError.SessionAlreadyExists;
-        }
+        if (_session is not null) return FLAdminError.SessionAlreadyExists;
 
         try
         {
@@ -68,34 +65,23 @@ public class MongoDatabaseAccess : IDatabaseAccess
         try
         {
             if (commit)
-            {
                 await _session.CommitTransactionAsync();
-            }
             else
-            {
                 await _session.AbortTransactionAsync();
-            }
             return new Option<FLAdminError>();
         }
         catch (MongoException ex)
         {
             return FLAdminError.DatabaseError;
         }
-        
     }
 
 
     public async Task<Either<FLAdminError, BsonDocument>> SubmitQuery(BsonDocument query, Guid sessionId)
     {
-        if (_session is null)
-        {
-            return FLAdminError.SessionNotStarted;
-        }
+        if (_session is null) return FLAdminError.SessionNotStarted;
 
-        if (sessionId == _sessionId)
-        {
-            return FLAdminError.SessionIdMismatch;
-        }
+        if (sessionId == _sessionId) return FLAdminError.SessionIdMismatch;
 
         try
         {

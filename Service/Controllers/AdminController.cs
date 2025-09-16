@@ -5,18 +5,18 @@ using FlAdmin.Common.Services;
 using FlAdmin.Logic.Services;
 using FlAdmin.Service.Extensions;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
 
 namespace FlAdmin.Service.Controllers;
 
 [ApiController]
 [Route("api/admin")]
-public class AdminController(IDatabaseAccess database, IAccountService accountService, IConfigService configService) : ControllerBase
+public class AdminController(IDatabaseAccess database, IAccountService accountService, IConfigService configService)
+    : ControllerBase
 {
     [HttpPost]
     [Route("startatabasesession")]
     [AdminAuthorize(Role.Database)]
-    public async Task<IActionResult> StartDatabaseSession()
+    public async Task<IActionResult> StartDatabaseSession(CancellationToken token)
     {
         var res = await database.StartSession();
 
@@ -28,9 +28,9 @@ public class AdminController(IDatabaseAccess database, IAccountService accountSe
     [HttpPost]
     [Route("querydatabase")]
     [AdminAuthorize(Role.Database)]
-    public async Task<IActionResult> DatabaseQuery([FromBody] CommandPayload command)
+    public async Task<IActionResult> DatabaseQuery([FromBody] CommandPayload command, CancellationToken token)
     {
-        var res  = await database.SubmitQuery(command.Command, command.SessionId);
+        var res = await database.SubmitQuery(command.Command, command.SessionId);
 
         return res.Match<IActionResult>(
             Left: err => err.ParseError(this),
@@ -41,34 +41,35 @@ public class AdminController(IDatabaseAccess database, IAccountService accountSe
     [HttpPost]
     [Route("enddatabasesession")]
     [AdminAuthorize(Role.Database)]
-    public async Task<IActionResult> EndDatabaseSession([FromQuery] bool commit)
+    public async Task<IActionResult> EndDatabaseSession([FromQuery] bool commit, CancellationToken token)
     {
         var res = await database.EndSession(commit);
         return res.Match<IActionResult>(
-            Some: err => err.ParseError(this),
-            None: () => Ok()
+            err => err.ParseError(this),
+            () => Ok()
         );
     }
-    
+
     [HttpPatch("addusername")]
     [AdminAuthorize(Role.ManageAdmins)]
-    public async Task<IActionResult> AddUsernameToAccount([FromBody] LoginModel login, [FromQuery] string accountId)
+    public async Task<IActionResult> AddUsernameToAccount([FromBody] LoginModel login, [FromQuery] string accountId,
+        CancellationToken token)
     {
         if (login?.Username is null || login?.Password is null || login.Password.Trim().Length is 0 ||
             login.Username.Trim().Length is 0)
             return BadRequest();
 
-        var res = await accountService.SetUpAdminAccount(accountId, login);
+        var res = await accountService.SetUpAdminAccount(accountId, login, token);
 
         return res.Match<IActionResult>(
             err => err.ParseError(this),
             Ok("Username and password set successfully.")
         );
     }
-    
+
     [HttpPatch("addroles")]
     [AdminAuthorize(Role.ManageRoles)]
-    public async Task<IActionResult> AddRolesToAccount([FromBody] RolePayload rolePayload)
+    public async Task<IActionResult> AddRolesToAccount([FromBody] RolePayload rolePayload, CancellationToken token)
     {
         var roles = new List<Role>();
         foreach (var roleStr in rolePayload.Roles)
@@ -80,16 +81,16 @@ public class AdminController(IDatabaseAccess database, IAccountService accountSe
             }
 
         if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
-        var res = await accountService.AddRolesToAccount(rolePayload.AccountId.Trim(), roles);
+        var res = await accountService.AddRolesToAccount(rolePayload.AccountId.Trim(), roles, token);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
             Ok($"Role(s) added to {rolePayload.AccountId} successfully.")
         );
     }
-    
+
     [HttpPatch("removeroles")]
     [AdminAuthorize(Role.ManageRoles)]
-    public async Task<IActionResult> RemoveRolesFromAccount([FromBody] RolePayload rolePayload)
+    public async Task<IActionResult> RemoveRolesFromAccount([FromBody] RolePayload rolePayload, CancellationToken token)
     {
         var roles = new List<Role>();
         foreach (var roleStr in rolePayload.Roles)
@@ -102,7 +103,7 @@ public class AdminController(IDatabaseAccess database, IAccountService accountSe
 
         if (roles.Count is 0) return BadRequest("No valid Roles were supplied");
 
-        var res = await accountService.RemoveRolesFromAccount(rolePayload.AccountId.Trim(), roles);
+        var res = await accountService.RemoveRolesFromAccount(rolePayload.AccountId.Trim(), roles, token);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
             Ok($"Role(s) removed from account {rolePayload.AccountId} successfully.")
@@ -110,10 +111,11 @@ public class AdminController(IDatabaseAccess database, IAccountService accountSe
     }
 
     [HttpPatch("updatepassword")]
-    public async Task<IActionResult> UpdatePassword([FromBody] LoginModel login, [FromQuery] string newPassword)
+    public async Task<IActionResult> UpdatePassword([FromBody] LoginModel login, [FromQuery] string newPassword,
+        CancellationToken token)
     {
         if (newPassword.Trim().Length is 0) return BadRequest();
-        var res = await accountService.ChangePassword(login, newPassword);
+        var res = await accountService.ChangePassword(login, newPassword, token);
 
         return res.Match<IActionResult>(
             err => err.ParseError(this),
@@ -123,9 +125,9 @@ public class AdminController(IDatabaseAccess database, IAccountService accountSe
 
     [HttpPatch("resetconfig")]
     [AdminAuthorize(Role.ManageServer)]
-    public async Task<IActionResult> ResetFlAdminConfig()
+    public async Task<IActionResult> ResetFlAdminConfig(CancellationToken token)
     {
-        var res =  await configService.GenerateDefaultFladminConfig();
+        var res = await configService.GenerateDefaultFlAdminConfig(TODO);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
             Ok("Config changed successfully.")

@@ -11,7 +11,7 @@ public class ConfigService(FlAdminConfig config, Logger<ConfigService> logger) :
 {
     private readonly string _freelancerDirectory = config.Server.FreelancerPath;
 
-    public async Task<Either<FLAdminError, JsonDocument>> GetJsonConfig(string path)
+    public async Task<Either<FLAdminError, JsonDocument>> GetJsonConfig(string path, CancellationToken token)
     {
         try
         {
@@ -36,10 +36,9 @@ public class ConfigService(FlAdminConfig config, Logger<ConfigService> logger) :
             logger.LogError("{Message}", e.Message);
             return FLAdminError.FileNotValidJson;
         }
-        
     }
 
-    public async Task<Either<FLAdminError, JsonDocument>> GetFlHookConfig()
+    public async Task<Either<FLAdminError, JsonDocument>> GetFlHookConfig(CancellationToken token)
     {
         try
         {
@@ -65,12 +64,12 @@ public class ConfigService(FlAdminConfig config, Logger<ConfigService> logger) :
         }
     }
 
-    public async Task<Either<FLAdminError, JsonDocument>> GetFlAdminConfig()
+    public async Task<Either<FLAdminError, JsonDocument>> GetFlAdminConfig(CancellationToken token)
     {
         try
         {
             var r = await File.ReadAllTextAsync("fladmin.json");
-            
+
             return JsonDocument.Parse(r);
         }
         //TODO: More metadata on the exception.
@@ -91,22 +90,22 @@ public class ConfigService(FlAdminConfig config, Logger<ConfigService> logger) :
         }
     }
 
-    public Task<Option<FLAdminError>> SetJsonConfig(string path, JsonDocument json)
+    public Task<Option<FLAdminError>> SetJsonConfig(string path, JsonDocument json, CancellationToken token)
     {
         throw new NotImplementedException();
     }
 
-    public Task<Option<FLAdminError>> SetFlHookConfig(JsonDocument json)
+    public Task<Option<FLAdminError>> SetFlHookConfig(JsonDocument json, CancellationToken token)
     {
         throw new NotImplementedException();
     }
 
-    public Task<Option<FLAdminError>> SetFlAdminConfig(FlAdminConfig config)
+    public Task<Option<FLAdminError>> SetFlAdminConfig(FlAdminConfig config, CancellationToken token)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<Option<FLAdminError>> GenerateDefaultFladminConfig()
+    public async Task<Option<FLAdminError>> GenerateDefaultFlAdminConfig(CancellationToken token)
     {
         var newConfig = new FlAdminConfig();
 

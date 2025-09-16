@@ -27,10 +27,7 @@ public interface ICharacterDataAccess
 
     Task<List<Character>> GetCharactersByFilter(Expression<Func<Character, bool>> filter, int page = 1,
         int pageSize = 100);
-    
+
     Task<List<Character>> GetCharactersByFilter(BsonDocument filter, int page = 1,
         int pageSize = 100);
-
-    
-  
 }

@@ -21,7 +21,6 @@ public class AccountServiceTests : IDisposable
         _service = new AccountService(_accountDataAccess, config, new NullLogger<AccountService>());
     }
 
-
     public void Dispose()
     {
         _accountDataAccess.Dispose();
@@ -35,7 +34,9 @@ public class AccountServiceTests : IDisposable
             Id = "123abc"
         };
 
-        var result = await _service.CreateAccounts(account);
+        var token = CancellationToken.None;
+
+        var result = await _service.CreateAccounts(token, account);
 
         result.IsNone.Should().BeTrue();
     }

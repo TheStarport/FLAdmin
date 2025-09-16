@@ -11,9 +11,9 @@ public class AuthService(IJwtProvider jwtProvider, IAccountService accountServic
 {
     private readonly ILogger<AuthService> _logger = logger;
 
-    public async Task<Option<string>> Authenticate(string username, string password)
+    public async Task<Option<string>> Authenticate(string username, string password, CancellationToken token)
     {
-        var account = await accountService.GetAccountByUserName(username);
+        var account = await accountService.GetAccountByUserName(token, username);
         return account.Match<Option<string>>(
             Left: error => new Option<string>(),
             Right: val =>

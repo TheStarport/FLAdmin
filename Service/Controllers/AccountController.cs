@@ -18,9 +18,10 @@ namespace FlAdmin.Service.Controllers;
 public class AccountController(IAccountService accountService) : ControllerBase
 {
     [HttpGet("getaccounts")]
-    public async Task<IActionResult> GetAccounts([FromQuery] int pageCount, [FromQuery] int pageSize)
+    public async Task<IActionResult> GetAccounts([FromQuery] int pageCount, [FromQuery] int pageSize,
+        CancellationToken token)
     {
-        var accounts = await accountService.GetAccounts(pageCount, pageSize);
+        var accounts = await accountService.GetAccounts(token, pageCount, pageSize);
         var accountModels = new List<AccountModel>();
         accounts.ForEach(account => accountModels.Add(account.ToModel()));
         if (accountModels.Count is 0) return NotFound("No accounts were found,");
@@ -29,9 +30,9 @@ public class AccountController(IAccountService accountService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetAccountById(string id)
+    public async Task<IActionResult> GetAccountById(string id, CancellationToken token)
     {
-        var account = await accountService.GetAccountById(id);
+        var account = await accountService.GetAccountById(token, id);
 
         var accountModel = account.Match<Either<FLAdminError, AccountModel>>(
             Left: err => err,
@@ -45,9 +46,9 @@ public class AccountController(IAccountService accountService) : ControllerBase
 
     [HttpGet("activeafterdate")]
     public async Task<IActionResult> GetAccountsActiveAfterDate([FromQuery] DateTimeOffset date,
-        [FromQuery] int pageNumber, [FromQuery] int pageSize)
+        [FromQuery] int pageNumber, [FromQuery] int pageSize, CancellationToken token)
     {
-        var accounts = await accountService.GetAccountsActiveAfterDate(date, pageNumber, pageSize);
+        var accounts = await accountService.GetAccountsActiveAfterDate(date, token, pageNumber, pageSize);
 
         var accountModels = accounts.Match<Either<FLAdminError, List<AccountModel>>>(
             Left: err => err,
@@ -60,10 +61,10 @@ public class AccountController(IAccountService accountService) : ControllerBase
     }
 
     [HttpDelete("delete")]
-    public async Task<IActionResult> DeleteAccounts([FromBody] string[] id)
+    public async Task<IActionResult> DeleteAccounts([FromBody] string[] id, CancellationToken token)
     {
         if (id.Length is 0) return BadRequest();
-        var res = await accountService.DeleteAccounts(id);
+        var res = await accountService.DeleteAccounts(token, id);
 
         return res.Match<IActionResult>(
             err => err.ParseError(this),
@@ -73,13 +74,13 @@ public class AccountController(IAccountService accountService) : ControllerBase
 
     [HttpPatch("update")]
     [AdminAuthorize(Role.SuperAdmin)]
-    public async Task<IActionResult> UpdateAccount([FromBody] AccountModel accountModel)
+    public async Task<IActionResult> UpdateAccount([FromBody] AccountModel accountModel, CancellationToken token)
     {
         var account = accountModel.ToDatabaseAccount();
 
         //Since our external model is different from the database we need to check if any old information is on it and
         // preserve it if it exists (such as password and salts. and username)
-        _ = (await accountService.GetAccountById(account.Id)).Match(
+        _ = (await accountService.GetAccountById(token, account.Id)).Match(
             Left: _ => new Option<Account>(),
             Right: val =>
             {
@@ -94,15 +95,15 @@ public class AccountController(IAccountService accountService) : ControllerBase
             }
         );
 
-        await accountService.UpdateAccount(account);
+        await accountService.UpdateAccount(token, account);
         return Ok($"Account {account.Id} updated successfully");
     }
 
 
     [HttpPatch("ban")]
-    public async Task<IActionResult> BanAccounts([FromBody] BanAccountsPayload bans)
+    public async Task<IActionResult> BanAccounts([FromBody] BanAccountsPayload bans, CancellationToken token)
     {
-        string concatOkMessage = "";
+        var concatOkMessage = "";
         foreach (var ban in bans.Bans)
         {
             var okMessage = ban.Duration is not null
@@ -113,7 +114,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
 
 
         var res = await accountService.BanAccounts(bans.Bans
-            .Select(ban => new Tuple<string, TimeSpan?>(ban.AccountId, ban.Duration)).ToList());
+            .Select(ban => new Tuple<string, TimeSpan?>(ban.AccountId, ban.Duration)).ToList(), token);
 
 
         return res.Match<IActionResult>(
@@ -123,9 +124,9 @@ public class AccountController(IAccountService accountService) : ControllerBase
     }
 
     [HttpPatch("unban")]
-    public async Task<IActionResult> UnbanAccount([FromQuery] string[] accountIds)
+    public async Task<IActionResult> UnbanAccount([FromQuery] string[] accountIds, CancellationToken token)
     {
-        var res = await accountService.UnBanAccounts(accountIds);
+        var res = await accountService.UnBanAccounts(accountIds, token);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
             Ok($"Accounts {accountIds} has been unbanned.")

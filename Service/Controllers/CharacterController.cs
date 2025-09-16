@@ -15,9 +15,9 @@ namespace FlAdmin.Service.Controllers;
 public class CharacterController(ICharacterService characterService, IFlHookService flHookService) : ControllerBase
 {
     [HttpGet("charactername")]
-    public async Task<IActionResult> GetCharacterByName([FromQuery] string name)
+    public async Task<IActionResult> GetCharacterByName([FromQuery] string name, CancellationToken token)
     {
-        var character = await characterService.GetCharacterByName(name);
+        var character = await characterService.GetCharacterByName(name, token);
 
         return character.Match<IActionResult>(
             Left: err => err.ParseError(this),
@@ -25,13 +25,14 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
     }
 
     [HttpGet("charactersummary")]
-    public async Task<IActionResult> GetCharacterSummary([FromQuery] int pageSize, [FromQuery] int page)
+    public async Task<IActionResult> GetCharacterSummary([FromQuery] int pageSize, [FromQuery] int page,
+        CancellationToken token)
     {
         return BadRequest("Currently not implemented");
     }
 
     [HttpGet("onlinecharacters")]
-    public async Task<IActionResult> GetOnlineCharacters()
+    public async Task<IActionResult> GetOnlineCharacters(CancellationToken token)
     {
         var characters = await flHookService.GetOnlineCharacters();
 
@@ -41,9 +42,9 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
     }
 
     [HttpGet("charactersofaccount")]
-    public async Task<IActionResult> GetCharactersOfAccount([FromQuery] string accountId)
+    public async Task<IActionResult> GetCharactersOfAccount([FromQuery] string accountId, CancellationToken token)
     {
-        var characters = await characterService.GetCharactersOfAccount(accountId);
+        var characters = await characterService.GetCharactersOfAccount(accountId, token);
 
         return characters.Match<IActionResult>(
             Left: err => err.ParseError(this),
@@ -51,9 +52,9 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
     }
 
     [HttpPatch("edit")]
-    public async Task<IActionResult> EditCharacter([FromBody] Character character)
+    public async Task<IActionResult> EditCharacter([FromBody] Character character, CancellationToken token)
     {
-        var res = await characterService.UpdateCharacter(character);
+        var res = await characterService.UpdateCharacter(character, token);
 
         return res.Match<IActionResult>(
             err => err.ParseError(this),
@@ -62,9 +63,9 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
     }
 
     [HttpDelete("delete")]
-    public async Task<IActionResult> DeleteCharacter([FromQuery] string name)
+    public async Task<IActionResult> DeleteCharacter([FromQuery] string name, CancellationToken token)
     {
-        var res = await characterService.DeleteCharacter(name);
+        var res = await characterService.DeleteCharacter(name, token);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
             Ok("Character successfully deleted.")
@@ -72,9 +73,10 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
     }
 
     [HttpPatch("movecharactertoaccount")]
-    public async Task<IActionResult> MoveCharacter([FromQuery] string characterName, [FromQuery] string newAccountId)
+    public async Task<IActionResult> MoveCharacter([FromQuery] string characterName, [FromQuery] string newAccountId,
+        CancellationToken token)
     {
-        var res = await characterService.MoveCharacter(characterName, newAccountId);
+        var res = await characterService.MoveCharacter(characterName, newAccountId, token);
 
         return res.Match<IActionResult>(
             err => err.ParseError(this),
@@ -83,9 +85,9 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
     }
 
     [HttpDelete("removeallfromaccount")]
-    public async Task<IActionResult> DeleteCharactersFromAccount([FromQuery] string accountId)
+    public async Task<IActionResult> DeleteCharactersFromAccount([FromQuery] string accountId, CancellationToken token)
     {
-        var res = await characterService.DeleteAllCharactersOnAccount(accountId);
+        var res = await characterService.DeleteAllCharactersOnAccount(accountId, token);
         return res.Match<IActionResult>(
             err => err.ParseError(this),
             Ok($"Characters on account {accountId} deleted.")
@@ -93,9 +95,9 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
     }
 
     [HttpPut("add")]
-    public async Task<IActionResult> AddCharacter([FromBody] Character character)
+    public async Task<IActionResult> AddCharacter([FromBody] Character character, CancellationToken token)
     {
-        var res = await characterService.AddCharacter(character);
+        var res = await characterService.AddCharacter(character, token);
 
         return res.Match<IActionResult>(
             err => err.ParseError(this),
@@ -104,9 +106,10 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
     }
 
     [HttpPatch("rename")]
-    public async Task<IActionResult> RenameCharacter([FromQuery] string oldName, [FromQuery] string newName)
+    public async Task<IActionResult> RenameCharacter([FromQuery] string oldName, [FromQuery] string newName,
+        CancellationToken token)
     {
-        var res = await characterService.RenameCharacter(oldName, newName);
+        var res = await characterService.RenameCharacter(oldName, newName, token);
 
         return res.Match<IActionResult>(
             err => err.ParseError(this),
@@ -116,9 +119,9 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
 
     [HttpPatch("movetoaccount")]
     public async Task<IActionResult> MoveCharacterToAccount([FromQuery] string characterName,
-        [FromQuery] string newAccountId)
+        [FromQuery] string newAccountId, CancellationToken token)
     {
-        var res = await characterService.MoveCharacter(characterName, newAccountId);
+        var res = await characterService.MoveCharacter(characterName, newAccountId, token);
 
         return res.Match<IActionResult>(
             err => err.ParseError(this),
@@ -127,9 +130,10 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
     }
 
     [HttpGet("summariesbyfilter")]
-    public async Task<IActionResult> GetCharacterSummariesByFilter([FromQuery] BsonDocument filter, [FromQuery] int pageSize, [FromQuery] int page)
+    public async Task<IActionResult> GetCharacterSummariesByFilter([FromQuery] BsonDocument filter,
+        [FromQuery] int pageSize, [FromQuery] int page, CancellationToken token)
     {
-        var res = await characterService.GetCharacterSummaries(filter, page, pageSize);
+        var res = await characterService.GetCharacterSummaries(filter, page, pageSize, token);
 
         return res.Match<IActionResult>(
             Left: err => err.ParseError(this),

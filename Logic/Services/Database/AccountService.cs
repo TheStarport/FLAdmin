@@ -14,28 +14,22 @@ namespace FlAdmin.Logic.Services.Database;
 public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig config, ILogger<AccountService> logger)
     : IAccountService
 {
-    public async Task<List<Account>> GetAccounts(int pageCount, int pageSize)
+    public async Task<List<Account>> GetAccounts(CancellationToken token, int pageCount, int pageSize)
     {
         return await accountDataAccess.GetAccountsByFilter(account => true, pageCount, pageSize);
     }
 
-    public List<Account> QueryAccounts(IQueryable<Account> query)
-    {
-        logger.LogError("Attempted usage of unimplemented function.");
-        throw new NotImplementedException();
-    }
-
-    public async Task<Either<FLAdminError, Account>> GetAccountById(string id)
+    public async Task<Either<FLAdminError, Account>> GetAccountById(CancellationToken token, string id)
     {
         return await accountDataAccess.GetAccount(id);
     }
 
-    public async Task<Option<FLAdminError>> CreateAccounts(params Account[] accounts)
+    public async Task<Option<FLAdminError>> CreateAccounts(CancellationToken token, params Account[] accounts)
     {
         return await accountDataAccess.CreateAccounts(accounts);
     }
 
-    public async Task<Option<FLAdminError>> UpdateAccount(Account account)
+    public async Task<Option<FLAdminError>> UpdateAccount(CancellationToken token, Account account)
     {
         var acc = accountDataAccess.GetAccount(account.Id);
 
@@ -43,7 +37,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return await accountDataAccess.UpdateAccount(account.ToBsonDocument());
     }
 
-    public async Task<Option<FLAdminError>> DeleteAccounts(params string[] ids)
+    public async Task<Option<FLAdminError>> DeleteAccounts(CancellationToken token, params string[] ids)
     {
         if (ids.Contains(config.SuperAdminName)) return FLAdminError.AccountIsProtected;
 
@@ -51,21 +45,15 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return await accountDataAccess.DeleteAccounts(ids);
     }
 
-    public async Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(string accountId, string name, T value)
+    public async Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(CancellationToken token, string accountId,
+        string name, T value)
     {
         if (name is "WebRoles" or "GameRoles") return FLAdminError.AccountFieldIsProtected;
 
         return await accountDataAccess.UpdateFieldOnAccount(accountId, name, value);
     }
 
-    public List<Account> GetOnlineAccounts()
-    {
-        //TODO: Requires the implementation of message queue talking with FLServer for this functionality.
-        logger.LogError("Attempted usage of unimplemented function.");
-        throw new NotImplementedException();
-    }
-
-    public async Task<Option<FLAdminError>> CreateWebMaster(LoginModel loginModel)
+    public async Task<Option<FLAdminError>> CreateWebMaster(CancellationToken token, LoginModel loginModel)
     {
         var name = loginModel.Username.Trim();
 
@@ -89,7 +77,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return new Option<FLAdminError>();
     }
 
-    public async Task<Either<FLAdminError, Account>> GetAccountByUserName(string userName)
+    public async Task<Either<FLAdminError, Account>> GetAccountByUserName(CancellationToken token, string userName)
     {
         var accounts = await accountDataAccess.GetAccountsByFilter(account => account.Username == userName);
         if (accounts.Count == 0) return FLAdminError.AccountNotFound;
@@ -103,7 +91,9 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return accounts[0];
     }
 
-    public async Task<Either<FLAdminError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date, int page = 1,
+    public async Task<Either<FLAdminError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date,
+        CancellationToken token,
+        int page = 1,
         int pageSize = 100)
     {
         var accounts = await accountDataAccess.GetAccountsByFilter(x => x.LastOnline >= date, page, pageSize);
@@ -114,7 +104,8 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
     }
 
 
-    public async Task<Option<FLAdminError>> SetUpAdminAccount(string accountId, LoginModel login)
+    public async Task<Option<FLAdminError>> SetUpAdminAccount(string accountId,
+        LoginModel login, CancellationToken token)
     {
         var accountEnum = await accountDataAccess.GetAccount(accountId);
         var account = accountEnum.Match<Account>(
@@ -155,7 +146,8 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return new Option<FLAdminError>();
     }
 
-    public async Task<Option<FLAdminError>> ChangePassword(LoginModel login, string newPassword)
+    public async Task<Option<FLAdminError>> ChangePassword(LoginModel login,
+        string newPassword, CancellationToken token)
     {
         var username = login.Username.Trim();
         var foundAccounts = await accountDataAccess.GetAccountsByFilter(acc => acc.Username == username);
@@ -181,7 +173,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return await accountDataAccess.UpdateAccount(account.ToBsonDocument());
     }
 
-    public async Task<Option<FLAdminError>> BanAccounts(List<Tuple<string, TimeSpan?>> bans)
+    public async Task<Option<FLAdminError>> BanAccounts(List<Tuple<string, TimeSpan?>> bans, CancellationToken token)
     {
         foreach (var ban in bans)
         {
@@ -196,16 +188,13 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
             var ret = await accountDataAccess.UpdateAccount(doc);
 
             //TODO:When error handling is reworked this should catch each individual error and still attempt to ban every item instead of quitting on first error.
-            if (ret.IsSome)
-            {
-                return ret;
-            }
+            if (ret.IsSome) return ret;
         }
 
         return Option<FLAdminError>.None;
     }
 
-    public async Task<Option<FLAdminError>> UnBanAccounts(string[] ids)
+    public async Task<Option<FLAdminError>> UnBanAccounts(string[] ids, CancellationToken token)
     {
         foreach (var id in ids)
         {
@@ -217,21 +206,15 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
             var ret = await accountDataAccess.UpdateAccount(doc);
 
             //TODO:When error handling is reworked this should catch each individual error and still attempt to ban every item instead of quitting on first error.
-            if (ret.IsSome)
-            {
-                return ret;
-            }
+            if (ret.IsSome) return ret;
         }
 
         return Option<FLAdminError>.None;
     }
 
-    public async Task<Option<FLAdminError>> RemoveRolesFromAccount(string id, List<Role> roles)
+    public async Task<Option<FLAdminError>> RemoveRolesFromAccount(string id, List<Role> roles, CancellationToken token)
     {
-        if (roles.Contains(Role.SuperAdmin))
-        {
-            return FLAdminError.SuperAdminRoleIsProtected;
-        }
+        if (roles.Contains(Role.SuperAdmin)) return FLAdminError.SuperAdminRoleIsProtected;
 
 
         var set = roles.Select(x => x.ToString()).ToHashSet();
@@ -245,12 +228,9 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return await accountDataAccess.UpdateFieldOnAccount(id, "webRoles", acc.WebRoles);
     }
 
-    public async Task<Option<FLAdminError>> AddRolesToAccount(string id, List<Role> roles)
+    public async Task<Option<FLAdminError>> AddRolesToAccount(string id, List<Role> roles, CancellationToken token)
     {
-        if (roles.Contains(Role.SuperAdmin))
-        {
-            return FLAdminError.SuperAdminRoleIsProtected;
-        }
+        if (roles.Contains(Role.SuperAdmin)) return FLAdminError.SuperAdminRoleIsProtected;
 
         var set = roles.Select(x => x.ToString()).ToHashSet();
         var accountEnum = await accountDataAccess.GetAccount(id);

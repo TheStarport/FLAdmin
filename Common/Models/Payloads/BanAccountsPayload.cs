@@ -5,7 +5,6 @@ public struct BanAccountsPayload
     public List<PlayerBan> Bans;
 }
 
-
 public struct PlayerBan
 {
     public string AccountId;

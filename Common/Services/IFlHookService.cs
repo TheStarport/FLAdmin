@@ -1,5 +1,4 @@
 using System.Numerics;
-using FlAdmin.Common.Models;
 using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Models.Payloads;
 using LanguageExt;
@@ -11,7 +10,7 @@ public interface IFlHookService
 {
     public Task<Option<FLAdminError>> PingFlHook();
 
-    public Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<ObjectId,string> characterName);
+    public Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<ObjectId, string> characterName);
     public Task<Option<FLAdminError>> KickCharacter(Either<string, ObjectId> characterName);
     public Task<Option<FLAdminError>> KillCharacter(Either<string, ObjectId> characterName);
 
@@ -27,6 +26,4 @@ public interface IFlHookService
         Vector3? position);
 
     public Task<Either<FLAdminError, OnlinePlayerPayload>> GetOnlineCharacters();
-    
-    
 }

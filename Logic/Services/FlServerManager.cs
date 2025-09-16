@@ -18,23 +18,21 @@ public class FlServerManager(
     : BackgroundService
 {
     private readonly List<long> _flserverMemUsage = new();
+
+    private ServerDiagnosticData _currentServerDiagnosticData;
     private Process? _flServer;
     private bool _flserverReady;
-    private bool _readyToStart = true;
-    private int _restartDelayInSeconds = 30;
-    private int totalServerLogins;
-
-    private DateTimeOffset _startTime;
-    private TimeSpan _serverOnlineTime;
-
-
-    private bool _shouldRestartServer;
-
-    private ServerDiagnosticData _currentServerDiagnosticData = new ServerDiagnosticData();
 
     //Keeps track of the past 6 hours of server diagnostics.
-    private FixedSizeQueue<ServerDiagnosticData> _pastServerDiagnostics =
-        new FixedSizeQueue<ServerDiagnosticData>(360);
+    private FixedSizeQueue<ServerDiagnosticData> _pastServerDiagnostics = new(360);
+
+    private bool _readyToStart = true;
+    private int _restartDelayInSeconds = 30;
+    private TimeSpan _serverOnlineTime;
+    private bool _shouldRestartServer;
+
+    private DateTimeOffset _startTime;
+    private int totalServerLogins;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -143,10 +141,10 @@ public class FlServerManager(
         _flServer?.StandardInput.WriteLine(command);
     }
 
-    public void Terminate()
+    public async Task Terminate(CancellationToken token)
     {
         _flServer?.Kill();
-        _flServer?.WaitForExit();
+        await _flServer?.WaitForExitAsync()!;
         _readyToStart = false;
         _flserverReady = false;
     }
