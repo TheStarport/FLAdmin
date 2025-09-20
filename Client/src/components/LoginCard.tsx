@@ -52,12 +52,12 @@ function LoginCard() {
 
   return (
     <Card>
+      <CardHeader>
+        <CardTitle className="flex flex-col gap-4 items-center">
+          <b className="text-5xl">FLAdmin</b>
+        </CardTitle>
+      </CardHeader>
       <CardContent className="min-w-100">
-        <CardHeader>
-          <CardTitle className="flex flex-col gap-4 items-center">
-            <b className="text-5xl">FLAdmin</b>
-          </CardTitle>
-        </CardHeader>
         <Form {...loginForm}>
           <form
             onSubmit={loginForm.handleSubmit(onSubmit)}

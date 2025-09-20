@@ -50,12 +50,12 @@ function SetupCard() {
 
   return (
     <Card>
+      <CardHeader>
+        <CardTitle className="text-center">
+          <b className="text-5xl">FLAdmin</b>
+        </CardTitle>
+      </CardHeader>
       <CardContent>
-        <CardHeader>
-          <CardTitle className="flex flex-col gap-4 items-center">
-            <b className="text-5xl">FLAdmin</b>
-          </CardTitle>
-        </CardHeader>
         <Form {...setupForm}>
           <form
             onSubmit={setupForm.handleSubmit(onSubmit)}
