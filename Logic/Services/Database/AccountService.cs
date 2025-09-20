@@ -1,5 +1,6 @@
 ﻿using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
+using FlAdmin.Common.Extensions;
 using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
@@ -53,7 +54,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return await accountDataAccess.UpdateFieldOnAccount(accountId, name, value, token);
     }
 
-    public async Task<Option<FLAdminError>> CreateWebMaster(CancellationToken token, LoginModel loginModel)
+    public async Task<Either<FLAdminError, Account>> CreateWebMaster(CancellationToken token, LoginModel loginModel)
     {
         var name = loginModel.Username.Trim();
 
@@ -67,14 +68,15 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
 
         var account = new Account
         {
-            Id = config.SuperAdminName,
+            Id = config.SuperAdminName.Trim(),
             PasswordHash = hashedPass,
             Salt = salt,
             Username = name,
             WebRoles = ["SuperAdmin"]
         };
+        
         await accountDataAccess.CreateAccounts(token, account);
-        return new Option<FLAdminError>();
+        return account;
     }
 
     public async Task<Either<FLAdminError, Account>> GetAccountByUserName(CancellationToken token, string userName)
@@ -226,6 +228,26 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         if (acc == null) return FLAdminError.AccountNotFound;
         acc.WebRoles.ExceptWith(set);
         return await accountDataAccess.UpdateFieldOnAccount(id, "webRoles", acc.WebRoles, token);
+    }
+
+    public async Task<Either<FLAdminError, bool>> IsWebMasterSetup(CancellationToken token)
+    {
+        var username = config.SuperAdminName.Trim();
+        var webMaster = await GetAccountByUserName(token, username);
+
+        if (!webMaster.IsLeft)
+        {
+            return true;
+        }
+
+        var left = webMaster.GetLeft();
+        if (left == FLAdminError.AccountNotFound)
+        {
+            return false;
+        }
+
+        return left;
+
     }
 
     public async Task<Option<FLAdminError>> AddRolesToAccount(string id, List<Role> roles, CancellationToken token)

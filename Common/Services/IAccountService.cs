@@ -86,7 +86,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> CreateWebMaster(CancellationToken token, LoginModel loginModel);
+    Task<Either<FLAdminError, Account>> CreateWebMaster(CancellationToken token, LoginModel loginModel);
 
     /// <summary>
     ///     Gets the account based on the username associated with the account
@@ -190,4 +190,13 @@ public interface IAccountService
     ///     operation failed.
     /// </returns>
     Task<Option<FLAdminError>> RemoveRolesFromAccount(string id, List<Role> roles, CancellationToken token);
+
+    /// <summary>
+    ///     Detects whether the super admin account has been setup or if first-time setup needs to be performed
+    /// </summary>
+    /// <returns>
+    ///     A "Left/Right" Either object, Left being an error if the operation was a failure,
+    ///     a boolean that will be true if the web master has been setup already.
+    /// </returns>
+    Task<Either<FLAdminError, bool>> IsWebMasterSetup(CancellationToken token);
 }

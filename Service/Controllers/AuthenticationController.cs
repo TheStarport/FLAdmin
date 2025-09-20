@@ -1,4 +1,5 @@
 ﻿using FlAdmin.Common.Configs;
+using FlAdmin.Common.Extensions;
 using FlAdmin.Common.Models.Auth;
 using FlAdmin.Common.Services;
 using FlAdmin.Service.Extensions;
@@ -28,7 +29,7 @@ public class AuthenticationController(
 
     [HttpPost("setup")]
     [AllowAnonymous]
-    public async Task<IActionResult> Setup(string password, CancellationToken token)
+    public async Task<IActionResult> Setup([FromBody]string password, CancellationToken token)
     {
         var username = flconfig.SuperAdminName;
 
@@ -40,8 +41,19 @@ public class AuthenticationController(
 
         var res = await accountService.CreateWebMaster(token, login);
         return res.Match<IActionResult>(
-            err => err.ParseError(this),
-            Ok("SuperAdmin successfully created.")
+            Left: err => err.ParseError(this),
+            Right: val => Ok(val.ToModel())
+        );
+    }
+
+    [HttpGet("issetup")]
+    [AllowAnonymous]
+    public async Task<IActionResult> IsSetup(CancellationToken token)
+    {
+        var res = await accountService.IsWebMasterSetup(token);
+        return res.Match<IActionResult>(
+            Left: err => err.ParseError(this),
+            Right: val => Ok(val)
         );
     }
 

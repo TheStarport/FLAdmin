@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using SharpDX;
 
 var builder = WebApplication.CreateBuilder(args);
 

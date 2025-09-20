@@ -62,6 +62,7 @@ public class FlServerController(FlServerManager server, ConfigService configServ
         return Task.FromResult<IActionResult>(Ok(server.GetCurrentPlayerCount()));
     }
 
+    [HttpGet("memory")]
     public Task<IActionResult> GetServerMemory()
     {
         return Task.FromResult<IActionResult>(Ok(server.GetServerMemory()));
