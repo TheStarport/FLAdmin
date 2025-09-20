@@ -1,13 +1,8 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getCookie } from "typescript-cookie";
+import { createFileRoute } from "@tanstack/react-router";
+import { routeGuard } from "@/contexts/AuthContext";
 
 export const Route = createFileRoute("/plugin_manager")({
-  beforeLoad: () => {
-    const token = getCookie("flAdminToken");
-    if (!token) {
-      throw redirect({ to: "/login" });
-    }
-  },
+  beforeLoad: routeGuard,
   component: PluginsPage,
 });
 

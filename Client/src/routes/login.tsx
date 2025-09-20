@@ -1,14 +1,9 @@
 import LoginCard from "@/components/LoginCard";
-import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getCookie } from "typescript-cookie";
+import { createFileRoute } from "@tanstack/react-router";
+import { loginGuard } from "@/contexts/AuthContext";
 
 export const Route = createFileRoute("/login")({
-  beforeLoad: () => {
-    const token = getCookie("flAdminToken");
-    if (token) {
-      throw redirect({ to: "/" });
-    }
-  },
+  beforeLoad: loginGuard,
   component: LoginPage,
 });
 
