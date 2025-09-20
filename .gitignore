@@ -9,6 +9,9 @@ FlAdmin.sln.DotSettings.user
 Properties
 SeedData
 
+# env
+.env
+
 # Client
 
 Client/logs

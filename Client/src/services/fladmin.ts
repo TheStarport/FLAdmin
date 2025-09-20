@@ -2,7 +2,7 @@ import axios from "axios";
 import type Account from "@/types/account";
 
 const fladminClient = axios.create({
-  baseURL: "http://localhost:5000", // TODO backend url
+  baseURL: await import.meta.env.VITE_FLADMIN_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -62,7 +62,7 @@ export const moveCharacterToAccount = (
 // TODO: Use returned Account
 export const setup = (password: string) =>
   fladminClient.post<string>("/api/auth/setup", `"${password}"`, {
-    timeout: 5000
+    timeout: 5000,
   });
 
 // TODO endpoint could change
