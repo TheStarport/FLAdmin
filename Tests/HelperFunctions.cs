@@ -31,8 +31,8 @@ public static class HelperFunctions
             .RuleFor(a => a.WebRoles, (f, a) => GenerateRandomWebRoles(a.Username))
             .RuleFor(a => a.PasswordHash,
                 (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
-            .RuleFor(a => a.Salt, (f, a) => TestSalter(a.PasswordHash))
-            .RuleFor(a => a.ScheduledUnbanDate, f => f.Date.Future(5));
+            .RuleFor(a => a.Salt, (f, a) => TestSalter(a.PasswordHash));
+          // .RuleFor(a => a.ScheduledUnbanDate, f => f.Date.Future(5));
 
 
         var webAccountGenerator = new Faker<Account>()
@@ -129,8 +129,8 @@ public static class HelperFunctions
             .RuleFor(a => a.WebRoles, (_, a) => GenerateRandomWebRoles(a.Username))
             .RuleFor(a => a.PasswordHash,
                 (f, a) => PasswordTestHasher(a.Username, f.Random.String2(10)))
-            .RuleFor(a => a.Salt, (_, a) => TestSalter(a.PasswordHash))
-            .RuleFor(a => a.ScheduledUnbanDate, f => f.Date.Future(5));
+            .RuleFor(a => a.Salt, (_, a) => TestSalter(a.PasswordHash));
+          //  .RuleFor(a => a.ScheduledUnbanDate, f => f.Date.Future(5));
 
 
         var webAccountGenerator = new Faker<Account>()

@@ -8,6 +8,6 @@ public class CharacterSummary
     public required string Name { get; set; }
     public required int Money { get; set; }
     public string AccountId { get; set; }
-    public long Base { get; set; }
+    public int Base { get; set; }
     public string Rep { get; set; }
 }

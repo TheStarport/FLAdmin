@@ -18,9 +18,9 @@ public class Character
 
     [BsonElement("repGroup")] public string? RepGroup { get; set; }
 
-    [BsonElement("pos")] public Vector3? Pos { get; set; }
+    [BsonElement("pos")] public float[]? Pos { get; set; }
 
-    [BsonElement("rot")] public Vector3? Rot { get; set; }
+    [BsonElement("rot")] public float[]? Rot { get; set; }
 
     [BsonElement("interface")] public int InterfaceState { get; set; }
 
@@ -32,23 +32,25 @@ public class Character
 
     [BsonElement("canTradeLane")] public bool CanTradeLane { get; set; }
 
-    [BsonElement("lastDockedBase")] public long LastDockedBase { get; set; }
+    [BsonElement("lastDockedBase")] public int LastDockedBase { get; set; }
 
-    [BsonElement("currentBase")] public long CurrentBase { get; set; }
+    [BsonElement("currentBase")] public int CurrentBase { get; set; }
 
-    [BsonElement("currentRoom")] public long CurrentRoom { get; set; }
+    [BsonElement("currentRoom")] public int CurrentRoom { get; set; }
 
-    [BsonElement("numOfKills")] public int KillCount { get; set; }
+    [BsonElement("killCount")] public int KillCount { get; set; }
 
-    [BsonElement("numOfFailedMissions")] public int MissionFailureCount { get; set; }
+    [BsonElement("missionFailureCount")] public int MissionFailureCount { get; set; }
 
-    [BsonElement("numOfSuccessMissions")] public int MissionSuccessCount { get; set; }
+    [BsonElement("missionSuccessCount")] public int MissionSuccessCount { get; set; }
 
-    [BsonElement("shipHash")] public long ShipHash { get; set; }
+    [BsonElement("voice")] public string Voice { get; set; } = "trent_voice";
 
-    [BsonElement("system")] public long System { get; set; }
+    [BsonElement("shipHash")] public int ShipHash { get; set; }
 
-    [BsonElement("totalTimePlayed")] public long TotalTimePlayed { get; set; }
+    [BsonElement("system")] public int System { get; set; }
+
+    [BsonElement("totalTimePlayed")] public float TotalTimePlayed { get; set; }
 
     [BsonElement("baseCostume")] public Costume? BaseCostume { get; set; }
 
@@ -79,6 +81,15 @@ public class Character
     [BsonElement("npcVisits")] public List<NpcVisit> NpcVisits { get; set; } = new();
 
     [BsonElement("weaponGroups")] public Dictionary<string, List<string>> WeaponGroups { get; set; } = new();
+    
+    [BsonElement("randomMissionsFailed")]
+    public Dictionary<string, int> RandomMissionsFailed { get; set; } = [];
+    
+    [BsonElement("randomMissionsCompleted")]
+    public Dictionary<string, int> RandomMissionsCompleted  { get; set; } = [];
+    
+    [BsonElement("randomMissionsAborted")]
+    public Dictionary<string, int> RandomMissionsAborted  { get; set; } = [];
 
     [BsonExtraElements] public BsonDocument? Extra { get; set; }
 }

@@ -4,9 +4,9 @@ namespace FlAdmin.Common.Models.Database;
 
 public class NpcVisit
 {
-    [BsonElement("npcId")] public long NpcId { get; set; }
+    [BsonElement("npcId")] public int NpcId { get; set; }
 
-    [BsonElement("baseId")] public long BaseId { get; set; }
+    [BsonElement("baseId")] public int BaseId { get; set; }
 
     [BsonElement("interactionCount")] public int InteractionCount { get; set; }
 

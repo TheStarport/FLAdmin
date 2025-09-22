@@ -8,7 +8,7 @@ public class AccountModel
     [BsonId] public required string Id { get; set; }
 
     [BsonElement("characters")] public List<ObjectId> Characters { get; set; } = [];
-    [BsonElement("scheduledUnbanDate")] public DateTimeOffset? ScheduledUnbanDate { get; set; }
+    [BsonElement("scheduledUnbanDate")] public long? ScheduledUnbanDate { get; set; }
     [BsonElement("lastOnline")] public DateTimeOffset? LastOnline { get; set; }
     [BsonElement("gameRoles")] public List<string> GameRoles { get; set; } = new();
     [BsonElement("webRoles")] public List<string> WebRoles { get; set; } = new();

@@ -9,7 +9,7 @@ public class Account
     [BsonId] public required string Id { get; set; }
 
     [BsonElement("characters")] public List<ObjectId> Characters { get; set; } = [];
-    [BsonElement("scheduledUnbanDate")] public DateTimeOffset? ScheduledUnbanDate { get; set; }
+    [BsonElement("scheduledUnbanDate")] public long? ScheduledUnbanDate { get; set; }
     [BsonElement("gameRoles")] public HashSet<string> GameRoles { get; set; } = new();
     [BsonElement("webRoles")] public HashSet<string> WebRoles { get; set; } = new();
     [BsonElement("cash")] public long Cash { get; set; }

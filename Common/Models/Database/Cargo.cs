@@ -4,11 +4,11 @@ namespace FlAdmin.Common.Models.Database;
 
 public class Cargo
 {
-    [BsonElement("cargoId")] public long CargoId { get; set; }
+    [BsonElement("cargoId")] public int CargoId { get; set; }
 
-    [BsonElement("amount")] public long Amount { get; set; }
+    [BsonElement("amount")] public int Amount { get; set; }
 
-    [BsonElement("health")] public long Health { get; set; }
+    [BsonElement("health")] public int Health { get; set; }
 
     [BsonElement("isMissionCargo")] public bool IsMissionCargo { get; set; }
 }
