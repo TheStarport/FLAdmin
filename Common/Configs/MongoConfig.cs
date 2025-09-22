@@ -3,11 +3,12 @@
 public class MongoConfig
 {
     public string ConnectionString { get; set; } = "mongodb://localhost";
-    public string DatabaseName { get; set; } = "FLHook";
+    
+    public string DatabaseName { get; set; } = "Freelancer";
     public string AccountCollectionName { get; set; } = "accounts";
     public string CharacterCollectionName { get; set; } = "characters";
 
-    public string FlAdminLogCollectionName { get; set; } = "logs";
+    public string FlAdminLogCollectionName { get; set; } = "fladminlogs";
     
-    public string JobCollectionName { get; set; } = "jobs";
+    public string JobDatabaseName { get; set; } = "jobs";
 }

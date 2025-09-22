@@ -72,27 +72,30 @@ builder.Host.UseSerilog((_, lc) =>
 {
     lc.Enrich.FromLogContext();
     if (config.Logging.LoggingLocation == LoggingLocation.Console)
-        lc.WriteTo.MongoDBBson(config.Mongo.ConnectionString + "/" + config.Mongo.FlAdminLogCollectionName);
+        lc.WriteTo.MongoDBBson(
+            databaseUrl: config.Mongo.ConnectionString + "/" + config.Mongo.DatabaseName + "/",
+            collectionName: config.Mongo.FlAdminLogCollectionName);
 });
 
 //Configure Hangfire to use MongoDB
 var mongoConnection = config.Mongo.ConnectionString;
 
-builder.Services.AddHangfire(configuration => 
+builder.Services.AddHangfire(configuration =>
     configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
         .UseSimpleAssemblyNameTypeSerializer()
         .UseRecommendedSerializerSettings()
-        .UseMongoStorage(mongoConnection, config.Mongo.JobCollectionName, new MongoStorageOptions
-        {
-            MigrationOptions = new MongoMigrationOptions
+        .UseMongoStorage(connectionString: config.Mongo.ConnectionString,
+            databaseName: config.Mongo.JobDatabaseName, new MongoStorageOptions
             {
-                MigrationStrategy = new MigrateMongoMigrationStrategy(),
-                BackupStrategy = new CollectionMongoBackupStrategy()
-            },
-            CheckConnection = true
-        }));
+                MigrationOptions = new MongoMigrationOptions
+                {
+                    MigrationStrategy = new MigrateMongoMigrationStrategy(),
+                    BackupStrategy = new CollectionMongoBackupStrategy()
+                },
+                CheckConnection = true
+            }));
 
-builder.Services.AddHangfireServer( options => options.ServerName = "FLAdmin");
+builder.Services.AddHangfireServer(options => options.ServerName = "FLAdmin");
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

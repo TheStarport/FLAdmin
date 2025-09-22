@@ -230,6 +230,8 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return await accountDataAccess.UpdateFieldOnAccount(id, "webRoles", acc.WebRoles, token);
     }
 
+    
+    //TODO: Convert this to the proper pattern matching syntax.
     public async Task<Either<FLAdminError, bool>> IsWebMasterSetup(CancellationToken token)
     {
         var username = config.SuperAdminName.Trim();

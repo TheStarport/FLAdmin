@@ -36,9 +36,6 @@ public class FlServerManager(
 
     private DateTimeOffset _startTime;
     private int totalServerLogins;
-
-    
-    
     
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -100,8 +97,23 @@ public class FlServerManager(
             }
         }
     }
-    
-    
+
+    /// <summary>
+    /// Sets a specified period to restart the server
+    /// </summary>
+    /// <param name="cronString">A cron string for the restart period.</param>
+    /// <param name="delay">Delay for the server restart</param>
+    public void SetServerRestart(string cronString, int delay = 30)
+    {
+        try
+        {
+            RecurringJob.AddOrUpdate("ServerRestart", () => RestartServer(delay), cronString);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to restart server restart.");
+        }
+    }
 
 
     /// <summary>
@@ -132,7 +144,9 @@ public class FlServerManager(
         }
     }
 
-    private async Task ServerDiagnostics()
+    // ReSharper disable once MemberCanBePrivate.Global
+    //Must be public for Hangfire to execute this function.
+    public async Task ServerDiagnostics()
     {
         _serverOnlineTime = DateTimeOffset.Now - _startTime;
         var memory = _flServer!.VirtualMemorySize64;
@@ -155,6 +169,8 @@ public class FlServerManager(
         await _flServer?.WaitForExitAsync(token)!;
         _readyToStart = false;
         FlserverReady = false;
+        
+        RecurringJob.RemoveIfExists("FLServerDiagnostic");
     }
 
     public Option<FLAdminError> StartServer(CancellationToken token)
@@ -223,8 +239,7 @@ public class FlServerManager(
             _startTime = DateTimeOffset.Now;
             _flServer.BeginOutputReadLine();
             _flServer.BeginErrorReadLine();
-
-
+            
             RecurringJob.AddOrUpdate("FLServerDiagnostic", () => ServerDiagnostics(), Cron.Minutely);
 
             return true;
