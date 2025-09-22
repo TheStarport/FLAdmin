@@ -8,6 +8,9 @@ public enum FLAdminError
     
     [Description("Request was cancelled")]
     RequestCancelled = 10,
+    
+    [Description("Hangfire scheduler failed")]
+    HangfireFailure = 20,
 
     [Description("Database encountered an unexpected error.")]
     DatabaseError = 1000,

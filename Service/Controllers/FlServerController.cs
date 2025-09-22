@@ -74,6 +74,17 @@ public class FlServerController(FlServerManager server, ConfigService configServ
         return Task.FromResult<IActionResult>(Ok(server.GetServerUptime()));
     }
 
+    [HttpPatch("setscheduledrestart")]
+    public Task<IActionResult> SetScheduledRestart([FromQuery] int delay, [FromQuery] string cronString,
+        CancellationToken token)
+    {
+        var ret = server.SetServerRestart(cronString, delay);
+        
+        return Task.FromResult(ret.Match<IActionResult>( 
+            err => BadRequest(), 
+            Ok()));
+    }
+
     //TODO: Get Server Latency.
 
     //TODO: Update JSON Configs.

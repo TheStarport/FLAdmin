@@ -98,23 +98,26 @@ public class FlServerManager(
         }
     }
 
-    /// <summary>
-    /// Sets a specified period to restart the server
-    /// </summary>
-    /// <param name="cronString">A cron string for the restart period.</param>
-    /// <param name="delay">Delay for the server restart</param>
-    public void SetServerRestart(string cronString, int delay = 30)
+   /// <summary>
+   /// Sets a specified period to restart the server
+   /// </summary>
+   /// <param name="cronString">A cron string for the restart period.</param>
+   /// <param name="delay">Delay for the server restart</param>
+   /// <returns></returns>
+    public Option<FLAdminError> SetServerRestart(string cronString, int delay = 30)
     {
         try
         {
             RecurringJob.AddOrUpdate("ServerRestart", () => RestartServer(delay), cronString);
+
+            return new Option<FLAdminError>();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to restart server restart.");
+            logger.LogError(ex, "Failed to set server restart.");
+            return FLAdminError.HangfireFailure;
         }
     }
-
 
     /// <summary>
     ///     Restarts the FlServer instance that FlAdmin is managing, delay is not exact and may vary a few seconds.
