@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { routeGuard } from "@/contexts/AuthContext";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import FLAdminSidebar from "@/components/FLAdminSidebar";
 
 export const Route = createFileRoute("/")({
   beforeLoad: routeGuard,
@@ -7,5 +9,12 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
-  return <div>Hello from Dashboard!</div>;
+  return (
+    <main>
+      <FLAdminSidebar />
+      <div>
+        <SidebarTrigger />
+      </div>
+    </main>
+  );
 }

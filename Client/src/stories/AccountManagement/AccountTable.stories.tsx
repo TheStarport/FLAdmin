@@ -3,7 +3,7 @@ import { accountColumns } from "@/components/AccountManagement/AccountTableColum
 import type Account from "@/types/account";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { v4 as uuidv4 } from "uuid";
-import { http, HttpResponse } from "msw";
+
 import type { ColumnDef } from "@tanstack/react-table";
 
 const meta = {
@@ -169,21 +169,6 @@ const exampleAccounts: Account[] = [
 ];
 
 export const Default: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        http.get("/api/accounts/:id", ({ params }) => {
-          const account = exampleAccounts.find((acc) => acc.id === params.id);
-          return account
-            ? HttpResponse.json(account)
-            : HttpResponse.json(
-                { error: "Account not found" },
-                { status: 404 }
-              );
-        }),
-      ],
-    },
-  },
   args: {
     columns: accountColumns as ColumnDef<unknown, unknown>[],
     data: exampleAccounts,

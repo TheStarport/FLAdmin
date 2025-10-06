@@ -7,8 +7,6 @@ import { Toaster } from "./components/ui/sonner";
 
 const router = createRouter({ routeTree });
 
-document.documentElement.classList.add('dark');
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <RouterProvider router={router} />

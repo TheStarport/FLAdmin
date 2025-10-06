@@ -13,7 +13,6 @@ import {
 import {
   MonitorIcon,
   PuzzleIcon,
-  ShieldUserIcon,
   UserIcon,
   User2Icon,
   UsersIcon,
@@ -25,18 +24,13 @@ function FLAdminSidebar() {
   const sidebarItems = [
     {
       name: "Server Dashboard",
-      link: "/dashboard",
+      link: "/",
       icon: MonitorIcon,
     },
     {
       name: "Plugin Manager",
-      link: "/plugins",
+      link: "/plugin_manager",
       icon: PuzzleIcon,
-    },
-    {
-      name: "Admin Manager",
-      link: "/admin",
-      icon: ShieldUserIcon,
     },
     {
       name: "Accounts",

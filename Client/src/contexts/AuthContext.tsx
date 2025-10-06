@@ -12,6 +12,9 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const routeGuard = async () => {
+  if (import.meta.env.DEV) {
+    return;
+  }
   const setupResponse = await isSetup();
   if (!setupResponse.data) {
     throw redirect({ to: "/setup" });
@@ -23,6 +26,9 @@ export const routeGuard = async () => {
 };
 
 export const loginGuard = async () => {
+  if (import.meta.env.DEV) {
+    return;
+  }
   const setupResponse = await isSetup();
   if (!setupResponse.data) {
     throw redirect({ to: "/setup" });

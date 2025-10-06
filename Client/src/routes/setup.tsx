@@ -13,8 +13,8 @@ export const Route = createFileRoute("/setup")({
 
 function SetupPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <main className="h-screen w-screen flex items-center justify-center">
       <SetupCard />
-    </div>
+    </main>
   );
 }

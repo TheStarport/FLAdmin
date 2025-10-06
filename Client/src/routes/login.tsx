@@ -9,8 +9,8 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <main className="h-screen w-screen flex items-center justify-center">
       <LoginCard />
-    </div>
+    </main>
   );
 }

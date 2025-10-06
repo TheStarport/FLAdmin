@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SetupRouteImport } from './routes/setup'
+import { Route as ScriptsRouteImport } from './routes/scripts'
 import { Route as Plugin_managerRouteImport } from './routes/plugin_manager'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as CharactersRouteImport } from './routes/characters'
@@ -19,6 +20,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScriptsRoute = ScriptsRouteImport.update({
+  id: '/scripts',
+  path: '/scripts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Plugin_managerRoute = Plugin_managerRouteImport.update({
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/characters': typeof CharactersRoute
   '/login': typeof LoginRoute
   '/plugin_manager': typeof Plugin_managerRoute
+  '/scripts': typeof ScriptsRoute
   '/setup': typeof SetupRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/characters': typeof CharactersRoute
   '/login': typeof LoginRoute
   '/plugin_manager': typeof Plugin_managerRoute
+  '/scripts': typeof ScriptsRoute
   '/setup': typeof SetupRoute
 }
 export interface FileRoutesById {
@@ -70,6 +78,7 @@ export interface FileRoutesById {
   '/characters': typeof CharactersRoute
   '/login': typeof LoginRoute
   '/plugin_manager': typeof Plugin_managerRoute
+  '/scripts': typeof ScriptsRoute
   '/setup': typeof SetupRoute
 }
 export interface FileRouteTypes {
@@ -80,6 +89,7 @@ export interface FileRouteTypes {
     | '/characters'
     | '/login'
     | '/plugin_manager'
+    | '/scripts'
     | '/setup'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -88,6 +98,7 @@ export interface FileRouteTypes {
     | '/characters'
     | '/login'
     | '/plugin_manager'
+    | '/scripts'
     | '/setup'
   id:
     | '__root__'
@@ -96,6 +107,7 @@ export interface FileRouteTypes {
     | '/characters'
     | '/login'
     | '/plugin_manager'
+    | '/scripts'
     | '/setup'
   fileRoutesById: FileRoutesById
 }
@@ -105,6 +117,7 @@ export interface RootRouteChildren {
   CharactersRoute: typeof CharactersRoute
   LoginRoute: typeof LoginRoute
   Plugin_managerRoute: typeof Plugin_managerRoute
+  ScriptsRoute: typeof ScriptsRoute
   SetupRoute: typeof SetupRoute
 }
 
@@ -115,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/setup'
       fullPath: '/setup'
       preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scripts': {
+      id: '/scripts'
+      path: '/scripts'
+      fullPath: '/scripts'
+      preLoaderRoute: typeof ScriptsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/plugin_manager': {
@@ -161,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   CharactersRoute: CharactersRoute,
   LoginRoute: LoginRoute,
   Plugin_managerRoute: Plugin_managerRoute,
+  ScriptsRoute: ScriptsRoute,
   SetupRoute: SetupRoute,
 }
 export const routeTree = rootRouteImport

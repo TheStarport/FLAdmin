@@ -1,3 +1,4 @@
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Outlet, createRootRoute } from "@tanstack/react-router";
 
 export const Route = createRootRoute({
@@ -7,7 +8,9 @@ export const Route = createRootRoute({
 function RootComponent() {
   return (
     <div className="h-screen w-screen">
-      <Outlet />
+      <SidebarProvider>
+        <Outlet />
+      </SidebarProvider>
     </div>
   );
 }
