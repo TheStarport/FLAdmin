@@ -44,7 +44,7 @@ public class FlServerController(FlServerManager server, ConfigService configServ
         {
             while (token.IsCancellationRequested == false || server.FlserverReady)
             {
-                await Task.Delay(TimeSpan.FromSeconds(10), token);
+                await Task.Delay(TimeSpan.FromSeconds(5), token);
             }
 
             return Ok("Server successfully started.");

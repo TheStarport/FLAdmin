@@ -7,10 +7,25 @@ using Microsoft.Extensions.Logging;
 
 namespace FlAdmin.Logic.Services;
 
-public class ConfigService(FlAdminConfig config, ILogger<ConfigService> logger) : IConfigService
+public class ConfigService : IConfigService
 {
-    private readonly string _freelancerDirectory = config.Server.FreelancerPath;
+    private readonly string _freelancerDirectory;
+    private ILogger<ConfigService> _logger;
 
+    public ConfigService(FlAdminConfig config, ILogger<ConfigService> logger)
+    {
+      _freelancerDirectory  = config.Server.FreelancerPath;
+      _logger = logger;
+
+      if (!File.Exists("fladmin.json"))
+      {
+         Task.Run( () => GenerateDefaultFlAdminConfig(CancellationToken.None));
+      }
+      
+    }
+    
+    
+    
     public async Task<Either<FLAdminError, JsonDocument>> GetJsonConfig(string path, CancellationToken token)
     {
         try
@@ -23,17 +38,17 @@ public class ConfigService(FlAdminConfig config, ILogger<ConfigService> logger) 
         //TODO: More metadata on the exception.
         catch (IOException e)
         {
-            logger.LogError("{Message}", e.Message);
+            _logger.LogError("{Message}", e.Message);
             return FLAdminError.FileNotFound;
         }
         catch (JsonException e)
         {
-            logger.LogError("{Message}", e.Message);
+            _logger.LogError("{Message}", e.Message);
             return FLAdminError.FileNotValidJson;
         }
         catch (ArgumentException e)
         {
-            logger.LogError("{Message}", e.Message);
+            _logger.LogError("{Message}", e.Message);
             return FLAdminError.FileNotValidJson;
         }
     }
@@ -49,17 +64,17 @@ public class ConfigService(FlAdminConfig config, ILogger<ConfigService> logger) 
         //TODO: More metadata on the exception.
         catch (IOException e)
         {
-            logger.LogError("{Message}", e.Message);
+            _logger.LogError("{Message}", e.Message);
             return FLAdminError.FileNotFound;
         }
         catch (JsonException e)
         {
-            logger.LogError("{Message}", e.Message);
+            _logger.LogError("{Message}", e.Message);
             return FLAdminError.FileNotValidJson;
         }
         catch (ArgumentException e)
         {
-            logger.LogError("{Message}", e.Message);
+            _logger.LogError("{Message}", e.Message);
             return FLAdminError.FileNotValidJson;
         }
     }
@@ -75,17 +90,17 @@ public class ConfigService(FlAdminConfig config, ILogger<ConfigService> logger) 
         //TODO: More metadata on the exception.
         catch (IOException e)
         {
-            logger.LogError("{Message}", e.Message);
+            _logger.LogError("{Message}", e.Message);
             return FLAdminError.FileNotFound;
         }
         catch (JsonException e)
         {
-            logger.LogError("{Message}", e.Message);
+            _logger.LogError("{Message}", e.Message);
             return FLAdminError.FileNotValidJson;
         }
         catch (ArgumentException e)
         {
-            logger.LogError("{Message}", e.Message);
+            _logger.LogError("{Message}", e.Message);
             return FLAdminError.FileNotValidJson;
         }
     }
@@ -118,7 +133,7 @@ public class ConfigService(FlAdminConfig config, ILogger<ConfigService> logger) 
         //TODO: More specific saving error.
         catch (IOException e)
         {
-            logger.LogError("{Message}", e.Message);
+            _logger.LogError("{Message}", e.Message);
             return FLAdminError.Unknown;
         }
     }

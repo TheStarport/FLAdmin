@@ -73,7 +73,7 @@ builder.Host.UseSerilog((_, lc) =>
     lc.Enrich.FromLogContext();
     if (config.Logging.LoggingLocation == LoggingLocation.Console)
         lc.WriteTo.MongoDBBson(
-            databaseUrl: config.Mongo.ConnectionString + "/" + config.Mongo.DatabaseName + "/",
+            databaseUrl: config.Mongo.ConnectionString + "/" + config.Mongo.DatabaseName,
             collectionName: config.Mongo.FlAdminLogCollectionName);
 });
 
