@@ -57,6 +57,15 @@ export const moveCharacterToAccount = (
     timeout: 5000,
   });
 
+export const renameCharacter = (
+  oldCharacterName: string,
+  newCharacterName: string
+) =>
+  fladminClient.patch<string>("/api/characters/rename", null, {
+    params: { oldName: oldCharacterName, newName: newCharacterName },
+    timeout: 5000,
+  });
+
 /* Authentication Controler */
 
 // TODO: Use returned Account
