@@ -14,7 +14,7 @@ export const Route = createFileRoute("/accounts")({
 });
 
 function AccountsPage() {
-  const { accountData: accounts, accountLoading, accountError } = useData();
+  const { accountData, accountLoading, accountError } = useData();
 
   return (
     <main className="flex h-screen w-screen">
@@ -25,8 +25,8 @@ function AccountsPage() {
             <div>Loading...</div>
           ) : accountError ? (
             <ErrorDataComponent />
-          ) : accounts ? (
-            <AccountTable columns={accountColumns} data={accounts} />
+          ) : accountData ? (
+            <AccountTable columns={accountColumns} data={accountData} />
           ) : (
             <NoDataComponent />
           )}

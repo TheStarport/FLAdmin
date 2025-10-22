@@ -9,10 +9,19 @@ function useData() {
     isLoading: accountLoading,
   } = useSwr(`/api/getaccounts`, fetcher);
 
+  const {
+    data: charactersData,
+    error: charactersError,
+    isLoading: charactersLoading,
+  } = useSwr(`/api/todo-no-endpoint-for-this`, fetcher);
+
   return {
     accountData,
     accountError,
     accountLoading,
+    charactersData,
+    charactersError,
+    charactersLoading,
   };
 }
 
