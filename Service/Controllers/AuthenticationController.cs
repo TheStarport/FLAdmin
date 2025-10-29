@@ -16,6 +16,13 @@ public class AuthenticationController(
     ILogger<AuthenticationController> logger,
     FlAdminConfig flconfig) : ControllerBase
 {
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="login"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<IActionResult> Login([FromBody] LoginModel login, CancellationToken cancellationToken)
@@ -27,6 +34,12 @@ public class AuthenticationController(
         );
     }
 
+    /// <summary>
+    /// Creates the initial setup of FLadmin and generation of the SuperAdmin account. 
+    /// </summary>
+    /// <param name="password"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpPost("setup")]
     [AllowAnonymous]
     public async Task<IActionResult> Setup([FromBody]string password, CancellationToken token)
@@ -46,6 +59,12 @@ public class AuthenticationController(
         );
     }
 
+    
+    /// <summary>
+    /// Returns a simple bool of if the super admin exists and is properly setup
+    /// </summary>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpGet("issetup")]
     [AllowAnonymous]
     public async Task<IActionResult> IsSetup(CancellationToken token)

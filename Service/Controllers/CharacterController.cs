@@ -15,6 +15,12 @@ namespace FlAdmin.Service.Controllers;
 [AdminAuthorize(Role.ManageAccounts)]
 public class CharacterController(ICharacterService characterService, IFlHookService flHookService) : ControllerBase
 {
+    /// <summary>
+    /// Gets a character by their specified in-game name.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpGet("charactername")]
     public async Task<IActionResult> GetCharacterByName([FromQuery] string name, CancellationToken token)
     {
@@ -25,13 +31,11 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
             Right: val => Ok(val));
     }
 
-    [HttpGet("charactersummary")]
-    public async Task<IActionResult> GetCharacterSummary([FromQuery] int pageSize, [FromQuery] int page,
-        CancellationToken token)
-    {
-        return BadRequest("Currently not implemented");
-    }
-
+    /// <summary>
+    /// Gets all characters currently online and logged into the server.
+    /// </summary>
+    /// <param name="token"></param>
+    /// <returns>List of characters</returns>
     [HttpGet("onlinecharacters")]
     public async Task<IActionResult> GetOnlineCharacters(CancellationToken token)
     {
@@ -42,6 +46,12 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
             Right: val => Ok(val));
     }
 
+    /// <summary>
+    /// Gets a list of characters that belong to the specified account id.
+    /// </summary>
+    /// <param name="accountId"></param>
+    /// <param name="token"></param>
+    /// <returns>List of characters.</returns>
     [HttpGet("charactersofaccount")]
     public async Task<IActionResult> GetCharactersOfAccount([FromQuery] string accountId, CancellationToken token)
     {
@@ -52,6 +62,12 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
             Right: val => Ok(val));
     }
 
+    /// <summary>
+    /// Edits a character via find and replace.
+    /// </summary>
+    /// <param name="character">New character doc that will replace the one on the database</param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpPatch("edit")]
     public async Task<IActionResult> EditCharacter([FromBody] Character character, CancellationToken token)
     {
@@ -63,6 +79,12 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
         );
     }
 
+    /// <summary>
+    /// Deletes a specified character by its name.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpDelete("delete")]
     public async Task<IActionResult> DeleteCharacter([FromQuery] string name, CancellationToken token)
     {
@@ -73,6 +95,14 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
         );
     }
 
+    
+    /// <summary>
+    /// Moves character to a specified account.
+    /// </summary>
+    /// <param name="characterName">name of character to be moved.</param>
+    /// <param name="newAccountId">Id of the account the character will be moved to.</param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpPatch("movecharactertoaccount")]
     public async Task<IActionResult> MoveCharacter([FromQuery] string characterName, [FromQuery] string newAccountId,
         CancellationToken token)
@@ -85,6 +115,12 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
         );
     }
 
+    /// <summary>
+    /// Deletes all characters tied to a specified account.
+    /// </summary>
+    /// <param name="accountId"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpDelete("removeallfromaccount")]
     public async Task<IActionResult> DeleteCharactersFromAccount([FromQuery] string accountId, CancellationToken token)
     {
@@ -95,6 +131,13 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
         );
     }
 
+    
+    /// <summary>
+    /// Adds a character to the database.
+    /// </summary>
+    /// <param name="character"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpPut("add")]
     public async Task<IActionResult> AddCharacter([FromBody] Character character, CancellationToken token)
     {
@@ -106,6 +149,14 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
         );
     }
 
+    
+    /// <summary>
+    /// Renames a character.
+    /// </summary>
+    /// <param name="oldName"></param>
+    /// <param name="newName"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpPatch("rename")]
     public async Task<IActionResult> RenameCharacter([FromQuery] string oldName, [FromQuery] string newName,
         CancellationToken token)
@@ -118,18 +169,14 @@ public class CharacterController(ICharacterService characterService, IFlHookServ
         );
     }
 
-    [HttpPatch("movetoaccount")]
-    public async Task<IActionResult> MoveCharacterToAccount([FromQuery] string characterName,
-        [FromQuery] string newAccountId, CancellationToken token)
-    {
-        var res = await characterService.MoveCharacter(characterName, newAccountId, token);
-
-        return res.Match<IActionResult>(
-            err => err.ParseError(this),
-            Ok($"{characterName} successfully moved to account {newAccountId}.")
-        );
-    }
-
+    /// <summary>
+    /// Gets a truncated character document by a specified filter with pagination.
+    /// </summary>
+    /// <param name="filter"></param>
+    /// <param name="pageSize"></param>
+    /// <param name="page"></param>
+    /// <param name="token"></param>
+    /// <returns>A page of character summaries that pass the filter.</returns>
     [HttpGet("summariesbyfilter")]
     public async Task<IActionResult> GetCharacterSummariesByFilter([FromQuery] BsonDocument filter,
         [FromQuery] int pageSize, [FromQuery] int page, CancellationToken token)

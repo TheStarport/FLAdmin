@@ -17,6 +17,14 @@ namespace FlAdmin.Service.Controllers;
 [AdminAuthorize(Role.ManageAccounts)]
 public class AccountController(IAccountService accountService) : ControllerBase
 {
+    
+    /// <summary>
+    /// Gets all accounts on the database with pagination.
+    /// </summary>
+    /// <param name="pageCount">The page that will be grabbed</param>
+    /// <param name="pageSize"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpGet("getaccounts")]
     public async Task<IActionResult> GetAccounts([FromQuery] int pageCount, [FromQuery] int pageSize,
         CancellationToken token)
@@ -29,6 +37,13 @@ public class AccountController(IAccountService accountService) : ControllerBase
         return Ok(accountModels);
     }
 
+    
+    /// <summary>
+    /// Gets an account by a specified AccountID String used by FLServer
+    /// </summary>
+    /// <param name="id">The id for the account.</param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpGet("{id}")]
     public async Task<IActionResult> GetAccountById(string id, CancellationToken token)
     {
@@ -44,6 +59,14 @@ public class AccountController(IAccountService accountService) : ControllerBase
         );
     }
 
+    /// <summary>
+    /// Gets a paginated list of accounts that have been logged into on FLServer within a specified date.
+    /// </summary>
+    /// <param name="date">The cut-off date that will filter for any accounts logged in after this date.</param>
+    /// <param name="pageNumber">The page that will be grabbed</param>
+    /// <param name="pageSize"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpGet("activeafterdate")]
     public async Task<IActionResult> GetAccountsActiveAfterDate([FromQuery] DateTimeOffset date,
         [FromQuery] int pageNumber, [FromQuery] int pageSize, CancellationToken token)
@@ -60,6 +83,12 @@ public class AccountController(IAccountService accountService) : ControllerBase
         );
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="id">List of accounts to be deleted.</param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpDelete("delete")]
     public async Task<IActionResult> DeleteAccounts([FromBody] string[] id, CancellationToken token)
     {
@@ -72,6 +101,12 @@ public class AccountController(IAccountService accountService) : ControllerBase
         );
     }
 
+    /// <summary>
+    /// Updates account via a find and replace, will preserve certain information such as password and web account.
+    /// </summary>
+    /// <param name="accountModel">The new account to be updated to.</param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpPatch("update")]
     [AdminAuthorize(Role.SuperAdmin)]
     public async Task<IActionResult> UpdateAccount([FromBody] AccountModel accountModel, CancellationToken token)
@@ -100,6 +135,12 @@ public class AccountController(IAccountService accountService) : ControllerBase
     }
 
 
+    /// <summary>
+    /// Bans account provided.
+    /// </summary>
+    /// <param name="bans">Ban payload of ID and duration, no duration will default to effectively perma ban.</param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpPatch("ban")]
     public async Task<IActionResult> BanAccounts([FromBody] BanAccountsPayload bans, CancellationToken token)
     {
@@ -123,6 +164,13 @@ public class AccountController(IAccountService accountService) : ControllerBase
         );
     }
 
+    
+    /// <summary>
+    /// Unbans the accounts of the provided ids.
+    /// </summary>
+    /// <param name="accountIds"></param>
+    /// <param name="token"></param>
+    /// <returns></returns>
     [HttpPatch("unban")]
     public async Task<IActionResult> UnbanAccount([FromQuery] string[] accountIds, CancellationToken token)
     {

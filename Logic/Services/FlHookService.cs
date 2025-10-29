@@ -31,7 +31,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         {
             var ping =
                 await _flHookUrl.AppendPathSegment(FlHookApiRoutes.Ping)
-                    .GetAsync();
+                    .GetAsync(cancellationToken: token);
 
             if (ping.StatusCode is (int)HttpStatusCode.OK) return new Option<FLAdminError>();
 
@@ -61,7 +61,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
                     Right: str => _flHookUrl.AppendQueryParam("characterName", str)
                 )
                 .AppendPathSegment(FlHookApiRoutes.CharacterIsOnline)
-                .GetBytesAsync();
+                .GetBytesAsync(cancellationToken: token);
 
             var isOnlineBson = BsonSerializer.Deserialize<BsonDocument>(isOnlineBytes);
             if (!isOnlineBson.TryGetValue("isOnline", out var isOnline) || !isOnline.IsBoolean)
@@ -98,7 +98,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
 
             var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.KickCharacter);
             var content = new ByteArrayContent(request.ToBson());
-            await str.PatchAsync(content);
+            await str.PatchAsync(content, cancellationToken: token);
 
             return new Option<FLAdminError>();
         }
@@ -126,7 +126,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
 
             var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.KillCharacter);
             var content = new ByteArrayContent(request.ToBson());
-            await str.PatchAsync(content);
+            await str.PatchAsync(content, cancellationToken: token);
 
             return new Option<FLAdminError>();
         }
@@ -155,7 +155,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
 
             var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessagePlayer);
             var content = new ByteArrayContent(request.ToBson());
-            await str.PatchAsync(content);
+            await str.PatchAsync(content, cancellationToken: token);
 
             return new Option<FLAdminError>();
         }
@@ -184,7 +184,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
 
             var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessageSystem);
             var content = new ByteArrayContent(request.ToBson());
-            await str.PatchAsync(content);
+            await str.PatchAsync(content, cancellationToken: token);
 
             return new Option<FLAdminError>();
         }
@@ -207,7 +207,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
 
             var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.MessageUniverse);
             var content = new ByteArrayContent(request.ToBson());
-            await str.PatchAsync(content);
+            await str.PatchAsync(content, cancellationToken: token);
 
             return new Option<FLAdminError>();
         }
@@ -240,7 +240,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
 
             var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.BeamPlayer);
             var content = new ByteArrayContent(request.ToBson());
-            await str.PatchAsync(content);
+            await str.PatchAsync(content, cancellationToken: token);
 
             return new Option<FLAdminError>();
         }
@@ -276,7 +276,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
 
             var content = new ByteArrayContent(request.ToBson());
             var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.TeleportPlayer);
-            await str.PatchAsync(content);
+            await str.PatchAsync(content, cancellationToken: token);
 
             return new Option<FLAdminError>();
         }
@@ -294,7 +294,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         try
         {
             var onlineCharactersBytes = await
-                _flHookUrl.AppendPathSegment(FlHookApiRoutes.GetOnlinePlayers).GetBytesAsync();
+                _flHookUrl.AppendPathSegment(FlHookApiRoutes.GetOnlinePlayers).GetBytesAsync(cancellationToken: token);
 
             return BsonSerializer.Deserialize<OnlinePlayerPayload>(onlineCharactersBytes);
         }
