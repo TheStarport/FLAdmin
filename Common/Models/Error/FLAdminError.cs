@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace FlAdmin.Common.Models.Error;
 
-public enum FLAdminError
+public enum FLAdminErrorCode
 {
     Unknown = 0,
     

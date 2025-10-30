@@ -8,22 +8,22 @@ namespace FlAdmin.Common.DataAccess;
 
 public interface ICharacterDataAccess
 {
-    Task<Option<FLAdminError>> CreateCharacters(CancellationToken token, params Character[] characters);
+    Task<Option<FLAdminErrorCode>> CreateCharacters(CancellationToken token, params Character[] characters);
 
-    Task<Option<FLAdminError>> UpdateCharacter(BsonDocument character, CancellationToken token);
+    Task<Option<FLAdminErrorCode>> UpdateCharacter(BsonDocument character, CancellationToken token);
 
     //Note this function does not account for any potential dangling references of accounts. 
-    Task<Option<FLAdminError>> DeleteCharacters(CancellationToken token, params string[] characters);
+    Task<Option<FLAdminErrorCode>> DeleteCharacters(CancellationToken token, params string[] characters);
 
-    Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName, CancellationToken token);
+    Task<Either<FLAdminErrorCode, Character>> GetCharacter(Either<ObjectId, string> characterName, CancellationToken token);
 
-    Task<Option<FLAdminError>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName,
+    Task<Option<FLAdminErrorCode>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName,
         T value, CancellationToken token);
 
-    Task<Option<FLAdminError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName,
+    Task<Option<FLAdminErrorCode>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName,
         T value, CancellationToken token);
 
-    Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName,
+    Task<Option<FLAdminErrorCode>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName,
         CancellationToken token);
 
     Task<List<Character>> GetCharactersByFilter(Expression<Func<Character, bool>> filter, CancellationToken token,

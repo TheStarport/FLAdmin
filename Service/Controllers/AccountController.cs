@@ -49,7 +49,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
     {
         var account = await accountService.GetAccountById(token, id);
 
-        var accountModel = account.Match<Either<FLAdminError, AccountModel>>(
+        var accountModel = account.Match<Either<FLAdminErrorCode, AccountModel>>(
             Left: err => err,
             Right: val => val.ToModel());
 
@@ -73,7 +73,7 @@ public class AccountController(IAccountService accountService) : ControllerBase
     {
         var accounts = await accountService.GetAccountsActiveAfterDate(date, token, pageNumber, pageSize);
 
-        var accountModels = accounts.Match<Either<FLAdminError, List<AccountModel>>>(
+        var accountModels = accounts.Match<Either<FLAdminErrorCode, List<AccountModel>>>(
             Left: err => err,
             Right: accs => accs.Select(a => a.ToModel()).ToList());
 

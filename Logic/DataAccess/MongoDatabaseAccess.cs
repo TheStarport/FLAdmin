@@ -36,9 +36,9 @@ public class MongoDatabaseAccess : IDatabaseAccess
         return _client;
     }
 
-    public async Task<Either<FLAdminError, Guid>> StartSession()
+    public async Task<Either<FLAdminErrorCode, Guid>> StartSession()
     {
-        if (_session is not null) return FLAdminError.SessionAlreadyExists;
+        if (_session is not null) return FLAdminErrorCode.SessionAlreadyExists;
 
         try
         {
@@ -49,17 +49,17 @@ public class MongoDatabaseAccess : IDatabaseAccess
         }
         catch (MongoException ex)
         {
-            return FLAdminError.SessionAlreadyExists;
+            return FLAdminErrorCode.SessionAlreadyExists;
         }
     }
 
-    public async Task<Option<FLAdminError>> EndSession(bool commit)
+    public async Task<Option<FLAdminErrorCode>> EndSession(bool commit)
     {
         if (_session is null)
         {
             //Make sure the sessionID is empty
             _sessionId = Guid.Empty;
-            return FLAdminError.SessionNotStarted;
+            return FLAdminErrorCode.SessionNotStarted;
         }
 
         try
@@ -68,20 +68,20 @@ public class MongoDatabaseAccess : IDatabaseAccess
                 await _session.CommitTransactionAsync();
             else
                 await _session.AbortTransactionAsync();
-            return new Option<FLAdminError>();
+            return new Option<FLAdminErrorCode>();
         }
         catch (MongoException ex)
         {
-            return FLAdminError.DatabaseError;
+            return FLAdminErrorCode.DatabaseError;
         }
     }
 
 
-    public async Task<Either<FLAdminError, BsonDocument>> SubmitQuery(BsonDocument query, Guid sessionId)
+    public async Task<Either<FLAdminErrorCode, BsonDocument>> SubmitQuery(BsonDocument query, Guid sessionId)
     {
-        if (_session is null) return FLAdminError.SessionNotStarted;
+        if (_session is null) return FLAdminErrorCode.SessionNotStarted;
 
-        if (sessionId == _sessionId) return FLAdminError.SessionIdMismatch;
+        if (sessionId == _sessionId) return FLAdminErrorCode.SessionIdMismatch;
 
         try
         {
@@ -90,7 +90,7 @@ public class MongoDatabaseAccess : IDatabaseAccess
         }
         catch (MongoCommandException ex)
         {
-            return FLAdminError.CommandError;
+            return FLAdminErrorCode.CommandError;
         }
     }
 }

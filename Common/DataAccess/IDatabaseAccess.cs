@@ -11,9 +11,9 @@ public interface IDatabaseAccess
 
     MongoClient GetClient();
 
-    Task<Either<FLAdminError, Guid>> StartSession();
+    Task<Either<FLAdminErrorCode, Guid>> StartSession();
 
-    Task<Option<FLAdminError>> EndSession(bool commit);
+    Task<Option<FLAdminErrorCode>> EndSession(bool commit);
 
-    Task<Either<FLAdminError, BsonDocument>> SubmitQuery(BsonDocument query, Guid sessionId);
+    Task<Either<FLAdminErrorCode, BsonDocument>> SubmitQuery(BsonDocument query, Guid sessionId);
 }

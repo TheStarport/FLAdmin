@@ -20,27 +20,27 @@ public class CharacterDataAccessMock : ICharacterDataAccess
 
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-    public async Task<Option<FLAdminError>> CreateCharacters(CancellationToken token, params Character[] characters)
+    public async Task<Option<FLAdminErrorCode>> CreateCharacters(CancellationToken token, params Character[] characters)
 
     {
         return characters.Any(character =>
             _characters.Any(ch => ch.CharacterName == character.CharacterName || ch.Id == character.Id))
-            ? FLAdminError.CharacterAlreadyExists
-            : new Option<FLAdminError>();
+            ? FLAdminErrorCode.CharacterAlreadyExists
+            : new Option<FLAdminErrorCode>();
     }
 
-    public async Task<Option<FLAdminError>> UpdateCharacter(BsonDocument character, CancellationToken token)
+    public async Task<Option<FLAdminErrorCode>> UpdateCharacter(BsonDocument character, CancellationToken token)
     {
-        if (!character.TryGetValue("_id", out var id)) return FLAdminError.CharacterIdIsNull;
+        if (!character.TryGetValue("_id", out var id)) return FLAdminErrorCode.CharacterIdIsNull;
 
         if (character.TryGetValue("characterName", out var name))
             if (name == "Mr_Trent" || name == "Chad_Games")
-                return FLAdminError.CharacterNameIsTaken;
+                return FLAdminErrorCode.CharacterNameIsTaken;
 
-        return new Option<FLAdminError>();
+        return new Option<FLAdminErrorCode>();
     }
 
-    public async Task<Option<FLAdminError>> DeleteCharacters(CancellationToken token, params string[] characters)
+    public async Task<Option<FLAdminErrorCode>> DeleteCharacters(CancellationToken token, params string[] characters)
     {
         var found = false;
 
@@ -51,10 +51,10 @@ public class CharacterDataAccessMock : ICharacterDataAccess
                 break;
             }
 
-        return !found ? FLAdminError.CharacterNotFound : new Option<FLAdminError>();
+        return !found ? FLAdminErrorCode.CharacterNotFound : new Option<FLAdminErrorCode>();
     }
 
-    public async Task<Either<FLAdminError, Character>> GetCharacter(Either<ObjectId, string> characterName,
+    public async Task<Either<FLAdminErrorCode, Character>> GetCharacter(Either<ObjectId, string> characterName,
         CancellationToken token)
     {
         var val = characterName.Match<Option<Character>>(
@@ -62,13 +62,13 @@ public class CharacterDataAccessMock : ICharacterDataAccess
             Right: ch => { return _characters.FirstOrDefault(x => x.CharacterName == ch) ?? new Option<Character>(); }
         );
 
-        return val.Match<Either<FLAdminError, Character>>(
-            None: () => FLAdminError.CharacterNotFound,
+        return val.Match<Either<FLAdminErrorCode, Character>>(
+            None: () => FLAdminErrorCode.CharacterNotFound,
             Some: ch => ch
         );
     }
 
-    public async Task<Option<FLAdminError>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character,
+    public async Task<Option<FLAdminErrorCode>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
         T value, CancellationToken token)
     {
@@ -76,14 +76,14 @@ public class CharacterDataAccessMock : ICharacterDataAccess
             Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch); },
             Right: ch => { return _characters.FirstOrDefault(x => x.CharacterName == ch); }
         );
-        if (val is null) return FLAdminError.CharacterNotFound;
+        if (val is null) return FLAdminErrorCode.CharacterNotFound;
 
         return fieldName is "_id" or "characterName" or "money"
-            ? FLAdminError.CharacterFieldAlreadyExists
-            : new Option<FLAdminError>();
+            ? FLAdminErrorCode.CharacterFieldAlreadyExists
+            : new Option<FLAdminErrorCode>();
     }
 
-    public async Task<Option<FLAdminError>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
+    public async Task<Option<FLAdminErrorCode>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
         T value, CancellationToken token)
     {
@@ -91,28 +91,28 @@ public class CharacterDataAccessMock : ICharacterDataAccess
             Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch); },
             Right: ch => { return _characters.FirstOrDefault(x => x.CharacterName == ch); }
         );
-        if (val is null) return FLAdminError.CharacterNotFound;
+        if (val is null) return FLAdminErrorCode.CharacterNotFound;
 
         if (fieldName != "characterName" && fieldName != "money" && fieldName != "accountId")
-            return FLAdminError.CharacterFieldDoesNotExist;
+            return FLAdminErrorCode.CharacterFieldDoesNotExist;
 
         if (fieldName == "characterName")
             if (value as string is "Mr_Trent" or "Chad_Games")
-                return FLAdminError.CharacterNameIsTaken;
+                return FLAdminErrorCode.CharacterNameIsTaken;
 
-        return new Option<FLAdminError>();
+        return new Option<FLAdminErrorCode>();
     }
 
-    public async Task<Option<FLAdminError>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName,
+    public async Task<Option<FLAdminErrorCode>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName,
         CancellationToken token)
     {
         var val = character.Match<Character?>(
             Left: ch => { return _characters.FirstOrDefault(x => x.Id == ch); },
             Right: ch => { return _characters.FirstOrDefault(x => x.CharacterName == ch); }
         );
-        if (val is null) return FLAdminError.CharacterNotFound;
+        if (val is null) return FLAdminErrorCode.CharacterNotFound;
 
-        return new Option<FLAdminError>();
+        return new Option<FLAdminErrorCode>();
     }
 
 

@@ -25,7 +25,7 @@ public interface IAccountService
     ///     A "Left/Right" Either object, Left being an error if the operation was a failure, Right being the account if
     ///     the operation was successful.
     /// </returns>
-    Task<Either<FLAdminError, Account>> GetAccountById(CancellationToken token, string id);
+    Task<Either<FLAdminErrorCode, Account>> GetAccountById(CancellationToken token, string id);
 
     /// <summary>
     ///     Creates the provided accounts on the Database.
@@ -36,7 +36,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> CreateAccounts(CancellationToken token, params Account[] accounts);
+    Task<Option<FLAdminErrorCode>> CreateAccounts(CancellationToken token, params Account[] accounts);
 
 
     /// <summary>
@@ -48,7 +48,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> UpdateAccount(CancellationToken token, Account account);
+    Task<Option<FLAdminErrorCode>> UpdateAccount(CancellationToken token, Account account);
 
 
     /// <summary>
@@ -60,7 +60,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> DeleteAccounts(CancellationToken token, params string[] ids);
+    Task<Option<FLAdminErrorCode>> DeleteAccounts(CancellationToken token, params string[] ids);
 
     /// <summary>
     ///     Updates an Account's field, Type-safety of empty lists is not guaranteed so exercise caution when updating fields
@@ -75,7 +75,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(CancellationToken token, string accountId, string name, T value);
+    Task<Option<FLAdminErrorCode>> UpdateFieldOnAccount<T>(CancellationToken token, string accountId, string name, T value);
 
     /// <summary>
     ///     Sets up the WebMaster/SuperAdmin for the server. Only ran once and will error if ran with one already present.
@@ -86,7 +86,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Either<FLAdminError, Account>> CreateWebMaster(CancellationToken token, LoginModel loginModel);
+    Task<Either<FLAdminErrorCode, Account>> CreateWebMaster(CancellationToken token, LoginModel loginModel);
 
     /// <summary>
     ///     Gets the account based on the username associated with the account
@@ -97,7 +97,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Either<FLAdminError, Account>> GetAccountByUserName(CancellationToken token, string userName);
+    Task<Either<FLAdminErrorCode, Account>> GetAccountByUserName(CancellationToken token, string userName);
 
 
     /// <summary>
@@ -111,7 +111,7 @@ public interface IAccountService
     ///     A "Left/Right" Either object, Left being an error if the operation was a failure, Right being the List of
     ///     accounts if the operation was successful.
     /// </returns>
-    Task<Either<FLAdminError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date,
+    Task<Either<FLAdminErrorCode, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date,
         CancellationToken token,
         int page = 1,
         int pageSize = 100);
@@ -127,7 +127,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> AddRolesToAccount(string id, List<Role> roles, CancellationToken token);
+    Task<Option<FLAdminErrorCode>> AddRolesToAccount(string id, List<Role> roles, CancellationToken token);
 
 
     /// <summary>
@@ -140,7 +140,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> SetUpAdminAccount(string accountId, LoginModel login, CancellationToken token);
+    Task<Option<FLAdminErrorCode>> SetUpAdminAccount(string accountId, LoginModel login, CancellationToken token);
 
     /// <summary>
     ///     Changes password of a given username.
@@ -152,7 +152,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> ChangePassword(LoginModel login, string newPassword, CancellationToken token);
+    Task<Option<FLAdminErrorCode>> ChangePassword(LoginModel login, string newPassword, CancellationToken token);
 
     /// <summary>
     ///     Bans an account either permanently or temporarily based on the inclusion of a duration
@@ -165,7 +165,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> BanAccounts(List<Tuple<string, TimeSpan?>> bans, CancellationToken token);
+    Task<Option<FLAdminErrorCode>> BanAccounts(List<Tuple<string, TimeSpan?>> bans, CancellationToken token);
 
     /// <summary>
     ///     Unbans the specified account
@@ -177,7 +177,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> UnBanAccounts(string[] ids, CancellationToken token);
+    Task<Option<FLAdminErrorCode>> UnBanAccounts(string[] ids, CancellationToken token);
 
     /// <summary>
     ///     Removes roles from a specified account, roles such as SuperAdmin are protected and unable to be removed.
@@ -189,7 +189,7 @@ public interface IAccountService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminError>> RemoveRolesFromAccount(string id, List<Role> roles, CancellationToken token);
+    Task<Option<FLAdminErrorCode>> RemoveRolesFromAccount(string id, List<Role> roles, CancellationToken token);
 
     /// <summary>
     ///     Detects whether the super admin account has been setup or if first-time setup needs to be performed
@@ -198,5 +198,5 @@ public interface IAccountService
     ///     A "Left/Right" Either object, Left being an error if the operation was a failure,
     ///     a boolean that will be true if the web master has been setup already.
     /// </returns>
-    Task<Either<FLAdminError, bool>> IsWebMasterSetup(CancellationToken token);
+    Task<Either<FLAdminErrorCode, bool>> IsWebMasterSetup(CancellationToken token);
 }

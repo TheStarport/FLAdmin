@@ -64,7 +64,7 @@ public class CharacterServiceTests
         var result = await _characterService.GetCharactersOfAccount("123", _token);
 
         result.Match(
-            Left: err => err == FLAdminError.AccountNotFound,
+            Left: err => err == FLAdminErrorCode.AccountNotFound,
             Right: _ => false
         ).Should().BeTrue();
     }
@@ -75,7 +75,7 @@ public class CharacterServiceTests
         var result = await _characterService.GetCharactersOfAccount("abc123456", _token);
 
         result.Match(
-            Left: err => err == FLAdminError.CharacterNotFound,
+            Left: err => err == FLAdminErrorCode.CharacterNotFound,
             Right: _ => false
         ).Should().BeTrue();
     }
@@ -94,7 +94,7 @@ public class CharacterServiceTests
         var result = await _characterService.RenameCharacter("Chad_Games", "Mr_Trent", _token);
 
         result.Match(
-            err => err == FLAdminError.CharacterNameIsTaken,
+            err => err == FLAdminErrorCode.CharacterNameIsTaken,
             false
         ).Should().BeTrue();
     }
@@ -105,7 +105,7 @@ public class CharacterServiceTests
         var result = await _characterService.RenameCharacter("Not_Chad_Games", "More_Not_Chad_Games", _token);
 
         result.Match(
-            err => err == FLAdminError.CharacterNotFound,
+            err => err == FLAdminErrorCode.CharacterNotFound,
             false
         ).Should().BeTrue();
     }
@@ -125,7 +125,7 @@ public class CharacterServiceTests
         var result = await _characterService.MoveCharacter("Chad_Games", "123", _token);
 
         result.Match(
-            err => err == FLAdminError.AccountNotFound,
+            err => err == FLAdminErrorCode.AccountNotFound,
             false
         ).Should().BeTrue();
     }
@@ -136,7 +136,7 @@ public class CharacterServiceTests
         var result = await _characterService.MoveCharacter("Not_Chad_Games", "abc123456", _token);
 
         result.Match(
-            err => err == FLAdminError.CharacterNotFound,
+            err => err == FLAdminErrorCode.CharacterNotFound,
             false
         ).Should().BeTrue();
     }

@@ -16,40 +16,40 @@ public static class ResultExtensions
             : attribute.Description;
     }
 
-    public static IActionResult ParseError(this FLAdminError error, ControllerBase controller)
+    public static IActionResult ParseError(this FLAdminErrorCode errorCode, ControllerBase controller)
     {
-        return error switch
+        return errorCode switch
         {
-            FLAdminError.DatabaseError => new ObjectResult(StatusCodes.Status500InternalServerError),
-            FLAdminError.Unknown => new ObjectResult(StatusCodes.Status500InternalServerError),
-            FLAdminError.AccountNotFound => controller.NotFound(error.GetEnumDescription()),
-            FLAdminError.AccountIdIsNull => controller.BadRequest(error.GetEnumDescription()),
-            FLAdminError.UsernameAlreadyExists => controller.Conflict(error.GetEnumDescription()),
-            FLAdminError.IncorrectPassword => controller.Unauthorized(error.GetEnumDescription()),
-            FLAdminError.AccountElementTypeMismatch => controller.BadRequest(error.GetEnumDescription()),
-            FLAdminError.AccountAlreadyHasUsername => controller.Conflict(error.GetEnumDescription()),
-            FLAdminError.AccountFieldDoesNotExist => controller.NotFound(error.GetEnumDescription()),
-            FLAdminError.AccountIdAlreadyExists => controller.Conflict(error.GetEnumDescription()),
-            FLAdminError.AccountIsProtected => controller.Forbid(error.GetEnumDescription()),
-            FLAdminError.AccountFieldIsProtected => controller.Forbid(error.GetEnumDescription()),
-            FLAdminError.AccountFieldAlreadyExists => controller.Conflict(error.GetEnumDescription()),
-            FLAdminError.SuperAdminRoleIsProtected => controller.Forbid(error.GetEnumDescription()),
-            FLAdminError.CharacterAlreadyExists => controller.Conflict(error.GetEnumDescription()),
-            FLAdminError.CharacterIdIsNull => controller.BadRequest(error.GetEnumDescription()),
-            FLAdminError.CharacterNotFound => controller.NotFound(error.GetEnumDescription()),
-            FLAdminError.CharacterFieldAlreadyExists => controller.Conflict(error.GetEnumDescription()),
-            FLAdminError.CharacterFieldIsProtected => controller.Forbid(error.GetEnumDescription()),
-            FLAdminError.CharacterFieldDoesNotExist => controller.NotFound(error.GetEnumDescription()),
-            FLAdminError.CharacterElementTypeMismatch => controller.BadRequest(error.GetEnumDescription()),
-            FLAdminError.CharacterInvalidCharacter => controller.BadRequest(error.GetEnumDescription()),
-            FLAdminError.CharacterAccountError => controller.BadRequest(error.GetEnumDescription()),
-            FLAdminError.CharacterIsLoggedIn => controller.BadRequest(error.GetEnumDescription()),
-            FLAdminError.FLServerFailedToStart => new ObjectResult(StatusCodes.Status500InternalServerError),
-            FLAdminError.FLHookFailedToStart => new ObjectResult(StatusCodes.Status500InternalServerError),
+            FLAdminErrorCode.DatabaseError => new ObjectResult(StatusCodes.Status500InternalServerError),
+            FLAdminErrorCode.Unknown => new ObjectResult(StatusCodes.Status500InternalServerError),
+            FLAdminErrorCode.AccountNotFound => controller.NotFound(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.AccountIdIsNull => controller.BadRequest(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.UsernameAlreadyExists => controller.Conflict(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.IncorrectPassword => controller.Unauthorized(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.AccountElementTypeMismatch => controller.BadRequest(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.AccountAlreadyHasUsername => controller.Conflict(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.AccountFieldDoesNotExist => controller.NotFound(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.AccountIdAlreadyExists => controller.Conflict(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.AccountIsProtected => controller.Forbid(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.AccountFieldIsProtected => controller.Forbid(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.AccountFieldAlreadyExists => controller.Conflict(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.SuperAdminRoleIsProtected => controller.Forbid(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.CharacterAlreadyExists => controller.Conflict(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.CharacterIdIsNull => controller.BadRequest(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.CharacterNotFound => controller.NotFound(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.CharacterFieldAlreadyExists => controller.Conflict(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.CharacterFieldIsProtected => controller.Forbid(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.CharacterFieldDoesNotExist => controller.NotFound(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.CharacterElementTypeMismatch => controller.BadRequest(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.CharacterInvalidCharacter => controller.BadRequest(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.CharacterAccountError => controller.BadRequest(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.CharacterIsLoggedIn => controller.BadRequest(errorCode.GetEnumDescription()),
+            FLAdminErrorCode.FLServerFailedToStart => new ObjectResult(StatusCodes.Status500InternalServerError),
+            FLAdminErrorCode.FLHookFailedToStart => new ObjectResult(StatusCodes.Status500InternalServerError),
             
 
 
-            _ => throw new ArgumentOutOfRangeException(nameof(error), error, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(errorCode), errorCode, null)
         };
     }
 }

@@ -104,18 +104,18 @@ public class FlServerManager(
    /// <param name="cronString">A cron string for the restart period.</param>
    /// <param name="delay">Delay for the server restart</param>
    /// <returns></returns>
-    public Option<FLAdminError> SetServerRestart(string cronString, int delay = 30)
+    public Option<FLAdminErrorCode> SetServerRestart(string cronString, int delay = 30)
     {
         try
         {
             RecurringJob.AddOrUpdate("ServerRestart", () => RestartServer(delay), cronString);
 
-            return new Option<FLAdminError>();
+            return new Option<FLAdminErrorCode>();
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to set server restart.");
-            return FLAdminError.HangfireFailure;
+            return FLAdminErrorCode.HangfireFailure;
         }
     }
 
@@ -176,15 +176,15 @@ public class FlServerManager(
         RecurringJob.RemoveIfExists("FLServerDiagnostic");
     }
 
-    public Option<FLAdminError> StartServer(CancellationToken token)
+    public Option<FLAdminErrorCode> StartServer(CancellationToken token)
     {
         if (_readyToStart)
         {
-            return FLAdminError.ServerAlreadyOnline;
+            return FLAdminErrorCode.ServerAlreadyOnline;
         }
         
         _readyToStart = true;
-        return Option<FLAdminError>.None;
+        return Option<FLAdminErrorCode>.None;
     }
 
     private async Task<bool> StartProcess()

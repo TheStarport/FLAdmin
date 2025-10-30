@@ -20,17 +20,17 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return await accountDataAccess.GetAccountsByFilter(account => true, token, pageCount, pageSize);
     }
 
-    public async Task<Either<FLAdminError, Account>> GetAccountById(CancellationToken token, string id)
+    public async Task<Either<FLAdminErrorCode, Account>> GetAccountById(CancellationToken token, string id)
     {
         return await accountDataAccess.GetAccount(id, token);
     }
 
-    public async Task<Option<FLAdminError>> CreateAccounts(CancellationToken token, params Account[] accounts)
+    public async Task<Option<FLAdminErrorCode>> CreateAccounts(CancellationToken token, params Account[] accounts)
     {
         return await accountDataAccess.CreateAccounts(token, accounts);
     }
 
-    public async Task<Option<FLAdminError>> UpdateAccount(CancellationToken token, Account account)
+    public async Task<Option<FLAdminErrorCode>> UpdateAccount(CancellationToken token, Account account)
     {
         var acc = accountDataAccess.GetAccount(account.Id, token);
 
@@ -38,28 +38,28 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return await accountDataAccess.UpdateAccount(account.ToBsonDocument(), token);
     }
 
-    public async Task<Option<FLAdminError>> DeleteAccounts(CancellationToken token, params string[] ids)
+    public async Task<Option<FLAdminErrorCode>> DeleteAccounts(CancellationToken token, params string[] ids)
     {
-        if (ids.Contains(config.SuperAdminName)) return FLAdminError.AccountIsProtected;
+        if (ids.Contains(config.SuperAdminName)) return FLAdminErrorCode.AccountIsProtected;
 
 
         return await accountDataAccess.DeleteAccounts(token, ids);
     }
 
-    public async Task<Option<FLAdminError>> UpdateFieldOnAccount<T>(CancellationToken token, string accountId,
+    public async Task<Option<FLAdminErrorCode>> UpdateFieldOnAccount<T>(CancellationToken token, string accountId,
         string name, T value)
     {
-        if (name is "WebRoles" or "GameRoles") return FLAdminError.AccountFieldIsProtected;
+        if (name is "WebRoles" or "GameRoles") return FLAdminErrorCode.AccountFieldIsProtected;
 
         return await accountDataAccess.UpdateFieldOnAccount(accountId, name, value, token);
     }
 
-    public async Task<Either<FLAdminError, Account>> CreateWebMaster(CancellationToken token, LoginModel loginModel)
+    public async Task<Either<FLAdminErrorCode, Account>> CreateWebMaster(CancellationToken token, LoginModel loginModel)
     {
         var name = loginModel.Username.Trim();
 
         var accountCheck = await accountDataAccess.GetAccountsByFilter(account => account.Username == name, token, 1, 1);
-        if (accountCheck.Count != 0) return FLAdminError.UsernameAlreadyExists;
+        if (accountCheck.Count != 0) return FLAdminErrorCode.UsernameAlreadyExists;
 
         var password = loginModel.Password.Trim();
         byte[]? salt = null;
@@ -79,34 +79,34 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return account;
     }
 
-    public async Task<Either<FLAdminError, Account>> GetAccountByUserName(CancellationToken token, string userName)
+    public async Task<Either<FLAdminErrorCode, Account>> GetAccountByUserName(CancellationToken token, string userName)
     {
         var accounts = await accountDataAccess.GetAccountsByFilter(account => account.Username == userName, token);
-        if (accounts.Count == 0) return FLAdminError.AccountNotFound;
+        if (accounts.Count == 0) return FLAdminErrorCode.AccountNotFound;
 
         if (accounts.Count != 1)
         {
             logger.LogError("There exists multiple accounts with the username of {username}", userName);
-            return FLAdminError.DatabaseError;
+            return FLAdminErrorCode.DatabaseError;
         }
 
         return accounts[0];
     }
 
-    public async Task<Either<FLAdminError, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date,
+    public async Task<Either<FLAdminErrorCode, List<Account>>> GetAccountsActiveAfterDate(DateTimeOffset date,
         CancellationToken token,
         int page = 1,
         int pageSize = 100)
     {
         var accounts = await accountDataAccess.GetAccountsByFilter(x => x.LastOnline >= date, token, page, pageSize);
 
-        if (accounts.Count == 0) return FLAdminError.AccountNotFound;
+        if (accounts.Count == 0) return FLAdminErrorCode.AccountNotFound;
 
         return accounts;
     }
 
 
-    public async Task<Option<FLAdminError>> SetUpAdminAccount(string accountId,
+    public async Task<Option<FLAdminErrorCode>> SetUpAdminAccount(string accountId,
         LoginModel login, CancellationToken token)
     {
         var accountEnum = await accountDataAccess.GetAccount(accountId, token);
@@ -114,7 +114,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
             Left: _ => null!,
             Right: val => val
         );
-        if (account == null) return FLAdminError.AccountNotFound;
+        if (account == null) return FLAdminErrorCode.AccountNotFound;
 
 
         var username = login.Username.Trim();
@@ -125,7 +125,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
             logger.LogWarning(
                 "Attempt to add username {} to account {} when the username exists on another account.", username,
                 accountId);
-            return FLAdminError.UsernameAlreadyExists;
+            return FLAdminErrorCode.UsernameAlreadyExists;
         }
 
         //Make sure the account does not already have a username. 
@@ -133,7 +133,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         {
             logger.LogWarning("There was an attempt to add the username {} to account {} when it already has one.",
                 username, account.Id);
-            return FLAdminError.AccountAlreadyHasUsername;
+            return FLAdminErrorCode.AccountAlreadyHasUsername;
         }
 
         var password = login.Password.Trim();
@@ -145,29 +145,29 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         account.Username = username;
 
         await accountDataAccess.UpdateAccount(account.ToBsonDocument(), token);
-        return new Option<FLAdminError>();
+        return new Option<FLAdminErrorCode>();
     }
 
-    public async Task<Option<FLAdminError>> ChangePassword(LoginModel login,
+    public async Task<Option<FLAdminErrorCode>> ChangePassword(LoginModel login,
         string newPassword, CancellationToken token)
     {
         var username = login.Username.Trim();
         var foundAccounts = await accountDataAccess.GetAccountsByFilter(acc => acc.Username == username, token);
-        if (foundAccounts.Count == 0) return FLAdminError.AccountNotFound;
+        if (foundAccounts.Count == 0) return FLAdminErrorCode.AccountNotFound;
 
         if (foundAccounts.Count != 1)
         {
             logger.LogError("There exists multiple accounts with the username of {username}.", username);
-            return FLAdminError.DatabaseError;
+            return FLAdminErrorCode.DatabaseError;
         }
 
         var account = foundAccounts[0];
-        if (account.PasswordHash is null || account.Salt is null) return FLAdminError.AccountFieldDoesNotExist;
+        if (account.PasswordHash is null || account.Salt is null) return FLAdminErrorCode.AccountFieldDoesNotExist;
 
         //Make sure the old password is correct before changing it.
         var password = login.Password.Trim();
         var verified = PasswordHasher.VerifyPassword(password, account.PasswordHash, account.Salt);
-        if (!verified) return FLAdminError.IncorrectPassword;
+        if (!verified) return FLAdminErrorCode.IncorrectPassword;
         byte[]? salt = null;
         var hashedPass = PasswordHasher.GenerateSaltedHash(password.Trim(), ref salt);
         account.PasswordHash = hashedPass;
@@ -175,7 +175,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         return await accountDataAccess.UpdateAccount(account.ToBsonDocument(), token);
     }
 
-    public async Task<Option<FLAdminError>> BanAccounts(List<Tuple<string, TimeSpan?>> bans, CancellationToken token)
+    public async Task<Option<FLAdminErrorCode>> BanAccounts(List<Tuple<string, TimeSpan?>> bans, CancellationToken token)
     {
         foreach (var ban in bans)
         {
@@ -193,10 +193,10 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
             if (ret.IsSome) return ret;
         }
 
-        return Option<FLAdminError>.None;
+        return Option<FLAdminErrorCode>.None;
     }
 
-    public async Task<Option<FLAdminError>> UnBanAccounts(string[] ids, CancellationToken token)
+    public async Task<Option<FLAdminErrorCode>> UnBanAccounts(string[] ids, CancellationToken token)
     {
         foreach (var id in ids)
         {
@@ -211,12 +211,12 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
             if (ret.IsSome) return ret;
         }
 
-        return Option<FLAdminError>.None;
+        return Option<FLAdminErrorCode>.None;
     }
 
-    public async Task<Option<FLAdminError>> RemoveRolesFromAccount(string id, List<Role> roles, CancellationToken token)
+    public async Task<Option<FLAdminErrorCode>> RemoveRolesFromAccount(string id, List<Role> roles, CancellationToken token)
     {
-        if (roles.Contains(Role.SuperAdmin)) return FLAdminError.SuperAdminRoleIsProtected;
+        if (roles.Contains(Role.SuperAdmin)) return FLAdminErrorCode.SuperAdminRoleIsProtected;
 
 
         var set = roles.Select(x => x.ToString()).ToHashSet();
@@ -225,14 +225,14 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
             Left: _ => null!,
             Right: val => val
         );
-        if (acc == null) return FLAdminError.AccountNotFound;
+        if (acc == null) return FLAdminErrorCode.AccountNotFound;
         acc.WebRoles.ExceptWith(set);
         return await accountDataAccess.UpdateFieldOnAccount(id, "webRoles", acc.WebRoles, token);
     }
 
     
     //TODO: Convert this to the proper pattern matching syntax.
-    public async Task<Either<FLAdminError, bool>> IsWebMasterSetup(CancellationToken token)
+    public async Task<Either<FLAdminErrorCode, bool>> IsWebMasterSetup(CancellationToken token)
     {
         var username = config.SuperAdminName.Trim();
         var webMaster = await GetAccountByUserName(token, username);
@@ -243,7 +243,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         }
 
         var left = webMaster.GetLeft();
-        if (left == FLAdminError.AccountNotFound)
+        if (left == FLAdminErrorCode.AccountNotFound)
         {
             return false;
         }
@@ -252,9 +252,9 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
 
     }
 
-    public async Task<Option<FLAdminError>> AddRolesToAccount(string id, List<Role> roles, CancellationToken token)
+    public async Task<Option<FLAdminErrorCode>> AddRolesToAccount(string id, List<Role> roles, CancellationToken token)
     {
-        if (roles.Contains(Role.SuperAdmin)) return FLAdminError.SuperAdminRoleIsProtected;
+        if (roles.Contains(Role.SuperAdmin)) return FLAdminErrorCode.SuperAdminRoleIsProtected;
 
         var set = roles.Select(x => x.ToString()).ToHashSet();
         var accountEnum = await accountDataAccess.GetAccount(id, token);
@@ -262,7 +262,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
             Left: _ => null!,
             Right: val => val
         );
-        if (acc == null) return FLAdminError.AccountNotFound;
+        if (acc == null) return FLAdminErrorCode.AccountNotFound;
         acc.WebRoles.UnionWith(set);
         return await accountDataAccess.UpdateFieldOnAccount(id, "webRoles", acc.WebRoles, token);
     }

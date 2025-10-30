@@ -25,7 +25,7 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
     private FreelancerData _freelancerData = fldata.GetFreelancerData()!;
 
 
-    public async Task<Option<FLAdminError>> PingFlHook(CancellationToken token)
+    public async Task<Option<FLAdminErrorCode>> PingFlHook(CancellationToken token)
     {
         try
         {
@@ -33,25 +33,25 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
                 await _flHookUrl.AppendPathSegment(FlHookApiRoutes.Ping)
                     .GetAsync(cancellationToken: token);
 
-            if (ping.StatusCode is (int)HttpStatusCode.OK) return new Option<FLAdminError>();
+            if (ping.StatusCode is (int)HttpStatusCode.OK) return new Option<FLAdminErrorCode>();
 
-            return FLAdminError.FlHookFailedToRespond;
+            return FLAdminErrorCode.FlHookFailedToRespond;
         }
         catch (BsonException ex)
         {
             _logger.LogError(ex, ex.Message);
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
         catch (FlurlHttpException e)
         {
             if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
-                return FLAdminError.FLHookRequestTimeout;
+                return FLAdminErrorCode.FLHookRequestTimeout;
 
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
     }
 
-    public async Task<Either<FLAdminError, bool>> CharacterIsOnline(Either<ObjectId, string> characterName,
+    public async Task<Either<FLAdminErrorCode, bool>> CharacterIsOnline(Either<ObjectId, string> characterName,
         CancellationToken token)
     {
         try
@@ -65,25 +65,25 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
 
             var isOnlineBson = BsonSerializer.Deserialize<BsonDocument>(isOnlineBytes);
             if (!isOnlineBson.TryGetValue("isOnline", out var isOnline) || !isOnline.IsBoolean)
-                return FLAdminError.FlHookHttpError;
+                return FLAdminErrorCode.FlHookHttpError;
 
             return isOnline.AsBoolean;
         }
         catch (BsonException ex)
         {
             _logger.LogError(ex, ex.Message);
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
         catch (FlurlHttpException e)
         {
             if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
-                return FLAdminError.FLHookRequestTimeout;
+                return FLAdminErrorCode.FLHookRequestTimeout;
 
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
     }
 
-    public async Task<Option<FLAdminError>> KickCharacter(Either<string, ObjectId> characterName,
+    public async Task<Option<FLAdminErrorCode>> KickCharacter(Either<string, ObjectId> characterName,
         CancellationToken token)
     {
         try
@@ -100,18 +100,18 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
             var content = new ByteArrayContent(request.ToBson());
             await str.PatchAsync(content, cancellationToken: token);
 
-            return new Option<FLAdminError>();
+            return new Option<FLAdminErrorCode>();
         }
         catch (FlurlHttpException e)
         {
             if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
-                return FLAdminError.FLHookRequestTimeout;
+                return FLAdminErrorCode.FLHookRequestTimeout;
 
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
     }
 
-    public async Task<Option<FLAdminError>> KillCharacter(Either<string, ObjectId> characterName,
+    public async Task<Option<FLAdminErrorCode>> KillCharacter(Either<string, ObjectId> characterName,
         CancellationToken token)
     {
         try
@@ -128,18 +128,18 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
             var content = new ByteArrayContent(request.ToBson());
             await str.PatchAsync(content, cancellationToken: token);
 
-            return new Option<FLAdminError>();
+            return new Option<FLAdminErrorCode>();
         }
         catch (FlurlHttpException e)
         {
             if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
-                return FLAdminError.FLHookRequestTimeout;
+                return FLAdminErrorCode.FLHookRequestTimeout;
 
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
     }
 
-    public async Task<Option<FLAdminError>> MessagePlayer(Either<string, ObjectId> characterName, string message,
+    public async Task<Option<FLAdminErrorCode>> MessagePlayer(Either<string, ObjectId> characterName, string message,
         CancellationToken token)
     {
         try
@@ -157,18 +157,18 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
             var content = new ByteArrayContent(request.ToBson());
             await str.PatchAsync(content, cancellationToken: token);
 
-            return new Option<FLAdminError>();
+            return new Option<FLAdminErrorCode>();
         }
         catch (FlurlHttpException e)
         {
             if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
-                return FLAdminError.FLHookRequestTimeout;
+                return FLAdminErrorCode.FLHookRequestTimeout;
 
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
     }
 
-    public async Task<Option<FLAdminError>> MessageSystem(Either<string, int> system, string message,
+    public async Task<Option<FLAdminErrorCode>> MessageSystem(Either<string, int> system, string message,
         CancellationToken token)
     {
         try
@@ -186,18 +186,18 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
             var content = new ByteArrayContent(request.ToBson());
             await str.PatchAsync(content, cancellationToken: token);
 
-            return new Option<FLAdminError>();
+            return new Option<FLAdminErrorCode>();
         }
         catch (FlurlHttpException e)
         {
             if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
-                return FLAdminError.FLHookRequestTimeout;
+                return FLAdminErrorCode.FLHookRequestTimeout;
 
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
     }
 
-    public async Task<Option<FLAdminError>> MessageUniverse(string message, CancellationToken token)
+    public async Task<Option<FLAdminErrorCode>> MessageUniverse(string message, CancellationToken token)
     {
         try
         {
@@ -209,18 +209,18 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
             var content = new ByteArrayContent(request.ToBson());
             await str.PatchAsync(content, cancellationToken: token);
 
-            return new Option<FLAdminError>();
+            return new Option<FLAdminErrorCode>();
         }
         catch (FlurlHttpException e)
         {
             if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
-                return FLAdminError.FLHookRequestTimeout;
+                return FLAdminErrorCode.FLHookRequestTimeout;
 
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
     }
 
-    public async Task<Option<FLAdminError>> BeamPlayerToBase(Either<string, ObjectId> characterName,
+    public async Task<Option<FLAdminErrorCode>> BeamPlayerToBase(Either<string, ObjectId> characterName,
         Either<string, int> baseName, CancellationToken token)
     {
         try
@@ -242,19 +242,19 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
             var content = new ByteArrayContent(request.ToBson());
             await str.PatchAsync(content, cancellationToken: token);
 
-            return new Option<FLAdminError>();
+            return new Option<FLAdminErrorCode>();
         }
         catch (FlurlHttpException e)
         {
             if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
-                return FLAdminError.FLHookRequestTimeout;
+                return FLAdminErrorCode.FLHookRequestTimeout;
 
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
     }
 
 
-    public async Task<Option<FLAdminError>> TeleportPlayerToSpot(Either<string, ObjectId> characterName,
+    public async Task<Option<FLAdminErrorCode>> TeleportPlayerToSpot(Either<string, ObjectId> characterName,
         Either<string, int> system, Vector3? position, CancellationToken token)
     {
         try
@@ -278,18 +278,18 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
             var str = _flHookUrl.AppendPathSegment(FlHookApiRoutes.TeleportPlayer);
             await str.PatchAsync(content, cancellationToken: token);
 
-            return new Option<FLAdminError>();
+            return new Option<FLAdminErrorCode>();
         }
         catch (FlurlHttpException e)
         {
             if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
-                return FLAdminError.FLHookRequestTimeout;
+                return FLAdminErrorCode.FLHookRequestTimeout;
 
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
     }
 
-    public async Task<Either<FLAdminError, OnlinePlayerPayload>> GetOnlineCharacters(CancellationToken token)
+    public async Task<Either<FLAdminErrorCode, OnlinePlayerPayload>> GetOnlineCharacters(CancellationToken token)
     {
         try
         {
@@ -301,14 +301,14 @@ public class FlHookService(FlAdminConfig config, ILogger<FlHookService> logger, 
         catch (BsonException ex)
         {
             _logger.LogError(ex, ex.Message);
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
         catch (FlurlHttpException e)
         {
             if (e.StatusCode is (int)HttpStatusCode.RequestTimeout or (int)HttpStatusCode.GatewayTimeout)
-                return FLAdminError.FLHookRequestTimeout;
+                return FLAdminErrorCode.FLHookRequestTimeout;
 
-            return FLAdminError.FlHookHttpError;
+            return FLAdminErrorCode.FlHookHttpError;
         }
     }
 }
