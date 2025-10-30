@@ -2,9 +2,11 @@ using FlAdmin.Common.Models.Error;
 
 namespace FlAdmin.Common.Models;
 
-public class ErrorResult
+public struct ErrorResult()
 {
-    private List<Tuple<FLAdminError, string>> Errors { get; set; } = new();
+    public List<Tuple<FLAdminError, string>> Errors { get; set; } = new();
 
-    private Exception? Exception { get; set; }
+    public Exception? Exception { get; set; } = null;
 }
+
+

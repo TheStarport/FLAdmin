@@ -9,6 +9,8 @@ FlAdmin.sln.DotSettings.user
 Properties
 SeedData
 
+publish/
+
 # env
 .env
 
