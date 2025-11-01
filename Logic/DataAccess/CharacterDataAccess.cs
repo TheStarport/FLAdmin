@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
+using FlAdmin.Common.Models;
 using FlAdmin.Common.Models.Database;
 using FlAdmin.Common.Models.Error;
 using LanguageExt;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
+using SharpDX.Win32;
 
 namespace FlAdmin.Logic.DataAccess;
 
@@ -22,13 +24,13 @@ public class CharacterDataAccess(
 
     private readonly MongoClient _client = databaseAccess.GetClient();
 
-    public async Task<Option<FLAdminErrorCode>> CreateCharacters(CancellationToken token, params Character[] characters)
+    public async Task<Option<ErrorResult>> CreateCharacters(CancellationToken token, params Character[] characters)
     {
         using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
         {
             await _characters.InsertManyAsync(characters, cancellationToken: token);
-            return new Option<FLAdminErrorCode>();
+            return new Option<ErrorResult>();
         }
         catch (MongoException ex)
         {
@@ -41,22 +43,23 @@ public class CharacterDataAccess(
                     {
                         logger.LogWarning(ex,
                             "Attempt to add characters with ids/names that already exist on the database.");
-                        return FLAdminErrorCode.CharacterAlreadyExists;
+                        return new ErrorResult(FLAdminErrorCode.CharacterAlreadyExists,
+                            "Character already exists on the database.");
                     }
                 }
 
             logger.LogError(ex,
                 "Encountered unexpected mongo database error when attempting to add a character to the database.");
-            return FLAdminErrorCode.DatabaseError;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
         }
         catch (OperationCanceledException ex)
         {
             logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            return [];
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled);
         }
     }
 
-    public async Task<Option<FLAdminErrorCode>> UpdateCharacter(BsonDocument character, CancellationToken token)
+    public async Task<Option<ErrorResult>> UpdateCharacter(BsonDocument character, CancellationToken token)
     {
         using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
@@ -70,36 +73,38 @@ public class CharacterDataAccess(
 
             var result = await _characters.UpdateOneAsync(filter, updateDoc, cancellationToken: token);
 
-            return result.ModifiedCount is 0 ? FLAdminErrorCode.CharacterNotFound : new Option<FLAdminErrorCode>();
+            return result.ModifiedCount is 0
+                ? new ErrorResult(FLAdminErrorCode.CharacterNotFound, $"{characterId} not found.")
+                : new Option<ErrorResult>();
         }
         catch (MongoWriteException ex)
         {
             if (ex.InnerException is MongoBulkWriteException wx)
                 return wx.WriteErrors[0].Code is (int)MongoErrorCodes.DuplicateKey
-                    ? FLAdminErrorCode.CharacterNameIsTaken
-                    : FLAdminErrorCode.DatabaseError;
+                    ? new ErrorResult(FLAdminErrorCode.CharacterNameIsTaken)
+                    : new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
 
-            return FLAdminErrorCode.DatabaseError;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
         }
         catch (MongoException ex)
         {
             logger.LogError(ex, "Encountered a mongo database issue when updating character {}",
                 character.GetValue("_id").AsObjectId);
-            return FLAdminErrorCode.DatabaseError;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
         }
         catch (KeyNotFoundException ex)
         {
             logger.LogError(ex, "Attempt to update character with Bson document that does not have an ObjectId");
-            return FLAdminErrorCode.CharacterIdIsNull;
+            return new ErrorResult(FLAdminErrorCode.CharacterIdIsNull, "CharacterId of provided BSON document is null");
         }
         catch (OperationCanceledException ex)
         {
             logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            return [];
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled);
         }
     }
 
-    public async Task<Option<FLAdminErrorCode>> DeleteCharacters(CancellationToken token, params string[] characters)
+    public async Task<Option<ErrorResult>> DeleteCharacters(CancellationToken token, params string[] characters)
     {
         using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
@@ -109,29 +114,30 @@ public class CharacterDataAccess(
 
             //TODO: Find a way to get more detailed information of which characters were not deleted. 
             return result.DeletedCount != characters.Length
-                ? FLAdminErrorCode.CharacterNotFound
-                : new Option<FLAdminErrorCode>();
+                ? new ErrorResult(FLAdminErrorCode.CharacterNotFound, "one of the characters provided does not exist.")
+                : new Option<ErrorResult>();
         }
         catch (MongoException ex)
         {
             logger.LogError(ex, "Encountered a mongo database issue when attempting to delete characters");
-            return FLAdminErrorCode.DatabaseError;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
         }
         catch (OperationCanceledException ex)
         {
             logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            return [];
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled);
         }
     }
 
-    public async Task<Either<FLAdminErrorCode, Character>> GetCharacter(Either<ObjectId, string> characterName,
+    public async Task<Either<ErrorResult, Character>> GetCharacter(Either<ObjectId, string> characterName,
         CancellationToken token)
     {
         try
         {
             var charDocRes = await GetCharacterBsonDocument(characterName, token);
 
-            if (charDocRes.IsNone) return FLAdminErrorCode.CharacterNotFound;
+            if (charDocRes.IsNone)
+                return new ErrorResult(FLAdminErrorCode.CharacterNotFound, $"{characterName} not found.");
 
             var charDoc = charDocRes.Match<BsonDocument>(
                 bs => bs,
@@ -144,11 +150,16 @@ public class CharacterDataAccess(
         {
             logger.LogError(ex, "Mongo exception thrown when attempting to get character of name {characterName}",
                 characterName);
-            return FLAdminErrorCode.DatabaseError;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
+        }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogError(ex, "Request was cancelled{}", ex.Message);
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled);
         }
     }
 
-    public async Task<Option<FLAdminErrorCode>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character,
+    public async Task<Option<ErrorResult>> CreateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
         T value, CancellationToken token)
     {
@@ -157,7 +168,8 @@ public class CharacterDataAccess(
         {
             var charDocRes = await GetCharacterBsonDocument(character, token);
 
-            if (charDocRes.IsNone) return FLAdminErrorCode.CharacterNotFound;
+            if (charDocRes.IsNone)
+                return new ErrorResult(FLAdminErrorCode.CharacterNotFound, $"{character} not found.");
 
             var charDoc = charDocRes.Match<BsonDocument>(
                 bs => bs,
@@ -173,7 +185,9 @@ public class CharacterDataAccess(
                 keyValuePair = new BsonElement(fieldName, BsonValue.Create(value));
 
             charDoc.TryGetValue(fieldName, out var existCheck);
-            if (existCheck is not null) return FLAdminErrorCode.CharacterFieldAlreadyExists;
+            if (existCheck is not null)
+                return new ErrorResult(FLAdminErrorCode.CharacterFieldAlreadyExists,
+                    $"The field {fieldName} already exists on {character}.");
 
             charDoc.Add(keyValuePair);
             var charObj = BsonSerializer.Deserialize<Character>(charDoc);
@@ -184,44 +198,48 @@ public class CharacterDataAccess(
                 logger.LogError("{Character} failed to add new field of name {fieldName} with value of {value}",
                     character,
                     fieldName, value);
-                return FLAdminErrorCode.DatabaseError;
+                return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
             }
 
-            return new Option<FLAdminErrorCode>();
+            return new Option<ErrorResult>();
         }
         catch (MongoException ex)
         {
             logger.LogError(ex,
                 "Encountered an error when attempting to add {fieldName} with value of {value} to {character}",
                 fieldName, value, character);
-            return FLAdminErrorCode.DatabaseError;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
         }
         catch (OperationCanceledException ex)
         {
             logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            return [];
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled);
         }
     }
 
-    public async Task<Option<FLAdminErrorCode>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
+    public async Task<Option<ErrorResult>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
         T value, CancellationToken token)
     {
-        if (fieldName == "_id") return FLAdminErrorCode.CharacterFieldIsProtected;
+        if (fieldName == "_id")
+            return new ErrorResult(FLAdminErrorCode.CharacterFieldIsProtected, "_id cannot be updated arbitrarily.");
 
         using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
         {
             var charDocRes = await GetCharacterBsonDocument(character, token);
 
-            if (charDocRes.IsNone) return FLAdminErrorCode.CharacterNotFound;
+            if (charDocRes.IsNone)
+                return new ErrorResult(FLAdminErrorCode.CharacterNotFound, $"{character} not found.");
 
             var charDoc = charDocRes.Match<BsonDocument>(
                 bs => bs,
                 null! as BsonDocument
             );
 
-            if (charDoc[fieldName] is null) return FLAdminErrorCode.CharacterFieldDoesNotExist;
+            if (charDoc[fieldName] is null)
+                return new ErrorResult(FLAdminErrorCode.CharacterFieldDoesNotExist,
+                    $"field {fieldName} does not exist on {character}.");
 
             BsonElement newValuePair;
             if (typeof(T) == typeof(int))
@@ -236,7 +254,8 @@ public class CharacterDataAccess(
             var oldValuePair = charDoc.Elements.FirstOrDefault(field => field.Name == newValuePair.Name);
 
             if (oldValuePair.Value.GetType() != newValuePair.Value.GetType())
-                return FLAdminErrorCode.CharacterElementTypeMismatch;
+                return new ErrorResult(FLAdminErrorCode.CharacterElementTypeMismatch,
+                    $"the provided type of {fieldName} does not match the expected type of {oldValuePair.Value.GetType()} (Provided type was {newValuePair.Value.GetType()}.");
 
             charDoc[newValuePair.Name] = newValuePair.Value;
 
@@ -248,53 +267,57 @@ public class CharacterDataAccess(
                 logger.LogError("{Character} failed to update field of name {fieldName} with value of {value}",
                     character,
                     fieldName, value);
-                return FLAdminErrorCode.DatabaseError;
+                return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
             }
 
-            return new Option<FLAdminErrorCode>();
+            return new Option<ErrorResult>();
         }
         catch (MongoWriteException ex)
         {
             if (ex.InnerException is MongoBulkWriteException wx)
                 return wx.WriteErrors[0].Code is (int)MongoErrorCodes.DuplicateKey
-                    ? FLAdminErrorCode.CharacterNameIsTaken
-                    : FLAdminErrorCode.DatabaseError;
+                    ? new ErrorResult(FLAdminErrorCode.CharacterNameIsTaken)
+                    : new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
 
-            return FLAdminErrorCode.DatabaseError;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
         }
         catch (MongoException ex)
         {
             logger.LogError(ex,
                 "Encountered an error when attempting to update {fieldName} with value of {value} to {character}",
                 fieldName, value, character);
-            return FLAdminErrorCode.DatabaseError;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
         }
         catch (KeyNotFoundException ex)
         {
             logger.LogWarning(ex, "Attempting to edit nonexistent field {fieldName} on character {character}",
                 fieldName,
                 character);
-            return FLAdminErrorCode.CharacterFieldDoesNotExist;
+            return new ErrorResult(FLAdminErrorCode.CharacterFieldDoesNotExist,
+                $"{fieldName} does not exist on {character}.");
         }
         catch (OperationCanceledException ex)
         {
             logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            return [];
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled);
         }
     }
 
-    public async Task<Option<FLAdminErrorCode>> RemoveFieldOnCharacter(Either<ObjectId, string> character,
+    public async Task<Option<ErrorResult>> RemoveFieldOnCharacter(Either<ObjectId, string> character,
         string fieldName, CancellationToken token)
     {
         //We only protect against these two as they are both indexed, other fields should be protected at the service layer
-        if (fieldName is "_id" or "characterName") return FLAdminErrorCode.CharacterFieldIsProtected;
+        if (fieldName is "_id" or "characterName")
+            return new ErrorResult(FLAdminErrorCode.CharacterFieldIsProtected,
+                $"{fieldName} is protected and cannot be deleted.");
 
         using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
         {
             var charDocRes = await GetCharacterBsonDocument(character, token);
 
-            if (charDocRes.IsNone) return FLAdminErrorCode.CharacterNotFound;
+            if (charDocRes.IsNone)
+                return new ErrorResult(FLAdminErrorCode.CharacterNotFound, $"{character} not found.");
 
             var charDoc = charDocRes.Match<BsonDocument>(
                 bs => bs,
@@ -305,7 +328,8 @@ public class CharacterDataAccess(
             {
                 logger.LogWarning("Attempted to remove nonexistent field {fieldName} from {character}", fieldName,
                     character);
-                return FLAdminErrorCode.CharacterFieldDoesNotExist;
+                return new ErrorResult(FLAdminErrorCode.CharacterFieldDoesNotExist,
+                    $"{fieldName} does not exist on {character}.");
             }
 
             charDoc.Remove(fieldName);
@@ -318,29 +342,29 @@ public class CharacterDataAccess(
                     "Encountered an unexpected mongo error when attempting to remove field {fieldName} from character {character}",
                     character,
                     fieldName);
-                return FLAdminErrorCode.DatabaseError;
+                return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
             }
 
-            return new Option<FLAdminErrorCode>();
+            return new Option<ErrorResult>();
         }
         catch (MongoException ex)
         {
             logger.LogWarning(ex,
                 "Encountered an unexpected mongo error when attempting to remove field {fieldName} from character {character}",
                 fieldName, character);
-            return FLAdminErrorCode.DatabaseError;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
         }
         catch (KeyNotFoundException ex)
         {
             logger.LogWarning(ex, "Attempting to remove nonexistent field {fieldName} on character {character}",
                 fieldName,
                 character);
-            return FLAdminErrorCode.CharacterFieldDoesNotExist;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
         }
         catch (OperationCanceledException ex)
         {
             logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            return [];
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled);
         }
     }
 
@@ -362,7 +386,7 @@ public class CharacterDataAccess(
         catch (OperationCanceledException ex)
         {
             logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            return [];
+            return[];
         }
     }
 

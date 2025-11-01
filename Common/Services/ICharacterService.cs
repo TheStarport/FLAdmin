@@ -17,7 +17,7 @@ public interface ICharacterService
     ///     A "Left/Right" Either object, Left being an error if the operation was a failure, Right being a List of
     ///     Characters if the operation was successful.
     /// </returns>
-    Task<Either<FLAdminErrorCode, List<Character>>> GetCharactersOfAccount(string accountId, CancellationToken token);
+    Task<Either<ErrorResult, List<Character>>> GetCharactersOfAccount(string accountId, CancellationToken token);
 
     /// <summary>
     ///     Gets the character specified by the name.
@@ -28,7 +28,7 @@ public interface ICharacterService
     ///     A "Left/Right" Either object, Left being an error if the operation was a failure, Right being the Desired
     ///     character if the operation was successful.
     /// </returns>
-    Task<Either<FLAdminErrorCode, Character>> GetCharacterByName(string name, CancellationToken token);
+    Task<Either<ErrorResult, Character>> GetCharacterByName(string name, CancellationToken token);
 
     /// <summary>
     ///     Adds a character to the database
@@ -39,7 +39,7 @@ public interface ICharacterService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminErrorCode>> AddCharacter(Character character, CancellationToken token);
+    Task<Option<ErrorResult>> AddCharacter(Character character, CancellationToken token);
 
     /// <summary>
     ///     Deletes all characters on the specified account
@@ -50,7 +50,7 @@ public interface ICharacterService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminErrorCode>> DeleteAllCharactersOnAccount(string accountId, CancellationToken token);
+    Task<Option<ErrorResult>> DeleteAllCharactersOnAccount(string accountId, CancellationToken token);
 
     /// <summary>
     ///     Deletes the specified character
@@ -61,7 +61,7 @@ public interface ICharacterService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminErrorCode>> DeleteCharacter(Either<ObjectId, string> character, CancellationToken token);
+    Task<Option<ErrorResult>> DeleteCharacter(Either<ObjectId, string> character, CancellationToken token);
 
 
     /// <summary>
@@ -74,7 +74,7 @@ public interface ICharacterService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminErrorCode>> MoveCharacter(Either<ObjectId, string> character, string newAccountId,
+    Task<Option<ErrorResult>> MoveCharacter(Either<ObjectId, string> character, string newAccountId,
         CancellationToken token);
 
     /// <summary>
@@ -87,7 +87,7 @@ public interface ICharacterService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminErrorCode>> UpdateCharacter(Character character, CancellationToken token);
+    Task<Option<ErrorResult>> UpdateCharacter(Character character, CancellationToken token);
 
 
     /// <summary>
@@ -102,7 +102,7 @@ public interface ICharacterService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminErrorCode>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName, T value,
+    Task<Option<ErrorResult>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName, T value,
         CancellationToken token);
 
     /// <summary>
@@ -116,7 +116,7 @@ public interface ICharacterService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminErrorCode>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName,
+    Task<Option<ErrorResult>> RemoveFieldOnCharacter(Either<ObjectId, string> character, string fieldName,
         CancellationToken token);
 
     /// <summary>
@@ -131,7 +131,7 @@ public interface ICharacterService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminErrorCode>> AddFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName, T value,
+    Task<Option<ErrorResult>> AddFieldOnCharacter<T>(Either<ObjectId, string> character, string fieldName, T value,
         CancellationToken token);
 
     /// <summary>
@@ -144,7 +144,7 @@ public interface ICharacterService
     ///     Optional error enum, None means the operation was successful, Some means an error was encountered and the
     ///     operation failed.
     /// </returns>
-    Task<Option<FLAdminErrorCode>> RenameCharacter(string oldName, string newName, CancellationToken token);
+    Task<Option<ErrorResult>> RenameCharacter(string oldName, string newName, CancellationToken token);
 
     /// <summary>
     /// Gets a list of truncated character data based on a BSON document filter
@@ -154,6 +154,6 @@ public interface ICharacterService
     /// <param name="pageSize"></param>
     /// <param name="token"></param>
     /// <returns></returns>
-    Task<Either<FLAdminErrorCode, List<CharacterSummary>>> GetCharacterSummaries(BsonDocument filter, int page,
+    Task<Either<ErrorResult, List<CharacterSummary>>> GetCharacterSummaries(BsonDocument filter, int page,
         int pageSize, CancellationToken token);
 }

@@ -33,37 +33,40 @@ public class CharacterService : ICharacterService
     }
 
 
-    public async Task<Either<FLAdminErrorCode, List<Character>>> GetCharactersOfAccount(string accountId,
+    public async Task<Either<ErrorResult, List<Character>>> GetCharactersOfAccount(string accountId,
         CancellationToken token)
     {
         var accountCheck = await _accountDataAccess.GetAccount(accountId, token);
         if (accountCheck.IsLeft)
             return accountCheck.Match
             (Left: err => err,
-                Right: _ => FLAdminErrorCode.Unknown
+                Right: _ => new ErrorResult(FLAdminErrorCode.Unknown, "An unexpected error has occured. ")
             );
 
 
         var characters = await _characterDataAccess.GetCharactersByFilter(x => x.AccountId == accountId, token);
 
-        if (characters.Count is 0) return FLAdminErrorCode.CharacterNotFound;
+        if (characters.Count is 0)
+            return new ErrorResult(FLAdminErrorCode.CharacterNotFound, $"no characters found on {accountId}");
 
         return characters;
     }
 
-    public async Task<Either<FLAdminErrorCode, Character>> GetCharacterByName(string name, CancellationToken token)
+    public async Task<Either<ErrorResult, Character>> GetCharacterByName(string name, CancellationToken token)
     {
         return await _characterDataAccess.GetCharacter(name, token);
     }
 
-    public async Task<Option<FLAdminErrorCode>> AddCharacter(Character character, CancellationToken token)
+    public async Task<Option<ErrorResult>> AddCharacter(Character character, CancellationToken token)
     {
-        if (_validation.ValidateCharacter(character) is false) return FLAdminErrorCode.InvalidCharacter;
+        if (_validation.ValidateCharacter(character) is false)
+            return
+                new ErrorResult(FLAdminErrorCode.InvalidCharacter, "Invalid character.");
 
         return await _characterDataAccess.CreateCharacters(token, character);
     }
 
-    public async Task<Option<FLAdminErrorCode>> DeleteAllCharactersOnAccount(string accountId, CancellationToken token)
+    public async Task<Option<ErrorResult>> DeleteAllCharactersOnAccount(string accountId, CancellationToken token)
     {
         var characters = await _characterDataAccess.GetCharactersByFilter(x => x.AccountId == accountId, token);
 
@@ -73,10 +76,13 @@ public class CharacterService : ICharacterService
             var isOnline = res.Match(
                 Left: err => true,
                 Right: b => b is true);
-            if (isOnline) return FLAdminErrorCode.CharacterIsLoggedIn;
+            if (isOnline)
+                return new ErrorResult(FLAdminErrorCode.CharacterIsLoggedIn,
+                    $"{accountId} is logged in and cannot be edited");
         }
 
-        if (characters.Count is 0) return FLAdminErrorCode.CharacterNotFound;
+        if (characters.Count is 0)
+            return new ErrorResult(FLAdminErrorCode.CharacterNotFound, $"no characters found on {accountId}");
 
         var charNames = characters.Select(character => character.CharacterName).ToList();
 
@@ -90,20 +96,22 @@ public class CharacterService : ICharacterService
         return result2;
     }
 
-    public async Task<Option<FLAdminErrorCode>> DeleteCharacter(Either<ObjectId, string> character, CancellationToken token)
+    public async Task<Option<ErrorResult>> DeleteCharacter(Either<ObjectId, string> character, CancellationToken token)
     {
         var isOnlineRes = await _flHookService.CharacterIsOnline(character, token);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline) return FLAdminErrorCode.CharacterIsLoggedIn;
+        if (isOnline)
+            return new ErrorResult(FLAdminErrorCode.CharacterIsLoggedIn,
+                $"{character} is logged in and cannot be edited");
 
         var charRes = await _characterDataAccess.GetCharacter(character, token);
         if (charRes.IsLeft)
             return charRes.Match(
                 Left: err => err,
                 //Right should never really be reached as we're checking it.
-                Right: _ => FLAdminErrorCode.InvalidCharacter);
+                Right: _ => new ErrorResult(FLAdminErrorCode.InvalidCharacter));
 
         var ch = charRes.Match<Character>(
             Left: _ => null!,
@@ -114,7 +122,7 @@ public class CharacterService : ICharacterService
         if (accountRes.IsLeft)
             return accountRes.Match(
                 Left: err => err,
-                Right: err => FLAdminErrorCode.Unknown);
+                Right: err => new ErrorResult(FLAdminErrorCode.Unknown));
 
         var account = accountRes.Match<Account>(
             Left: _ => null!,
@@ -128,21 +136,23 @@ public class CharacterService : ICharacterService
         return res2;
     }
 
-    public async Task<Option<FLAdminErrorCode>> MoveCharacter(Either<ObjectId, string> character, string newAccountId,
+    public async Task<Option<ErrorResult>> MoveCharacter(Either<ObjectId, string> character, string newAccountId,
         CancellationToken token)
     {
         var isOnlineRes = await _flHookService.CharacterIsOnline(character, token);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline) return FLAdminErrorCode.CharacterIsLoggedIn;
+        if (isOnline)
+            return new ErrorResult(FLAdminErrorCode.CharacterIsLoggedIn,
+                $"{character} is logged in and cannot be edited");
 
         var charRes = await _characterDataAccess.GetCharacter(character, token);
         if (charRes.IsLeft)
             return charRes.Match(
                 Left: err => err, Right
                 //Right should never really be reached as we're checking it.
-                : _ => FLAdminErrorCode.InvalidCharacter);
+                : _ => new ErrorResult(FLAdminErrorCode.InvalidCharacter));
 
         var ch = charRes.Match<Character>(
             Left: _ => null!,
@@ -151,7 +161,7 @@ public class CharacterService : ICharacterService
         if (oldAccountRes.IsLeft)
             return oldAccountRes.Match(
                 Left: err => err,
-                Right: _ => FLAdminErrorCode.Unknown);
+                Right: _ => new ErrorResult(FLAdminErrorCode.Unknown));
 
         var oldAccount = oldAccountRes.Match<Account>(
             Left: _ => null!,
@@ -161,7 +171,7 @@ public class CharacterService : ICharacterService
         if (newAccountRes.IsLeft)
             return newAccountRes.Match(
                 Left: err => err,
-                Right: _ => FLAdminErrorCode.Unknown);
+                Right: _ => new ErrorResult(FLAdminErrorCode.Unknown));
 
         var newAccount = newAccountRes.Match<Account>(
             Left: _ => null!,
@@ -182,23 +192,26 @@ public class CharacterService : ICharacterService
             await _accountDataAccess.UpdateFieldOnAccount(newAccount.Id, "characters", newAccount.Characters, token);
         if (result3.IsSome) return result3;
 
-        return new Option<FLAdminErrorCode>();
+        return new Option<ErrorResult>();
     }
 
-    public async Task<Option<FLAdminErrorCode>> UpdateCharacter(Character character, CancellationToken token)
+    public async Task<Option<ErrorResult>> UpdateCharacter(Character character, CancellationToken token)
     {
         var isOnlineRes = await _flHookService.CharacterIsOnline(character.CharacterName, token);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline) return FLAdminErrorCode.CharacterIsLoggedIn;
+        if (isOnline)
+            return new ErrorResult(FLAdminErrorCode.CharacterIsLoggedIn,
+                $"{character} is logged in and cannot be edited");
 
-        if (_validation.ValidateCharacter(character) is false) return FLAdminErrorCode.InvalidCharacter;
+        if (_validation.ValidateCharacter(character) is false)
+            return new ErrorResult(FLAdminErrorCode.InvalidCharacter, $"{character} is invalid");
 
         return await _characterDataAccess.UpdateCharacter(character.ToBsonDocument(), token);
     }
 
-    public async Task<Option<FLAdminErrorCode>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
+    public async Task<Option<ErrorResult>> UpdateFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
         T value, CancellationToken token)
     {
@@ -206,48 +219,55 @@ public class CharacterService : ICharacterService
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline) return FLAdminErrorCode.CharacterIsLoggedIn;
+        if (isOnline)
+            return new ErrorResult(FLAdminErrorCode.CharacterIsLoggedIn,
+                $"{character} is logged in and cannot be edited");
 
         return await _characterDataAccess.UpdateFieldOnCharacter(character, fieldName, value, token);
     }
 
-    public async Task<Option<FLAdminErrorCode>> RemoveFieldOnCharacter(Either<ObjectId, string> character,
+    public async Task<Option<ErrorResult>> RemoveFieldOnCharacter(Either<ObjectId, string> character,
         string fieldName, CancellationToken token)
     {
         var isOnlineRes = await _flHookService.CharacterIsOnline(character, token);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline) return FLAdminErrorCode.CharacterIsLoggedIn;
+        if (isOnline)
+            return new ErrorResult(FLAdminErrorCode.CharacterIsLoggedIn,
+                $"{character} is logged in and cannot be edited");
 
         return await _characterDataAccess.RemoveFieldOnCharacter(character, fieldName, token);
     }
 
-    public async Task<Option<FLAdminErrorCode>> AddFieldOnCharacter<T>(Either<ObjectId, string> character,
+    public async Task<Option<ErrorResult>> AddFieldOnCharacter<T>(Either<ObjectId, string> character,
         string fieldName,
         T value, CancellationToken token)
     {
         return await _characterDataAccess.CreateFieldOnCharacter(character, fieldName, value, token);
     }
 
-    public async Task<Option<FLAdminErrorCode>> RenameCharacter(string oldName, string newName, CancellationToken token)
+    public async Task<Option<ErrorResult>> RenameCharacter(string oldName, string newName, CancellationToken token)
     {
         var isOnlineRes = await _flHookService.CharacterIsOnline(oldName, token);
         var isOnline = isOnlineRes.Match(
             Left: err => true,
             Right: b => b is true);
-        if (isOnline) return FLAdminErrorCode.CharacterIsLoggedIn;
+        if (isOnline)
+            return new ErrorResult(FLAdminErrorCode.CharacterIsLoggedIn,
+                $"{oldName} is logged in and cannot be edited");
 
         //First check if new name is available.
         var newNameAvailableCheck = await _characterDataAccess.GetCharacter(newName, token);
 
-        if (newNameAvailableCheck.IsRight) return FLAdminErrorCode.CharacterNameIsTaken;
+        if (newNameAvailableCheck.IsRight)
+            return new ErrorResult(FLAdminErrorCode.CharacterNameIsTaken, $"{newName} is already taken.");
 
         var characterRes = await _characterDataAccess.GetCharacter(oldName, token);
         if (characterRes.IsLeft)
             return characterRes.Match(
                 Left: err => err,
-                Right: _ => FLAdminErrorCode.Unknown
+                Right: _ => new ErrorResult(FLAdminErrorCode.Unknown)
             );
 
         var character = characterRes.Match<Character>(
@@ -260,12 +280,13 @@ public class CharacterService : ICharacterService
         return await _characterDataAccess.UpdateCharacter(character.ToBsonDocument(), token);
     }
 
-    public async Task<Either<FLAdminErrorCode, List<CharacterSummary>>> GetCharacterSummaries(BsonDocument filter, int page,
+    public async Task<Either<ErrorResult, List<CharacterSummary>>> GetCharacterSummaries(BsonDocument filter, int page,
         int pageSize, CancellationToken token)
     {
         var characters = await _characterDataAccess.GetCharactersByFilter(filter, token, page, pageSize);
 
-        if (characters.IsNullOrEmpty()) return FLAdminErrorCode.CharacterNotFound;
+        if (characters.IsNullOrEmpty())
+            return new ErrorResult(FLAdminErrorCode.CharacterNotFound, "No characters found with provided filter.");
 
         var summaries = new List<CharacterSummary>(characters.Select(character => new CharacterSummary
         {

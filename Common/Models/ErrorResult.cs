@@ -4,9 +4,9 @@ namespace FlAdmin.Common.Models;
 
 public struct ErrorResult()
 {
-    public ErrorResult(FLAdminErrorCode err, string errMsg) : this()
+    public ErrorResult(FLAdminErrorCode err, string errMsg = "") : this()
     {
-        this.Errors.Add(new FlAdminError(err, errMsg));
+        Errors.Add(new FlAdminError(err, errMsg));
     }
     
     
