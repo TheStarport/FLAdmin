@@ -9,6 +9,8 @@ public class FlAdminConfig
 
     public FlHookConfig FlHook { get; set; } = new();
 
+
+    //N.B. This is the database ID name of the superadmin account which may be different from the username which is decided by the end user
     public string SuperAdminName { get; set; } = "SuperAdmin";
 
     public int MaxCharactersPerAccount { get; set; } = 5;
