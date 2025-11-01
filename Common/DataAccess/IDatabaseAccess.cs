@@ -1,4 +1,5 @@
-﻿using FlAdmin.Common.Models.Error;
+﻿using FlAdmin.Common.Models;
+using FlAdmin.Common.Models.Error;
 using LanguageExt;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -11,9 +12,9 @@ public interface IDatabaseAccess
 
     MongoClient GetClient();
 
-    Task<Either<FLAdminErrorCode, Guid>> StartSession();
+    Task<Either<ErrorResult, Guid>> StartSession();
 
-    Task<Option<FLAdminErrorCode>> EndSession(bool commit);
+    Task<Option<ErrorResult>> EndSession(bool commit);
 
-    Task<Either<FLAdminErrorCode, BsonDocument>> SubmitQuery(BsonDocument query, Guid sessionId);
+    Task<Either<ErrorResult, BsonDocument>> SubmitQuery(BsonDocument query, Guid sessionId);
 }

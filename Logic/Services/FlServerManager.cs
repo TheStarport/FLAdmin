@@ -176,15 +176,15 @@ public class FlServerManager(
         RecurringJob.RemoveIfExists("FLServerDiagnostic");
     }
 
-    public Option<FLAdminErrorCode> StartServer(CancellationToken token)
+    public Option<ErrorResult> StartServer(CancellationToken token)
     {
         if (_readyToStart)
         {
-            return FLAdminErrorCode.ServerAlreadyOnline;
+            return new ErrorResult(FLAdminErrorCode.ServerAlreadyOnline);
         }
         
         _readyToStart = true;
-        return Option<FLAdminErrorCode>.None;
+        return Option<ErrorResult>.None;
     }
 
     private async Task<bool> StartProcess()

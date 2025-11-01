@@ -19,7 +19,6 @@ public struct ErrorResult()
         return this.Errors.Any(err => err.ErrorCode == error);
     }
     
-    
 }
 
 public struct FlAdminError(FLAdminErrorCode ErrorCode, string Message)

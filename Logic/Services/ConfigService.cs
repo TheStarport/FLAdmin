@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FlAdmin.Common.Configs;
+using FlAdmin.Common.Models;
 using FlAdmin.Common.Models.Error;
 using FlAdmin.Common.Services;
 using LanguageExt;
@@ -26,7 +27,7 @@ public class ConfigService : IConfigService
     
     
     
-    public async Task<Either<FLAdminErrorCode, JsonDocument>> GetJsonConfig(string path, CancellationToken token)
+    public async Task<Either<ErrorResult, JsonDocument>> GetJsonConfig(string path, CancellationToken token)
     {
         try
         {
@@ -39,21 +40,21 @@ public class ConfigService : IConfigService
         catch (IOException e)
         {
             _logger.LogError("{Message}", e.Message);
-            return FLAdminErrorCode.FileNotFound;
+            return new ErrorResult(FLAdminErrorCode.FileNotFound, $"file not found at path {path}");
         }
         catch (JsonException e)
         {
             _logger.LogError("{Message}", e.Message);
-            return FLAdminErrorCode.FileNotValidJson;
+            return new ErrorResult(FLAdminErrorCode.FileNotValidJson);
         }
         catch (ArgumentException e)
         {
             _logger.LogError("{Message}", e.Message);
-            return FLAdminErrorCode.FileNotValidJson;
+            return new ErrorResult(FLAdminErrorCode.FileNotValidJson);
         }
     }
 
-    public async Task<Either<FLAdminErrorCode, JsonDocument>> GetFlHookConfig(CancellationToken token)
+    public async Task<Either<ErrorResult, JsonDocument>> GetFlHookConfig(CancellationToken token)
     {
         try
         {
@@ -65,21 +66,21 @@ public class ConfigService : IConfigService
         catch (IOException e)
         {
             _logger.LogError("{Message}", e.Message);
-            return FLAdminErrorCode.FileNotFound;
+            return new ErrorResult(FLAdminErrorCode.FileNotFound, $"flhook config not found");
         }
         catch (JsonException e)
         {
             _logger.LogError("{Message}", e.Message);
-            return FLAdminErrorCode.FileNotValidJson;
+            return new ErrorResult(FLAdminErrorCode.FileNotValidJson);
         }
         catch (ArgumentException e)
         {
             _logger.LogError("{Message}", e.Message);
-            return FLAdminErrorCode.FileNotValidJson;
+            return new ErrorResult(FLAdminErrorCode.FileNotValidJson);
         }
     }
 
-    public async Task<Either<FLAdminErrorCode, JsonDocument>> GetFlAdminConfig(CancellationToken token)
+    public async Task<Either<ErrorResult, JsonDocument>> GetFlAdminConfig(CancellationToken token)
     {
         try
         {
@@ -91,36 +92,36 @@ public class ConfigService : IConfigService
         catch (IOException e)
         {
             _logger.LogError("{Message}", e.Message);
-            return FLAdminErrorCode.FileNotFound;
+            return new ErrorResult(FLAdminErrorCode.FileNotFound, $"FLAdmin config does not exist.");
         }
         catch (JsonException e)
         {
             _logger.LogError("{Message}", e.Message);
-            return FLAdminErrorCode.FileNotValidJson;
+            return new ErrorResult(FLAdminErrorCode.FileNotValidJson);
         }
         catch (ArgumentException e)
         {
             _logger.LogError("{Message}", e.Message);
-            return FLAdminErrorCode.FileNotValidJson;
+            return new ErrorResult(FLAdminErrorCode.FileNotValidJson);
         }
     }
 
-    public Task<Option<FLAdminErrorCode>> SetJsonConfig(string path, JsonDocument json, CancellationToken token)
+    public Task<Option<ErrorResult>> SetJsonConfig(string path, JsonDocument json, CancellationToken token)
     {
         throw new NotImplementedException();
     }
 
-    public Task<Option<FLAdminErrorCode>> SetFlHookConfig(JsonDocument json, CancellationToken token)
+    public Task<Option<ErrorResult>> SetFlHookConfig(JsonDocument json, CancellationToken token)
     {
         throw new NotImplementedException();
     }
 
-    public Task<Option<FLAdminErrorCode>> SetFlAdminConfig(FlAdminConfig config, CancellationToken token)
+    public Task<Option<ErrorResult>> SetFlAdminConfig(FlAdminConfig config, CancellationToken token)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<Option<FLAdminErrorCode>> GenerateDefaultFlAdminConfig(CancellationToken token)
+    public async Task<Option<ErrorResult>> GenerateDefaultFlAdminConfig(CancellationToken token)
     {
         var newConfig = new FlAdminConfig();
 
@@ -128,13 +129,13 @@ public class ConfigService : IConfigService
         {
             var writer = new StreamWriter("fladmin.json", false);
             await writer.WriteAsync(JsonSerializer.Serialize(newConfig));
-            return Option<FLAdminErrorCode>.None;
+            return Option<ErrorResult>.None;
         }
         //TODO: More specific saving error.
         catch (IOException e)
         {
             _logger.LogError("{Message}", e.Message);
-            return FLAdminErrorCode.Unknown;
+            return new ErrorResult(FLAdminErrorCode.Unknown);
         }
     }
 }

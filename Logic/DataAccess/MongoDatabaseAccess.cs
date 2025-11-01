@@ -1,5 +1,6 @@
 ﻿using FlAdmin.Common.Configs;
 using FlAdmin.Common.DataAccess;
+using FlAdmin.Common.Models;
 using FlAdmin.Common.Models.Error;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
@@ -36,9 +37,9 @@ public class MongoDatabaseAccess : IDatabaseAccess
         return _client;
     }
 
-    public async Task<Either<FLAdminErrorCode, Guid>> StartSession()
+    public async Task<Either<ErrorResult, Guid>> StartSession()
     {
-        if (_session is not null) return FLAdminErrorCode.SessionAlreadyExists;
+        if (_session is not null) return new ErrorResult(FLAdminErrorCode.SessionAlreadyExists, "Session already exists");
 
         try
         {
@@ -49,17 +50,17 @@ public class MongoDatabaseAccess : IDatabaseAccess
         }
         catch (MongoException ex)
         {
-            return FLAdminErrorCode.SessionAlreadyExists;
+            return new ErrorResult(FLAdminErrorCode.CommandError, ex.Message);
         }
     }
 
-    public async Task<Option<FLAdminErrorCode>> EndSession(bool commit)
+    public async Task<Option<ErrorResult>> EndSession(bool commit)
     {
         if (_session is null)
         {
             //Make sure the sessionID is empty
             _sessionId = Guid.Empty;
-            return FLAdminErrorCode.SessionNotStarted;
+            return new ErrorResult(FLAdminErrorCode.SessionNotStarted);
         }
 
         try
@@ -68,20 +69,20 @@ public class MongoDatabaseAccess : IDatabaseAccess
                 await _session.CommitTransactionAsync();
             else
                 await _session.AbortTransactionAsync();
-            return new Option<FLAdminErrorCode>();
+            return new Option<ErrorResult>();
         }
         catch (MongoException ex)
         {
-            return FLAdminErrorCode.DatabaseError;
+            return new ErrorResult(FLAdminErrorCode.CommandError, ex.Message);
         }
     }
 
 
-    public async Task<Either<FLAdminErrorCode, BsonDocument>> SubmitQuery(BsonDocument query, Guid sessionId)
+    public async Task<Either<ErrorResult, BsonDocument>> SubmitQuery(BsonDocument query, Guid sessionId)
     {
-        if (_session is null) return FLAdminErrorCode.SessionNotStarted;
+        if (_session is null) return new ErrorResult(FLAdminErrorCode.SessionNotStarted);
 
-        if (sessionId == _sessionId) return FLAdminErrorCode.SessionIdMismatch;
+        if (sessionId != _sessionId) return new ErrorResult(FLAdminErrorCode.SessionIdMismatch);
 
         try
         {
@@ -90,7 +91,7 @@ public class MongoDatabaseAccess : IDatabaseAccess
         }
         catch (MongoCommandException ex)
         {
-            return FLAdminErrorCode.CommandError;
+            return new ErrorResult(FLAdminErrorCode.CommandError, ex.Message);
         }
     }
 }
