@@ -31,7 +31,6 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         catch (MongoException ex)
         {
             logger.LogError(ex, "Encountered a mongo database issue when adding accounts.");
-            var errResult = new ErrorResult();
 
             if (ex is MongoBulkWriteException wx)
                 if (wx.WriteErrors.Count is not 0)
@@ -43,26 +42,18 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
                         logger.LogWarning(ex, "Attempt to add accounts with ids that already exist on the database.");
 
 
-                        errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountIdAlreadyExists,
-                            wx.Message));
-                        return errResult;
+                        return new ErrorResult(FLAdminErrorCode.AccountIdAlreadyExists,
+                            "One or more Accounts with the provided ids that already exist on the database.");
                     }
                 }
 
             logger.LogError(ex, "Encountered a mongo database issue when adding accounts.");
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.DatabaseError, ex.Message));
-
-            return errResult;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "database operation failed.");
         }
         catch (OperationCanceledException ex)
         {
-            logger.LogError(ex, "Request was cancelled{}", ex.Message);
-
-            var errResult = new ErrorResult();
-
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.RequestCancelled, ex.Message));
-
-            return errResult;
+            logger.LogInformation(ex, "Request was cancelled{}", ex.Message);
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled, "Operation was cancelled.");
         }
     }
 
@@ -71,14 +62,11 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
         {
-            var errResult = new ErrorResult();
-
             var accountId = account.GetValue("_id").AsString;
             if (accountId is null || accountId.Length is 0)
             {
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountIdIsNull,
-                    "accountID of the provided account is null."));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.AccountIdIsNull,
+                    "accountID of the provided account is null.");
             }
 
             var filter = Builders<Account>.Filter.Eq(a => a.Id, accountId);
@@ -92,34 +80,27 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
 
             if (result.ModifiedCount is 0)
             {
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountNotFound,
-                    "Account id of the provided account does not exist on the database."));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.AccountNotFound,
+                    "Account id of the provided account does not exist on the database.");
             }
 
             return new Option<ErrorResult>();
         }
         catch (MongoException ex)
         {
-            var errResult = new ErrorResult();
             logger.LogError(ex, "Encountered a mongo database issue when updating account {}",
                 account.GetValue("_id").AsString);
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.DatabaseError, ex.Message));
-            return errResult;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "database operation failed.");
         }
         catch (KeyNotFoundException ex)
         {
-            var errResult = new ErrorResult();
             logger.LogError(ex, "Attempt to update character with Bson document that does not have an ObjectId");
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountIdIsNull, ex.Message));
-            return errResult;
+            return new ErrorResult(FLAdminErrorCode.AccountIdIsNull, "provided document does not have an accoundId.");
         }
         catch (OperationCanceledException ex)
         {
-            logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            var errResult = new ErrorResult();
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.RequestCancelled, ex.Message));
-            return errResult;
+            logger.LogInformation(ex, "Request was cancelled{}", ex.Message);
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled, "Operation was cancelled.");
         }
     }
 
@@ -129,13 +110,12 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
 
         try
         {
-            var errResult = new ErrorResult();
             var result = await _accounts.DeleteManyAsync(account => ids.Contains(account.Id), cancellationToken: token);
 
             if (result.DeletedCount is 0)
             {
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountNotFound,
-                    "Account with this id is not found."));
+                return new ErrorResult(FLAdminErrorCode.AccountNotFound,
+                    "one or more accoutns with the provided id was not found.");
             }
 
 
@@ -143,17 +123,13 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         }
         catch (MongoException ex)
         {
-            var errResult = new ErrorResult();
             logger.LogError(ex, "Mongo exception thrown when attempting to delete accounts");
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountIdIsNull, ex.Message));
-            return errResult;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "database operation failed.");
         }
         catch (OperationCanceledException ex)
         {
-            logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            var errResult = new ErrorResult();
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.RequestCancelled, ex.Message));
-            return errResult;
+            logger.LogInformation(ex, "Request was cancelled{}", ex.Message);
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled, "Operation was cancelled.");
         }
     }
 
@@ -161,32 +137,25 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
     {
         try
         {
-            var errResult = new ErrorResult();
             var account = (await _accounts.FindAsync(account => account.Id == accountId, cancellationToken: token))
                 .FirstOrDefault(cancellationToken: token);
             if (account is null)
             {
                 logger.LogWarning("Account {accountId} not found", accountId);
-
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountNotFound, "Account not found."));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.AccountNotFound, $"{accountId} not found.");
             }
 
             return account;
         }
         catch (MongoException ex)
         {
-            var errResult = new ErrorResult();
             logger.LogError(ex, "Mongo exception thrown when attempting to get account of id {accountId}", accountId);
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountIdIsNull, ex.Message));
-            return errResult;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "database operation failed.");
         }
         catch (OperationCanceledException ex)
         {
-            logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            var errResult = new ErrorResult();
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.RequestCancelled, ex.Message));
-            return errResult;
+            logger.LogInformation(ex, "Request was cancelled{}", ex.Message);
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled, "Operation was cancelled.");
         }
     }
 
@@ -194,20 +163,15 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
     public async Task<Option<ErrorResult>> UpdateFieldOnAccount<T>(string accountId, string fieldName, T value,
         CancellationToken token)
     {
-        var errResult = new ErrorResult();
-
         switch (fieldName)
         {
             case "_id":
-
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountFieldIsProtected,
-                    "You cannot change the Id of an account."));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.AccountFieldIsProtected,
+                    "You cannot change the Id of an account.");
             //TODO: May not work correctly
             case "username" when value is "SuperAdmin":
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountIsProtected,
-                    "You cannot edit the superadmin username."));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.AccountIsProtected,
+                    "You cannot edit the superadmin username.");
         }
 
         using var session = await _client.StartSessionAsync(cancellationToken: token);
@@ -225,16 +189,14 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
                 .FirstOrDefault(cancellationToken: token).ToBsonDocument();
             if (account is null)
             {
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountNotFound,
-                    $"Account Id of {accountId} not found."));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.AccountNotFound,
+                    $"Account Id of {accountId} not found.");
             }
 
             if (account[fieldName] is null)
             {
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountFieldDoesNotExist,
-                    $"Field {fieldName} not found."));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.AccountFieldDoesNotExist,
+                    $"Field {fieldName} not found.");
             }
 
             var oldValuePair = account.Elements.FirstOrDefault(field => field.Name == newValuePair.Name);
@@ -242,9 +204,9 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
 
             if (oldValuePair.Value.GetType() != newValuePair.Value.GetType())
             {
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountElementTypeMismatch,
-                    "The type provided and the type in the database do not match."));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.AccountElementTypeMismatch,
+                    $"The type provided and the type in the database for field {fieldName}do not match." +
+                    $" (Was {oldValuePair.Value.GetType()}), but was provided {newValuePair.Value.GetType()}.");
             }
 
             account[newValuePair.Name] = newValuePair.Value;
@@ -257,9 +219,8 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
             {
                 logger.LogError("{accountId} failed to update for field {fieldName} to value {value}", accountId,
                     fieldName, value);
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.DatabaseError,
-                    $"{accountId} failed to update for field {fieldName} to value {value}"));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.DatabaseError,
+                    $"{accountId} failed to update for field {fieldName} to value {value}");
             }
 
             return new Option<ErrorResult>();
@@ -269,21 +230,19 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
             logger.LogError(ex, "Encountered a mongo database when updating account {accountId} on field {value}",
                 accountId,
                 value);
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.DatabaseError, ex.Message));
-            return errResult;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "database operation failed.");
         }
         catch (KeyNotFoundException ex)
         {
             logger.LogWarning(ex, "Attempting to edit nonexistent field {fieldName} on account {accountId}", fieldName,
                 accountId);
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountFieldDoesNotExist, ex.Message));
-            return errResult;
+            return new ErrorResult(FLAdminErrorCode.AccountFieldDoesNotExist,
+                $"{fieldName} not found on account {accountId}.");
         }
         catch (OperationCanceledException ex)
         {
-            logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.RequestCancelled, ex.Message));
-            return errResult;
+            logger.LogInformation(ex, "Request was cancelled{}", ex.Message);
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled, "Operation was cancelled.");
         }
     }
 
@@ -293,7 +252,6 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         using var session = await _client.StartSessionAsync(cancellationToken: token);
         try
         {
-            var errResult = new ErrorResult();
             BsonElement keyValuePair;
             if (typeof(T) == typeof(int))
                 keyValuePair = new BsonElement(fieldName, BsonValue.Create(value).ToInt64());
@@ -306,17 +264,18 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
                 .FirstOrDefault(cancellationToken: token).ToBsonDocument();
             if (account is null)
             {
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountNotFound,
-                    "Account with that Id doesn't exist."));
-                return errResult;
+                var test = new ErrorResult(FLAdminErrorCode.AccountNotFound,
+                    $"Account with id of {accountId} doesn't exist.");
+
+                bool e = true;
+                return test;
             }
 
             account.TryGetValue(fieldName, out var val);
             if (val is not null)
             {
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountFieldAlreadyExists,
-                    $"{fieldName} already exists. on {accountId}"));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.AccountFieldAlreadyExists,
+                    $"{fieldName} already exists. on {accountId}");
             }
 
 
@@ -329,9 +288,8 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
                 logger.LogError("{accountId} failed to add new field of name {fieldName} with value of {value}",
                     accountId,
                     fieldName, value);
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.DatabaseError,
-                    $"{accountId} failed to add new field of name {fieldName} with value of {value}"));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.DatabaseError,
+                    $"{accountId} failed to add new field of name {fieldName} with value of {value}");
             }
 
             return new Option<ErrorResult>();
@@ -342,30 +300,25 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
                 value,
                 accountId
             );
-            var errResult = new ErrorResult();
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.DatabaseError, ex.Message));
-            return errResult;
+
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "database operation failed.");
         }
         catch (OperationCanceledException ex)
         {
-            logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            var errResult = new ErrorResult();
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.RequestCancelled, ex.Message));
-            return errResult;
+            logger.LogInformation(ex, "Request was cancelled{}", ex.Message);
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled, "Operation was cancelled.");
         }
     }
 
     public async Task<Option<ErrorResult>> RemoveFieldOnAccount(string accountId, string fieldName,
         CancellationToken token)
     {
-        var errResult = new ErrorResult();
         switch (fieldName)
         {
             case "_id":
-                
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountFieldIsProtected,
-                    "You cannot remove the account Id of an account."));
-                return errResult;
+
+                return new ErrorResult(FLAdminErrorCode.AccountFieldIsProtected,
+                    "You cannot remove the account Id of an account.");
         }
 
         using var session = await _client.StartSessionAsync(cancellationToken: token);
@@ -375,31 +328,29 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
                 .FirstOrDefault(cancellationToken: token).ToBsonDocument();
             if (account is null)
             {
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountNotFound, $"{accountId} not found."));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.AccountNotFound, $"{accountId} not found.");
             }
 
 
             if (account[fieldName] is null)
             {
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountFieldDoesNotExist, $"{fieldName} not found."));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.AccountFieldDoesNotExist,
+                    $"{fieldName} not found.");
             }
-            
+
             account.Remove(fieldName);
             var accObj = BsonSerializer.Deserialize<Account>(account);
             var result = await _accounts.ReplaceOneAsync(acc => acc.Id == accountId, accObj, cancellationToken: token);
-            
+
             if (result.ModifiedCount is 0)
             {
                 logger.LogError("{accountId} failed to remove field with name of {fieldName}",
                     accountId,
                     fieldName);
-                errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.DatabaseError,
-                    $"{accountId} failed to remove field of name {fieldName}"));
-                return errResult;
+                return new ErrorResult(FLAdminErrorCode.DatabaseError,
+                    $"Failed to remove field {fieldName} from {accountId}.");
             }
-            
+
             return new Option<ErrorResult>();
         }
         catch (MongoException ex)
@@ -407,22 +358,19 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
             logger.LogError(ex,
                 "Encountered a mongo database when attempting to remove field {fieldName} from account {accountId}",
                 fieldName, accountId);
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.DatabaseError, ex.Message));
-            return errResult;
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "database operation failed.");
         }
         catch (KeyNotFoundException ex)
         {
             logger.LogWarning(ex, "Attempting to remove a nonexistent field {fieldName} on account {accountId}",
                 fieldName,
                 accountId);
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountFieldDoesNotExist, ex.Message));
-            return errResult;
+            return new ErrorResult(FLAdminErrorCode.AccountFieldDoesNotExist, $"{fieldName} not found on {accountId}");
         }
         catch (OperationCanceledException ex)
         {
-            logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.RequestCancelled, ex.Message));
-            return errResult;
+            logger.LogWarning(ex, "Request was cancelled{}", ex.Message);
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled, "Operation was cancelled.");
         }
     }
 
@@ -459,18 +407,16 @@ public class AccountDataAccess(IDatabaseAccess databaseAccess, FlAdminConfig con
         }
         catch (MongoException ex)
         {
-            var errResult = new ErrorResult();
             logger.LogError(ex, "Encountered mongo database error when attempting to replace account of Id {} ",
                 account.Id);
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountFieldDoesNotExist, ex.Message));
-            return errResult;
+
+            return new ErrorResult(FLAdminErrorCode.DatabaseError, "database operation failed.");
         }
         catch (OperationCanceledException ex)
         {
-            logger.LogError(ex, "Request was cancelled{}", ex.Message);
-            var errResult = new ErrorResult();
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.RequestCancelled, ex.Message));
-            return errResult;
+            logger.LogWarning(ex, "Request was cancelled{}", ex.Message);
+
+            return new ErrorResult(FLAdminErrorCode.RequestCancelled, "Operation was cancelled.");
         }
     }
 }

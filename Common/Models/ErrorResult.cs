@@ -2,27 +2,36 @@ using FlAdmin.Common.Models.Error;
 
 namespace FlAdmin.Common.Models;
 
-public struct ErrorResult()
+public class ErrorResult
 {
-    public ErrorResult(FLAdminErrorCode err, string errMsg = "") : this()
+    public ErrorResult(FLAdminErrorCode err, string errMsg = "")
+    {
+        Errors =
+        [
+            new FlAdminError(err, errMsg)
+        ];
+    }
+
+    public ErrorResult()
+    {
+        Errors = [];
+    }
+
+    private List<FlAdminError> Errors { get; }
+
+    public void AddError(FLAdminErrorCode err, string errMsg)
     {
         Errors.Add(new FlAdminError(err, errMsg));
     }
-    
-    
-    public List<FlAdminError> Errors { get; set; } = [];
-
-    public Exception? Exception { get; set; } = null;
 
     public bool HasErrorCode(FLAdminErrorCode error)
     {
-        return this.Errors.Any(err => err.ErrorCode == error);
+        return Errors.Any(err => err.ErrorCode == error);
     }
-    
 }
 
-public struct FlAdminError(FLAdminErrorCode ErrorCode, string Message)
+public struct FlAdminError(FLAdminErrorCode err, string errMsg)
 {
-    public FLAdminErrorCode ErrorCode { get; set; }
-    public string Message { get; set; }
+    public FLAdminErrorCode ErrorCode { get; set; } = err;
+    public string Message { get; set; } = errMsg;
 }
