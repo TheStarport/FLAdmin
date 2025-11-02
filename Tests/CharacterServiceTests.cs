@@ -64,7 +64,7 @@ public class CharacterServiceTests
         var result = await _characterService.GetCharactersOfAccount("123", _token);
 
         result.Match(
-            Left: err => err == FLAdminErrorCode.AccountNotFound,
+            Left: err => err.HasErrorCode(FLAdminErrorCode.AccountNotFound),
             Right: _ => false
         ).Should().BeTrue();
     }
@@ -75,7 +75,7 @@ public class CharacterServiceTests
         var result = await _characterService.GetCharactersOfAccount("abc123456", _token);
 
         result.Match(
-            Left: err => err == FLAdminErrorCode.CharacterNotFound,
+            Left: err => err.HasErrorCode(FLAdminErrorCode.CharacterNotFound),
             Right: _ => false
         ).Should().BeTrue();
     }
@@ -94,7 +94,7 @@ public class CharacterServiceTests
         var result = await _characterService.RenameCharacter("Chad_Games", "Mr_Trent", _token);
 
         result.Match(
-            err => err == FLAdminErrorCode.CharacterNameIsTaken,
+            err => err.HasErrorCode(FLAdminErrorCode.CharacterNameIsTaken),
             false
         ).Should().BeTrue();
     }
@@ -105,7 +105,7 @@ public class CharacterServiceTests
         var result = await _characterService.RenameCharacter("Not_Chad_Games", "More_Not_Chad_Games", _token);
 
         result.Match(
-            err => err == FLAdminErrorCode.CharacterNotFound,
+            err => err.HasErrorCode(FLAdminErrorCode.CharacterNotFound),
             false
         ).Should().BeTrue();
     }
@@ -125,7 +125,7 @@ public class CharacterServiceTests
         var result = await _characterService.MoveCharacter("Chad_Games", "123", _token);
 
         result.Match(
-            err => err == FLAdminErrorCode.AccountNotFound,
+            err => err.HasErrorCode(FLAdminErrorCode.AccountNotFound),
             false
         ).Should().BeTrue();
     }
@@ -136,7 +136,7 @@ public class CharacterServiceTests
         var result = await _characterService.MoveCharacter("Not_Chad_Games", "abc123456", _token);
 
         result.Match(
-            err => err == FLAdminErrorCode.CharacterNotFound,
+            err => err.HasErrorCode(FLAdminErrorCode.CharacterNotFound),
             false
         ).Should().BeTrue();
     }

@@ -359,7 +359,7 @@ public class CharacterDataAccess(
             logger.LogWarning(ex, "Attempting to remove nonexistent field {fieldName} on character {character}",
                 fieldName,
                 character);
-            return new ErrorResult(FLAdminErrorCode.DatabaseError, "Database op failed.");
+            return new ErrorResult(FLAdminErrorCode.CharacterFieldDoesNotExist, $"{fieldName} does not exist on {character}.");
         }
         catch (OperationCanceledException ex)
         {

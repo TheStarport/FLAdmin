@@ -43,10 +43,8 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
     {
         if (ids.Contains(config.SuperAdminName))
         {
-            var errResult = new ErrorResult();
-            errResult.Errors.Add(new FlAdminError(FLAdminErrorCode.AccountIsProtected,
-                "Superadmin cannot be deleted."));
-            return errResult;
+            return new ErrorResult(FLAdminErrorCode.AccountIsProtected,
+                "Superadmin cannot be deleted.");
         }
 
         return await accountDataAccess.DeleteAccounts(token, ids);

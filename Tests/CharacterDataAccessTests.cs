@@ -60,7 +60,7 @@ public class CharacterDataAccessTests : IDisposable
 
         character.Match(
             _ => false,
-            err => err == FLAdminErrorCode.CharacterNotFound
+            err => err.HasErrorCode(FLAdminErrorCode.CharacterNotFound)
         ).Should().BeTrue();
     }
 
@@ -93,7 +93,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.UpdateCharacter(testCharacter.ToBsonDocument(), token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterNameIsTaken,
+            err =>  err.HasErrorCode(FLAdminErrorCode.CharacterNameIsTaken),
             false
         ).Should().BeTrue();
     }
@@ -111,7 +111,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.UpdateCharacter(testCharacter.ToBsonDocument(), token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterNotFound,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterNotFound),
             false
         ).Should().BeTrue();
     }
@@ -132,7 +132,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.UpdateCharacter(testDoc, token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterIdIsNull,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterIdIsNull),
             false
         ).Should().BeTrue();
     }
@@ -151,7 +151,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.DeleteCharacters(token, "Not_Chad_Games");
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterNotFound,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterNotFound),
             false
         ).Should().BeTrue();
     }
@@ -162,7 +162,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.DeleteCharacters(token, "Chad_Games", "Not_Chad_Games");
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterNotFound,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterNotFound),
             false
         ).Should().BeTrue();
     }
@@ -195,7 +195,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.CreateCharacters(token, testCharacter);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterAlreadyExists,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterAlreadyExists),
             false
         ).Should().BeTrue();
     }
@@ -214,7 +214,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.CreateFieldOnCharacter("Chad_Games", "money", 1234567, token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterFieldAlreadyExists,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterFieldAlreadyExists),
             false
         ).Should().BeTrue();
     }
@@ -225,7 +225,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.CreateFieldOnCharacter("Not_Chad_Games", "someFactor", 1234567, token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterNotFound,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterNotFound),
             false
         ).Should().BeTrue();
     }
@@ -245,7 +245,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.RemoveFieldOnCharacter("Chad_Games", "garg", token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterFieldDoesNotExist,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterFieldDoesNotExist),
             false
         ).Should().BeTrue();
     }
@@ -256,7 +256,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.RemoveFieldOnCharacter("Chad_Games", "characterName", token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterFieldIsProtected,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterFieldIsProtected),
             false
         ).Should().BeTrue();
     }
@@ -268,7 +268,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.RemoveFieldOnCharacter("Not_Chad_Games", "money", token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterNotFound,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterNotFound),
             false
         ).Should().BeTrue();
     }
@@ -287,7 +287,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.UpdateFieldOnCharacter("Chad_Games", "money", "1234567", token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterElementTypeMismatch,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterElementTypeMismatch),
             false
         ).Should().BeTrue();
     }
@@ -299,7 +299,7 @@ public class CharacterDataAccessTests : IDisposable
             await _characterDataAccess.UpdateFieldOnCharacter("Chad_Games", "_id", ObjectId.GenerateNewId(), token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterFieldIsProtected,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterFieldIsProtected),
             false
         ).Should().BeTrue();
     }
@@ -311,7 +311,7 @@ public class CharacterDataAccessTests : IDisposable
             await _characterDataAccess.UpdateFieldOnCharacter("Chad_Games", "characterName", "Mr_Trent", token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterNameIsTaken,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterNameIsTaken),
             false
         ).Should().BeTrue();
     }
@@ -322,7 +322,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.UpdateFieldOnCharacter("Chad_Games", "gagdr", 1234567, token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterFieldDoesNotExist,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterFieldDoesNotExist),
             false
         ).Should().BeTrue();
     }
@@ -333,7 +333,7 @@ public class CharacterDataAccessTests : IDisposable
         var result = await _characterDataAccess.UpdateFieldOnCharacter("Not_Chad_Games", "money", 1234567, token);
 
         result.Match(
-            x => x == FLAdminErrorCode.CharacterNotFound,
+            x => x.HasErrorCode(FLAdminErrorCode.CharacterNotFound),
             false
         ).Should().BeTrue();
     }
