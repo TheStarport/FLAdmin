@@ -13,11 +13,24 @@ using Hangfire.Mongo.Migration.Strategies.Backup;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text.Json;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var config = new FlAdminConfig();
+
+
+if (File.Exists("fladmin.json"))
+{
+    config = JsonSerializer.Deserialize<FlAdminConfig>(File.ReadAllText("fladmin.json"));
+}
+else
+{
+    var json = JsonSerializer.Serialize(config);
+    File.WriteAllText("fladmin.json", json);
+}
+
 var keyProvider = new KeyProvider();
 
 builder.Services.AddAuthentication(x =>
@@ -41,7 +54,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddEndpointsApiExplorer();
 
 //Config
-builder.Services.AddSingleton<FlAdminConfig>();
+builder.Services.AddSingleton(config);
 
 //Data Access
 builder.Services.AddSingleton<IDatabaseAccess, MongoDatabaseAccess>();
