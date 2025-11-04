@@ -27,7 +27,7 @@ public class FlServerManager(
     public bool FlserverReady { get; private set; }
 
     //Keeps track of the past 6 hours of server diagnostics.
-    public FixedSizeQueue<ServerDiagnosticData> _pastServerDiagnostics { get;} = new(360);
+    public FixedSizeQueue<ServerDiagnosticData> _pastServerDiagnostics { get; } = new(360);
 
     private bool _readyToStart = true;
     private int _restartDelayInSeconds = 30;
@@ -36,9 +36,14 @@ public class FlServerManager(
 
     private DateTimeOffset _startTime;
     private int totalServerLogins;
-    
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (configuration.Server.ScheduledRestartEnabled)
+        {
+            SetServerRestart(configuration.Server.DefaultRestartTime);
+        }
+
         while (!stoppingToken.IsCancellationRequested)
         {
             if (!_readyToStart || (configuration.Server.AutoStart &&
@@ -98,12 +103,12 @@ public class FlServerManager(
         }
     }
 
-   /// <summary>
-   /// Sets a specified period to restart the server
-   /// </summary>
-   /// <param name="cronString">A cron string for the restart period.</param>
-   /// <param name="delay">Delay for the server restart</param>
-   /// <returns></returns>
+    /// <summary>
+    /// Sets a specified period to restart the server
+    /// </summary>
+    /// <param name="cronString">A cron string for the restart period.</param>
+    /// <param name="delay">Delay for the server restart</param>
+    /// <returns></returns>
     public Option<FLAdminErrorCode> SetServerRestart(string cronString, int delay = 30)
     {
         try
@@ -172,7 +177,7 @@ public class FlServerManager(
         await _flServer?.WaitForExitAsync(token)!;
         _readyToStart = false;
         FlserverReady = false;
-        
+
         RecurringJob.RemoveIfExists("FLServerDiagnostic");
     }
 
@@ -182,7 +187,7 @@ public class FlServerManager(
         {
             return new ErrorResult(FLAdminErrorCode.ServerAlreadyOnline);
         }
-        
+
         _readyToStart = true;
         return Option<ErrorResult>.None;
     }
@@ -242,7 +247,7 @@ public class FlServerManager(
             _startTime = DateTimeOffset.Now;
             _flServer.BeginOutputReadLine();
             _flServer.BeginErrorReadLine();
-            
+
             RecurringJob.AddOrUpdate("FLServerDiagnostic", () => ServerDiagnostics(), Cron.Minutely);
 
             return true;
