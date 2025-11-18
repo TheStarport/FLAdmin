@@ -24,7 +24,8 @@ public enum FLAdminErrorCode
     [Description("A session is already started, finish or abort the currrent session before starting a new one.")]
     SessionAlreadyExists,
 
-    [Description("Session ID mismatch.")] SessionIdMismatch,
+    [Description("Session ID mismatch.")] 
+    SessionIdMismatch,
 
     [Description("No accounts were found that match the provided criteria.")]
     AccountNotFound = 2000,
@@ -108,7 +109,7 @@ public enum FLAdminErrorCode
     FLHookFailedToStart,
 
     [Description("FLAdmin was unable to terminate FLServer.")]
-    FlServerFailedToTerminate,
+    FLServerFailedToTerminate,
 
     [Description("HTTP Request to FLHook timed out.")]
     FLHookRequestTimeout,

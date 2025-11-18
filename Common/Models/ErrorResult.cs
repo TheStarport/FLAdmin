@@ -1,7 +1,9 @@
 using FlAdmin.Common.Models.Error;
 
 namespace FlAdmin.Common.Models;
-
+/// <summary>
+/// Error result object, first error in the list is the "primary error".
+/// </summary>
 public class ErrorResult
 {
     public ErrorResult(FLAdminErrorCode err, string errMsg = "")
@@ -17,7 +19,7 @@ public class ErrorResult
         Errors = [];
     }
 
-    private List<FlAdminError> Errors { get; }
+    public List<FlAdminError> Errors { get; }
 
     public void AddError(FLAdminErrorCode err, string errMsg)
     {
@@ -28,6 +30,7 @@ public class ErrorResult
     {
         return Errors.Any(err => err.ErrorCode == error);
     }
+    
 }
 
 public struct FlAdminError(FLAdminErrorCode err, string errMsg)
