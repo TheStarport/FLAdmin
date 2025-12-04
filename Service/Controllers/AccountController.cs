@@ -134,7 +134,6 @@ public class AccountController(IAccountService accountService) : ControllerBase
         return Ok($"Account {account.Id} updated successfully");
     }
 
-
     /// <summary>
     /// Bans account provided.
     /// </summary>

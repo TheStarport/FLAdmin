@@ -127,5 +127,10 @@ public enum FLAdminErrorCode
     FileNotFound = 5000,
 
     [Description("The provided file is not a valid JSON file.")]
-    FileNotValidJson
+    FileNotValidJson,
+    
+    [Description("That ini entry was not found")]
+    FreelancerIniEntryNotFound = 6000,
+    [Description("The provided id was not of the appopriate type.")]
+    FreelancerIniTypeMismatch,
 }

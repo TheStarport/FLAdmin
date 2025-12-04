@@ -17,10 +17,9 @@ public class ValidationService : IValidationService
 
         if (freelancerDataProvider.GetFreelancerData() is null)
         {
-            logger.LogCritical("No freelancer data available for validation service.");
+            _logger.LogCritical("No freelancer data available for validation service.");
             throw new Exception("No freelancer data available for validation service.");
         }
-
         _freelancerData = freelancerDataProvider.GetFreelancerData()!;
     }
 

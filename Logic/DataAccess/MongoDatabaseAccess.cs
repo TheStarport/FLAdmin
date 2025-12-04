@@ -3,6 +3,7 @@ using FlAdmin.Common.DataAccess;
 using FlAdmin.Common.Models;
 using FlAdmin.Common.Models.Error;
 using LanguageExt;
+using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -21,10 +22,10 @@ public class MongoDatabaseAccess : IDatabaseAccess
 
     public MongoDatabaseAccess(FlAdminConfig config, ILogger<MongoDatabaseAccess> logger)
     {
-        _client = new MongoClient(config.Mongo.ConnectionString);
-        _logger = logger;
-        _database = _client.GetDatabase(config.Mongo.DatabaseName);
-        _session = null;
+            _client = new MongoClient(config.Mongo.ConnectionString);
+            _logger = logger;
+            _database = _client.GetDatabase(config.Mongo.DatabaseName);
+            _session = null;
     }
 
     public IMongoCollection<T> GetCollection<T>(string collectionName)

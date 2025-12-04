@@ -7,4 +7,7 @@ public interface IFreelancerDataProvider
     bool Loaded();
     void Reload();
     FreelancerData? GetFreelancerData();
+    
+    
+    
 }
