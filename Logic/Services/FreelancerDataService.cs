@@ -138,6 +138,7 @@ public class FreelancerDataService : IFreelancerDataService
                 return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
                     $"Provided system nickname of {systemNickname} does not exist.");
             }
+
             return id.Match<Either<ErrorResult, SystemObject>>(s =>
                 {
                     var sysobj = system.Objects.Find(sysobj => sysobj.Nickname == s);
@@ -207,7 +208,7 @@ public class FreelancerDataService : IFreelancerDataService
         return id.Match<Either<ErrorResult, Commodity>>(s =>
             {
                 var commodity = _freelancerData.Equipment.Equip.Find(equip => equip.Nickname == s);
-                if (commodity != null && commodity.GetType()  == typeof(Commodity))
+                if (commodity != null && commodity.GetType() == typeof(Commodity))
                 {
                     return (Commodity)commodity;
                 }
@@ -217,6 +218,7 @@ public class FreelancerDataService : IFreelancerDataService
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
                         $"The provided name of {s} was not of type Commodity but of type {commodity.GetType()}");
                 }
+
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
                         $"A commodity with the name of {s} was not found.");
@@ -224,16 +226,19 @@ public class FreelancerDataService : IFreelancerDataService
             },
             u =>
             {
-                var commodity = _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
-                if (commodity != null && commodity.GetType()  == typeof(Commodity))
+                var commodity =
+                    _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
+                if (commodity != null && commodity.GetType() == typeof(Commodity))
                 {
                     return (Commodity)commodity;
                 }
+
                 if (commodity != null && commodity.GetType() != typeof(Commodity))
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
                         $"The provided id of {u} was not of type Commodity but of type {commodity.GetType()}");
                 }
+
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
                         $"A commodity with the id of {u} was not found");
@@ -246,7 +251,7 @@ public class FreelancerDataService : IFreelancerDataService
         return id.Match<Either<ErrorResult, Gun>>(s =>
             {
                 var gun = _freelancerData.Equipment.Equip.Find(equip => equip.Nickname == s);
-                if (gun != null && gun.GetType()  == typeof(Gun))
+                if (gun != null && gun.GetType() == typeof(Gun))
                 {
                     return (Gun)gun;
                 }
@@ -256,6 +261,7 @@ public class FreelancerDataService : IFreelancerDataService
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
                         $"The provided name of {s} was not of type gun but of type {gun.GetType()}");
                 }
+
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
                         $"A gun with the name of {s} was not found.");
@@ -263,16 +269,19 @@ public class FreelancerDataService : IFreelancerDataService
             },
             u =>
             {
-                var gun = _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
-                if (gun != null && gun.GetType()  == typeof(Gun))
+                var gun =
+                    _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
+                if (gun != null && gun.GetType() == typeof(Gun))
                 {
                     return (Gun)gun;
                 }
+
                 if (gun != null && gun.GetType() != typeof(Gun))
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
                         $"The provided id of {u} was not of type gun but of type {gun.GetType()}");
                 }
+
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
                         $"A gun with the id of {u} was not found");
@@ -285,7 +294,7 @@ public class FreelancerDataService : IFreelancerDataService
         return id.Match<Either<ErrorResult, Thruster>>(s =>
             {
                 var thruster = _freelancerData.Equipment.Equip.Find(equip => equip.Nickname == s);
-                if (thruster != null && thruster.GetType()  == typeof(Thruster))
+                if (thruster != null && thruster.GetType() == typeof(Thruster))
                 {
                     return (Thruster)thruster;
                 }
@@ -295,6 +304,7 @@ public class FreelancerDataService : IFreelancerDataService
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
                         $"The provided name of {s} was not of type thruster but of type {thruster.GetType()}");
                 }
+
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
                         $"A thruster with the name of {s} was not found.");
@@ -302,16 +312,19 @@ public class FreelancerDataService : IFreelancerDataService
             },
             u =>
             {
-                var thruster = _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
-                if (thruster != null && thruster.GetType()  == typeof(Thruster))
+                var thruster =
+                    _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
+                if (thruster != null && thruster.GetType() == typeof(Thruster))
                 {
                     return (Thruster)thruster;
                 }
+
                 if (thruster != null && thruster.GetType() != typeof(Thruster))
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
                         $"The provided id of {u} was not of type thruster but of type {thruster.GetType()}");
                 }
+
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
                         $"A thruster with the id of {u} was not found");
@@ -324,7 +337,7 @@ public class FreelancerDataService : IFreelancerDataService
         return id.Match<Either<ErrorResult, Engine>>(s =>
             {
                 var engine = _freelancerData.Equipment.Equip.Find(equip => equip.Nickname == s);
-                if (engine != null && engine.GetType()  == typeof(Engine))
+                if (engine != null && engine.GetType() == typeof(Engine))
                 {
                     return (Engine)engine;
                 }
@@ -334,6 +347,7 @@ public class FreelancerDataService : IFreelancerDataService
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
                         $"The provided name of {s} was not of type thruster but of type {engine.GetType()}");
                 }
+
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
                         $"A thruster with the name of {s} was not found.");
@@ -341,16 +355,19 @@ public class FreelancerDataService : IFreelancerDataService
             },
             u =>
             {
-                var engine = _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
-                if (engine != null && engine.GetType()  == typeof(Thruster))
+                var engine =
+                    _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
+                if (engine != null && engine.GetType() == typeof(Thruster))
                 {
                     return (Engine)engine;
                 }
+
                 if (engine != null && engine.GetType() != typeof(Engine))
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
                         $"The provided id of {u} was not of type engine but of type {engine.GetType()}");
                 }
+
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
                         $"A engine with the id of {u} was not found");
@@ -360,24 +377,20 @@ public class FreelancerDataService : IFreelancerDataService
 
     public Either<ErrorResult, Countermeasure> GetCountermeasure(Either<uint, string> id)
     {
-        throw new NotImplementedException();
-    }
-
-    public Either<ErrorResult, CountermeasureDropper> GetCountermeasureDropper(Either<uint, string> id)
-    {
-        return id.Match<Either<ErrorResult, CountermeasureDropper>>(s =>
+        return id.Match<Either<ErrorResult, Countermeasure>>(s =>
             {
-                var counterMeasureDropper = _freelancerData.Equipment.Equip.Find(equip => equip.Nickname == s);
-                if (counterMeasureDropper != null && counterMeasureDropper.GetType()  == typeof(CountermeasureDropper))
+                var counterMeasure = _freelancerData.Equipment.Equip.Find(equip => equip.Nickname == s);
+                if (counterMeasure != null && counterMeasure.GetType() == typeof(Countermeasure))
                 {
-                    return (CountermeasureDropper)counterMeasureDropper;
+                    return (Countermeasure)counterMeasure;
                 }
 
-                if (counterMeasureDropper != null && counterMeasureDropper.GetType() != typeof(CountermeasureDropper))
+                if (counterMeasure != null && counterMeasure.GetType() != typeof(Countermeasure))
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
-                        $"The provided name of {s} was not of type Counter Measure Dropper but of type {counterMeasureDropper.GetType()}");
+                        $"The provided name of {s} was not of type Counter Measure but of type {counterMeasure.GetType()}");
                 }
+
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
                         $"A Counter Measure Dropper with the name of {s} was not found.");
@@ -385,39 +398,37 @@ public class FreelancerDataService : IFreelancerDataService
             },
             u =>
             {
-                var counterMeasureDropper = _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
-                if (counterMeasureDropper != null && counterMeasureDropper.GetType()  == typeof(CountermeasureDropper))
+                var counterMeasure =
+                    _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
+                if (counterMeasure != null && counterMeasure.GetType() == typeof(Countermeasure))
                 {
-                    return (CountermeasureDropper)counterMeasureDropper;
+                    return (Countermeasure)counterMeasure;
                 }
-                if (counterMeasureDropper != null && counterMeasureDropper.GetType() != typeof(CountermeasureDropper))
+
+                if (counterMeasure != null && counterMeasure.GetType() != typeof(Countermeasure))
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
-                        $"The provided id of {u} was not of type Counter Measure Dropper but of type {counterMeasureDropper.GetType()}");
+                        $"The provided id of {u} was not of type Counter Measure but of type {counterMeasure.GetType()}");
                 }
+
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
-                        $"A Counter Measure Dropper with the id of {u} was not found");
+                        $"A Counter Measure with the id of {u} was not found");
                 }
             });
     }
 
-    public Either<ErrorResult, Mine> GetMine(Either<uint, string> id)
+    public Either<ErrorResult, CountermeasureDropper> GetCountermeasureDropper(Either<uint, string> id)
     {
-        throw new NotImplementedException();
-    }
-
-    public Either<ErrorResult, MineDropper> GetMineDropper(Either<uint, string> id)
-    {
-        return id.Match<Either<ErrorResult, MineDropper>>(s =>
+        return id.Match<Either<ErrorResult, CountermeasureDropper>>(s =>
             {
                 var counterMeasureDropper = _freelancerData.Equipment.Equip.Find(equip => equip.Nickname == s);
-                if (counterMeasureDropper != null && counterMeasureDropper.GetType() == typeof(MineDropper))
+                if (counterMeasureDropper != null && counterMeasureDropper.GetType() == typeof(CountermeasureDropper))
                 {
-                    return (MineDropper)counterMeasureDropper;
+                    return (CountermeasureDropper)counterMeasureDropper;
                 }
 
-                if (counterMeasureDropper != null && counterMeasureDropper.GetType() != typeof(MineDropper))
+                if (counterMeasureDropper != null && counterMeasureDropper.GetType() != typeof(CountermeasureDropper))
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
                         $"The provided name of {s} was not of type Counter Measure Dropper but of type {counterMeasureDropper.GetType()}");
@@ -432,9 +443,9 @@ public class FreelancerDataService : IFreelancerDataService
             {
                 var counterMeasureDropper =
                     _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
-                if (counterMeasureDropper != null && counterMeasureDropper.GetType() == typeof(MineDropper))
+                if (counterMeasureDropper != null && counterMeasureDropper.GetType() == typeof(CountermeasureDropper))
                 {
-                    return (MineDropper)counterMeasureDropper;
+                    return (CountermeasureDropper)counterMeasureDropper;
                 }
 
                 if (counterMeasureDropper != null && counterMeasureDropper.GetType() != typeof(CountermeasureDropper))
@@ -450,14 +461,140 @@ public class FreelancerDataService : IFreelancerDataService
             });
     }
 
+    public Either<ErrorResult, Mine> GetMine(Either<uint, string> id)
+    {
+        return id.Match<Either<ErrorResult, Mine>>(s =>
+            {
+                var mine = _freelancerData.Equipment.Mines.Find(mine => mine.Nickname == s);
+                if (mine != null)
+                {
+                    return mine;
+                }
+
+                {
+                    return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
+                        $"A munition with the name of {s} was not found.");
+                }
+            },
+            u =>
+            {
+                var mine = _freelancerData.Equipment.Mines.Find(mine =>
+                    LibreLancer.FLHash.CreateID(mine.Nickname) == u);
+                if (mine != null)
+                {
+                    return mine;
+                }
+
+                {
+                    return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
+                        $"A munition with the name of {u} was not found.");
+                }
+            });
+    }
+
+    public Either<ErrorResult, MineDropper> GetMineDropper(Either<uint, string> id)
+    {
+        return id.Match<Either<ErrorResult, MineDropper>>(s =>
+            {
+                var mineDropper = _freelancerData.Equipment.Equip.Find(equip => equip.Nickname == s);
+                if (mineDropper != null && mineDropper.GetType() == typeof(MineDropper))
+                {
+                    return (MineDropper)mineDropper;
+                }
+
+                if (mineDropper != null && mineDropper.GetType() != typeof(MineDropper))
+                {
+                    return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
+                        $"The provided name of {s} was not of type Mine Dropper but of type {mineDropper.GetType()}");
+                }
+
+                {
+                    return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
+                        $"A Mine Dropper with the name of {s} was not found.");
+                }
+            },
+            u =>
+            {
+                var mineDropper =
+                    _freelancerData.Equipment.Equip.Find(equip => LibreLancer.FLHash.CreateID(equip.Nickname) == u);
+                if (mineDropper != null && mineDropper.GetType() == typeof(MineDropper))
+                {
+                    return (MineDropper)mineDropper;
+                }
+
+                if (mineDropper != null && mineDropper.GetType() != typeof(CountermeasureDropper))
+                {
+                    return new ErrorResult(FLAdminErrorCode.FreelancerIniTypeMismatch,
+                        $"The provided id of {u} was not of type Mine Dropper but of type {mineDropper.GetType()}");
+                }
+
+                {
+                    return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
+                        $"A Mine Dropper with the id of {u} was not found");
+                }
+            });
+    }
+
     public Either<ErrorResult, Munition> GetMunition(Either<uint, string> id)
     {
-        throw new NotImplementedException();
+        return id.Match<Either<ErrorResult, Munition>>(s =>
+            {
+                var munition = _freelancerData.Equipment.Munitions.Find(munition => munition.Nickname == s);
+                if (munition != null)
+                {
+                    return munition;
+                }
+
+                {
+                    return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
+                        $"A munition with the name of {s} was not found.");
+                }
+            },
+            u =>
+            {
+                var munition = _freelancerData.Equipment.Munitions.Find(motor =>
+                    LibreLancer.FLHash.CreateID(motor.Nickname) == u);
+                if (munition != null)
+                {
+                    return munition;
+                }
+
+                {
+                    return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
+                        $"A munition with the name of {u} was not found.");
+                }
+            });
     }
 
     public Either<ErrorResult, Motor> GetMotor(Either<uint, string> id)
     {
-        throw new NotImplementedException();
+        return id.Match<Either<ErrorResult, Motor>>(s =>
+            {
+                var motor = _freelancerData.Equipment.Motors.Find(motor => motor.Nickname == s);
+                if (motor != null)
+                {
+                    return motor;
+                }
+
+                {
+                    return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
+                        $"A motor with the name of {s} was not found.");
+                }
+            },
+            u =>
+            {
+                var motor = _freelancerData.Equipment.Motors.Find(motor =>
+                    LibreLancer.FLHash.CreateID(motor.Nickname) == u);
+                if (motor != null)
+                {
+                    return motor;
+                }
+
+                {
+                    return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
+                        $"A motor with the name of {u} was not found.");
+                }
+            });
     }
 
     public Either<ErrorResult, PowerCore> GetPowerCore(Either<uint, string> id)
@@ -505,7 +642,7 @@ public class FreelancerDataService : IFreelancerDataService
 
     public Either<ErrorResult, ShieldGenerator> GetShieldGenerator(Either<uint, string> id)
     {
-            return id.Match<Either<ErrorResult, ShieldGenerator>>(s =>
+        return id.Match<Either<ErrorResult, ShieldGenerator>>(s =>
             {
                 var shieldGenerator = _freelancerData.Equipment.Equip.Find(equip => equip.Nickname == s);
                 if (shieldGenerator != null && shieldGenerator.GetType() == typeof(ShieldGenerator))
@@ -730,7 +867,31 @@ public class FreelancerDataService : IFreelancerDataService
 
     public Either<ErrorResult, BaseGood> GetBaseGood(Either<uint, string> id)
     {
-        throw new NotImplementedException();
+        return id.Match<Either<ErrorResult, BaseGood>>(s =>
+        {
+            var baseGood = _freelancerData.Markets.BaseGoods.Find(b => b.Base == s);
+            if (baseGood is not null)
+            {
+                return baseGood;
+            }
+            else
+            {
+                return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
+                    $"The provided base name of {s}has no market good associated with it;");
+            }
+        }, u =>
+        {
+            var baseGood = _freelancerData.Markets.BaseGoods.Find(b => LibreLancer.FLHash.CreateID(b.Base) == u);
+            if (baseGood is not null)
+            {
+                return baseGood;
+            }
+            else
+            {
+                return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
+                    $"The provided base id of {u}has no market good associated with it;");
+            }
+        });
     }
 
     public Either<ErrorResult, Good> GetGood(Either<uint, string> id)
@@ -742,6 +903,7 @@ public class FreelancerDataService : IFreelancerDataService
                 {
                     return good;
                 }
+
                 {
                     return new ErrorResult(FLAdminErrorCode.FreelancerIniEntryNotFound,
                         $"A cargo pod with the name of {s} was not found.");
@@ -761,17 +923,6 @@ public class FreelancerDataService : IFreelancerDataService
                 }
             });
     }
-
-    public Either<ErrorResult, MarketGood> GetMarketGood(Either<uint, string> id)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Either<ErrorResult, GoodAddon> GetGoodAddon(Either<uint, string> id)
-    {
-        throw new NotImplementedException();
-    }
-
     public Either<ErrorResult, string> GetInfocard(int infocardId)
     {
         throw new NotImplementedException();

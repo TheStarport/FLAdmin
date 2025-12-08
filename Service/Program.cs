@@ -73,6 +73,7 @@ builder.Services.AddSingleton<ICharacterService, CharacterService>();
 builder.Services.AddSingleton<IAuthService, AuthService>();
 builder.Services.AddSingleton<IFlHookService, FlHookService>();
 builder.Services.AddSingleton<IConfigService, ConfigService>();
+builder.Services.AddSingleton<IFreelancerDataService, FreelancerDataService>();
 
 //Background Services
 builder.Services.AddHostedService<FlServerManager>();

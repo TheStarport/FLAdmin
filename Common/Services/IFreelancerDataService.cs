@@ -41,10 +41,7 @@ public interface IFreelancerDataService
     
     public Either<ErrorResult,LibreLancer.Data.Goods.BaseGood> GetBaseGood(Either<uint,string> id);
     public Either<ErrorResult,LibreLancer.Data.Goods.Good> GetGood(Either<uint,string> id);
-    public Either<ErrorResult,LibreLancer.Data.Goods.MarketGood> GetMarketGood(Either<uint,string> id);
-    public Either<ErrorResult,LibreLancer.Data.Goods.GoodAddon> GetGoodAddon(Either<uint,string> id);
-
-
+    
     public Either<ErrorResult,string> GetInfocard(int infocardId);
 
 }
