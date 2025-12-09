@@ -170,6 +170,7 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
         account.PasswordHash = hashedPass;
         account.Salt = salt;
         account.Username = username;
+        account.WebRoles.Add("User");
 
         await accountDataAccess.UpdateAccount(account.ToBsonDocument(), token);
         return new Option<ErrorResult>();
@@ -265,7 +266,6 @@ public class AccountService(IAccountDataAccess accountDataAccess, FlAdminConfig 
             return new ErrorResult(FLAdminErrorCode.SuperAdminRoleIsProtected,
                 "The role of super admin cannot be removed.");
         }
-
         var set = roles.Select(x => x.ToString()).ToHashSet();
         var accountEnum = await accountDataAccess.GetAccount(id, token);
         var acc = accountEnum.Match<Account>(

@@ -17,7 +17,7 @@ public interface IFreelancerDataService
     
     public Either<ErrorResult,StarSystem> GetSystem(Either<uint,string> id);
     
-    public Either<ErrorResult,LibreLancer.Data.Universe.SystemObject> GetSystemObject(Either<uint,string> id, string systemNickname  = "none");
+    public Either<ErrorResult,SystemObject> GetSystemObject(Either<uint,string> id, string systemNickname  = "none");
     
     public Either<ErrorResult,LibreLancer.Data.Equipment.Commodity> GetCommodity(Either<uint,string> id);
     public Either<ErrorResult,LibreLancer.Data.Equipment.Gun> GetGun(Either<uint,string> id);
